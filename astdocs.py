@@ -232,8 +232,8 @@ def format_docstring(
 
     Expect some stiff `NumPy`-ish formatting (see
     [this](https://numpydoc.readthedocs.io/en/latest/example.html#example) or
-    [that](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html).
-    Do try to **type** all your input parameters/returned objects. Anduse a linter on
+    [that](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html)).
+    Do try to **type** all your input parameters/returned objects. And use a linter on
     the output.
 
     Parameters
