@@ -315,18 +315,14 @@ def parse_functiondef(n: typing.Union[ast.AsyncFunctionDef, ast.FunctionDef]):
     else:
         prefix = ""
 
+    args = [
+        f'{prefix}{a.arg}{format_annotation(a.annotation, ": ")}' for a in n.args.args
+    ]
+
     if not n.name.startswith("_"):
         _funcdefs[f"{n.ancestry}.{n.name}"] = {
             "ancestry": n.ancestry,
-            "args": ", ".join(
-                [
-                    f'{prefix}{a.arg}{format_annotation(a.annotation, ": ")}'
-                    for a in n.args.args
-                ]
-            )
-            + "\n"
-            if len(prefix)
-            else "",
+            "args": ", ".join(args) + ("\n" if len(prefix) else ""),
             "decoration": "**Decoration** via " + ", ".join(dc) + "." if dc else "",
             "endlineno": n.end_lineno,
             "funcdocs": format_docstring(n),

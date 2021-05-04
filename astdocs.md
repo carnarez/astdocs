@@ -99,7 +99,7 @@ print(astdocs.render(filepath))
 ### `astdocs.format_annotation`
 
 ```python
-format_annotation() -> str:
+format_annotation(a: typing.Union[ast.Attribute, ast.Name], char: str) -> str:
 ```
 
 Format an annotation (object type or decorator).
@@ -124,7 +124,7 @@ See the code itself for some line-by-line documentation.
 ### `astdocs.format_docstring`
 
 ```python
-format_docstring() -> str:
+format_docstring(n: typing.Union[ast.AsyncFunctionDef, ast.ClassDef, ast.FunctionDef, ast.Module]) -> str:
 ```
 
 Format the object docstring.
@@ -152,7 +152,7 @@ output.
 ### `astdocs.parse_classdef`
 
 ```python
-parse_classdef():
+parse_classdef(n: ast.ClassDef):
 ```
 
 Parse a `class` statement.
@@ -164,7 +164,7 @@ Parse a `class` statement.
 ### `astdocs.parse_functiondef`
 
 ```python
-parse_functiondef():
+parse_functiondef(n: typing.Union[ast.AsyncFunctionDef, ast.FunctionDef]):
 ```
 
 Parse a `def` statement.
@@ -177,7 +177,7 @@ Parse a `def` statement.
 ### `astdocs.parse_tree`
 
 ```python
-parse_tree():
+parse_tree(n: typing.Any):
 ```
 
 Recursively traverse the nodes of the abstract syntax tree.
@@ -196,7 +196,7 @@ method for instance).
 ### `astdocs.render_classdef`
 
 ```python
-render_classdef() -> str:
+render_classdef(filepath: str, name: str) -> str:
 ```
 
 Render a `class` object, according to the defined `CLASSDEF_TPL` template.
@@ -213,7 +213,7 @@ Render a `class` object, according to the defined `CLASSDEF_TPL` template.
 ### `astdocs.render_functiondef`
 
 ```python
-render_functiondef() -> str:
+render_functiondef(filepath: str, name: str) -> str:
 ```
 
 Render a `def` object (function or method).
@@ -232,7 +232,7 @@ Follow the defined `FUNCTIONDEF_TPL` template.
 ### `astdocs.render_summary`
 
 ```python
-render_summary() -> str:
+render_summary(name: str, docstring: str) -> str:
 ```
 
 Render a module summary as a `Markdown` file.
@@ -252,7 +252,7 @@ Follow the defined `SUMMARY_TPL` template.
 ### `astdocs.render`
 
 ```python
-render() -> str:
+render(filepath: str) -> str:
 ```
 
 Run the whole pipeline (wrapper method).
