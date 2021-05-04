@@ -374,7 +374,8 @@ def render_classdef(filepath: str, name: str) -> str:
     # methods bullet list
     for i, f in enumerate(fn):
         n = f.split(".")[-1]
-        fn[i] = f"* [`{n}()`](#{f})"
+        link = f.replace(".", "").lower()  # github/mdbook
+        fn[i] = f"* [`{n}()`](#{link})"
 
     # update the description of the object
     _classdefs[name].update(
@@ -435,14 +436,16 @@ def render_summary(name: str, docstring: str = "") -> str:
     for f in _funcdefs:
         if f.count(".") == name.count(".") + 1:
             n = f.split(".")[-1]
-            fn.append(f"* [`{n}()`](#{f})")
+            link = f.replace(".", "").lower()  # github/mdbook
+            fn.append(f"* [`{n}()`](#{link})")
 
     # classes bullet list
     cn = []
     for c in _classdefs:
         if c.count(".") == name.count(".") + 1:
             n = c.split(".")[-1]
-            cn.append(f"* [`{n}`](#{c})")
+            link = c.replace(".", "").lower()  # github/mdbook
+            cn.append(f"* [`{n}`](#{link})")
 
     sub = {
         "classnames": "**Classes:**\n\n" + "\n".join(cn) if cn else "",

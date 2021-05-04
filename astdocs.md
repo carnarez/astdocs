@@ -58,15 +58,15 @@ $ for f in xx??; do
 
 **Functions:**
 
-- [`format_annotation()`](#astdocs.format_annotation)
-- [`format_docstring()`](#astdocs.format_docstring)
-- [`parse_classdef()`](#astdocs.parse_classdef)
-- [`parse_functiondef()`](#astdocs.parse_functiondef)
-- [`parse_tree()`](#astdocs.parse_tree)
-- [`render_classdef()`](#astdocs.render_classdef)
-- [`render_functiondef()`](#astdocs.render_functiondef)
-- [`render_summary()`](#astdocs.render_summary)
-- [`render()`](#astdocs.render)
+- [`format_annotation()`](#astdocsformat_annotation)
+- [`format_docstring()`](#astdocsformat_docstring)
+- [`parse_classdef()`](#astdocsparse_classdef)
+- [`parse_functiondef()`](#astdocsparse_functiondef)
+- [`parse_tree()`](#astdocsparse_tree)
+- [`render_classdef()`](#astdocsrender_classdef)
+- [`render_functiondef()`](#astdocsrender_functiondef)
+- [`render_summary()`](#astdocsrender_summary)
+- [`render()`](#astdocsrender)
 
 ## Functions
 
