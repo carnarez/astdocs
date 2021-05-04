@@ -1,13 +1,17 @@
 # Module `astdocs`
 
-Extract and format documentation from `Python` code. In more details, parse the
-underlying Abstract Syntax Tree (AST) description. (See
+Extract and format documentation from `Python` code.
+
+In more details, parse the underlying Abstract Syntax Tree (AST) description. (See
 [documentation](https://docs.python.org/3/library/ast.html) of the standard library
-module with same name.) The only requirement is to use the standard library **only**
-(even the [templating](https://docs.python.org/3/library/string.html#template-strings)),
-and keep it as lean as possible. Support for corner cases is scarse... for one, no
-class-in-function (or the opposite) or function-in-function. The simplest way to check
-this is to run it on itself:
+module with same name.)
+
+The only requirement is to use the standard library **only** (even the
+[templating](https://docs.python.org/3/library/string.html#template-strings)), and keep
+it as lean as possible. Support for corner cases is scarse... for one, no
+class-in-function (or the opposite) or function-in-function.
+
+The simplest way to check this is to run it on itself:
 
 ```shell
 $ python astdocs.py astdocs.py
@@ -44,8 +48,8 @@ $ ASTDOCS_SPLIT_BY=mfc python astdocs.py module.py | csplit -qz - '/%%%B/' '{*}'
 $ mv xx00 module.md
 $ mkdir module
 $ for f in xx??; do
->   path=$(grep -m1 ^# $f | sed -r 's|#{1,} \`(.*)\`|\1|g;s|\.|/|g')
->   grep -v ^%%% $f > "$path.md"  # quotes are needed
+>   path=$(grep -m1 '^#' $f | sed -r 's|#{1,} \`(.*)\`|\1|g;s|\.|/|g')
+>   grep -v '^%%%' $f > "$path.md"  # quotes are needed
 >   rm $f
 > done
 ```
@@ -53,8 +57,20 @@ $ for f in xx??; do
 If the regular expression solution presented here (which works for *my* needs) does not
 fulfill, it is pretty easy to clobber it:
 
-```python import ast import astdocs def my_docstring_parser(docstring: str) -> str:
-    # process docstring return string def format_docstring(n): return my_docstring_parser(ast.get_docstring(n)) astdocs.format_docstring = format_docstring print(astdocs.render(filepath))
+```python
+import ast
+import astdocs
+
+def my_docstring_parser(docstring: str) -> str:
+    # process docstring
+    return string
+
+def format_docstring(n):
+    return my_docstring_parser(ast.get_docstring(n))
+
+astdocs.format_docstring = format_docstring
+
+print(astdocs.render(filepath))
 ```
 
 **Attributes:**
@@ -86,10 +102,13 @@ fulfill, it is pretty easy to clobber it:
 format_annotation() -> str:
 ```
 
-Format an annotation (object type or decorator). Dive as deep as necessary within the
-children nodes until reaching the name of the module/attribute objects are annotated
-after; save the import path on the way. Recursively repeat for complicated object. See
-the code itself for some line-by-line documentation.
+Format an annotation (object type or decorator).
+
+Dive as deep as necessary within the children nodes until reaching the name of the
+module/attribute objects are annotated after; save the import path on the way.
+Recursively repeat for complicated object.
+
+See the code itself for some line-by-line documentation.
 
 **Parameters:**
 
@@ -108,10 +127,13 @@ the code itself for some line-by-line documentation.
 format_docstring() -> str:
 ```
 
-Format the object docstring. Expect some stiff `NumPy`-ish formatting (see
+Format the object docstring.
+
+Expect some stiff `NumPy`-ish formatting (see
 [this](https://numpydoc.readthedocs.io/en/latest/example.html#example) or
 [that](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html). Do
-try to **type** all your input parameters/returned objects.
+try to **type** all your input parameters/returned objects. Anduse a linter on the
+output.
 
 **Parameters:**
 
@@ -124,7 +146,7 @@ try to **type** all your input parameters/returned objects.
 
 **Known problems:**
 
-- Overall naive and opinionated.
+- Overall naive and *very* opinionated (for my use).
 - Does not support list in parameter/return entries.
 
 ### `astdocs.parse_classdef`
@@ -158,11 +180,14 @@ Parse a `def` statement.
 parse_tree():
 ```
 
-Recursively traverse the nodes of the abstract syntax tree. The present function calls
-the formatting function corresponding to the node name (if supported) to parse/format
-it. Add a `.ancestry` attribute on each traversed children object containing the
-complete path to that object. This path is used to identify ownership of objects
-(function *vs.* method for instance).
+Recursively traverse the nodes of the abstract syntax tree.
+
+The present function calls the formatting function corresponding to the node name (if
+supported) to parse/format it.
+
+Add a `.ancestry` attribute on each traversed children object containing the complete
+path to that object. This path is used to identify ownership of objects (function *vs.*
+method for instance).
 
 **Parameters:**
 
@@ -191,8 +216,9 @@ Render a `class` object, according to the defined `CLASSDEF_TPL` template.
 render_functiondef() -> str:
 ```
 
-Render a `def` object (function or method). Follow the defined `FUNCTIONDEF_TPL`
-template.
+Render a `def` object (function or method).
+
+Follow the defined `FUNCTIONDEF_TPL` template.
 
 **Parameters:**
 
@@ -209,7 +235,9 @@ template.
 render_summary() -> str:
 ```
 
-Render a module summary as a `Markdown` file. Follow the defined `SUMMARY_TPL` template.
+Render a module summary as a `Markdown` file.
+
+Follow the defined `SUMMARY_TPL` template.
 
 **Parameters:**
 
