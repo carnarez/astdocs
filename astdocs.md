@@ -23,12 +23,15 @@ $ for f in $(find . -name "*.py"); do
 
 The behaviour of this little stunt can be modified via environment variables:
 
-- `ASTDOCS_WITH_LINENOS` taking the `1`, `on`, `true` or `yes` values (anything else will
-  be ignored).
+- `ASTDOCS_FOLD_ARGS_AFTER` to fold long object (function/method) definition (many
+  parameters). Defaults to 3.
 - `ASTDOCS_SPLIT_BY` taking the `m` (default), `mc` or `mfc`: split each \[m\]odule,
   \[f\]unction and \[c\]lass apart (by adding markers in the output). Classes will always
   keep their methods. In case `mfc` is provided, the module will only keep its docstring,
   and each function will be marked.
+- `ASTDOCS_WITH_LINENOS` taking the `1`, `on`, `true` or `yes` values (anything else will
+  be ignored) to show the line numbers of the object in the codebase (to be processed
+  later on by your favourite `Markdown` renderer).
 
 ```shell
 $ ASTDOCS_WITH_LINENOS=on python astdocs.py astdocs.py
@@ -41,10 +44,17 @@ $ ASTDOCS_SPLIT_BY=mfc python astdocs.py module.py | csplit -qz - '/%%%B/' '{*}'
 $ mv xx00 module.md
 $ mkdir module
 $ for f in xx??; do
->   path=`grep -m1 ^# $f | sed -r 's|#{1,} \`(.*)\`|\1|g;s|\.|/|g'`
->   grep -v ^%%% $f > "$path.md"
+>   path=$(grep -m1 ^# $f | sed -r 's|#{1,} \`(.*)\`|\1|g;s|\.|/|g')
+>   grep -v ^%%% $f > "$path.md"  # quotes are needed
 >   rm $f
 > done
+```
+
+If the regular expression solution presented here (which works for *my* needs) does not
+fulfill, it is pretty easy to clobber it:
+
+```python import ast import astdocs def my_docstring_parser(docstring: str) -> str:
+    # process docstring return string def format_docstring(n): return my_docstring_parser(ast.get_docstring(n)) astdocs.format_docstring = format_docstring print(astdocs.render(filepath))
 ```
 
 **Attributes:**
@@ -73,7 +83,7 @@ $ for f in xx??; do
 ### `astdocs.format_annotation`
 
 ```python
-format_annotation(a: typing.Union[ast.Attribute, ast.Name], char: str) -> str:
+format_annotation() -> str:
 ```
 
 Format an annotation (object type or decorator). Dive as deep as necessary within the
@@ -95,7 +105,7 @@ the code itself for some line-by-line documentation.
 ### `astdocs.format_docstring`
 
 ```python
-format_docstring(n: typing.Union[ast.AsyncFunctionDef, ast.ClassDef, ast.FunctionDef, ast.Module]) -> str:
+format_docstring() -> str:
 ```
 
 Format the object docstring. Expect some stiff `NumPy`-ish formatting (see
@@ -120,7 +130,7 @@ try to **type** all your input parameters/returned objects.
 ### `astdocs.parse_classdef`
 
 ```python
-parse_classdef(n: ast.ClassDef):
+parse_classdef():
 ```
 
 Parse a `class` statement.
@@ -132,7 +142,7 @@ Parse a `class` statement.
 ### `astdocs.parse_functiondef`
 
 ```python
-parse_functiondef(n: typing.Union[ast.AsyncFunctionDef, ast.FunctionDef]):
+parse_functiondef():
 ```
 
 Parse a `def` statement.
@@ -145,7 +155,7 @@ Parse a `def` statement.
 ### `astdocs.parse_tree`
 
 ```python
-parse_tree(n: typing.Any):
+parse_tree():
 ```
 
 Recursively traverse the nodes of the abstract syntax tree. The present function calls
@@ -161,7 +171,7 @@ complete path to that object. This path is used to identify ownership of objects
 ### `astdocs.render_classdef`
 
 ```python
-render_classdef(filepath: str, name: str) -> str:
+render_classdef() -> str:
 ```
 
 Render a `class` object, according to the defined `CLASSDEF_TPL` template.
@@ -178,7 +188,7 @@ Render a `class` object, according to the defined `CLASSDEF_TPL` template.
 ### `astdocs.render_functiondef`
 
 ```python
-render_functiondef(filepath: str, name: str) -> str:
+render_functiondef() -> str:
 ```
 
 Render a `def` object (function or method). Follow the defined `FUNCTIONDEF_TPL`
@@ -196,7 +206,7 @@ template.
 ### `astdocs.render_summary`
 
 ```python
-render_summary(name: str, docstring: str) -> str:
+render_summary() -> str:
 ```
 
 Render a module summary as a `Markdown` file. Follow the defined `SUMMARY_TPL` template.
@@ -214,7 +224,7 @@ Render a module summary as a `Markdown` file. Follow the defined `SUMMARY_TPL` t
 ### `astdocs.render`
 
 ```python
-render(filepath: str) -> str:
+render() -> str:
 ```
 
 Run the whole pipeline (wrapper method).

@@ -25,12 +25,15 @@ $ for f in $(find . -name "*.py"); do
 
 The behaviour of this little stunt can be modified via environment variables:
 
-* `ASTDOCS_WITH_LINENOS` taking the `1`, `on`, `true` or `yes` values (anything else
-  will be ignored).
+* `ASTDOCS_FOLD_ARGS_AFTER` to fold long object (function/method) definition (many
+  parameters). Defaults to 3.
 * `ASTDOCS_SPLIT_BY` taking the `m` (default), `mc` or `mfc`: split each [m]odule,
   [f]unction and [c]lass apart (by adding markers in the output). Classes will
   always keep their methods. In case `mfc` is provided, the module will only keep its
   docstring, and each function will be marked.
+* `ASTDOCS_WITH_LINENOS` taking the `1`, `on`, `true` or `yes` values (anything else
+  will be ignored) to show the line numbers of the object in the codebase (to be
+  processed later on by your favourite `Markdown` renderer).
 
 ```shell
 $ ASTDOCS_WITH_LINENOS=on python astdocs.py astdocs.py
@@ -43,10 +46,29 @@ $ ASTDOCS_SPLIT_BY=mfc python astdocs.py module.py | csplit -qz - '/%%%B/' '{*}'
 $ mv xx00 module.md
 $ mkdir module
 $ for f in xx??; do
->   path=`grep -m1 ^# $f | sed -r 's|#{1,} \`(.*)\`|\1|g;s|\.|/|g'`
->   grep -v ^%%% $f > "$path.md"
+>   path=$(grep -m1 ^# $f | sed -r 's|#{1,} \`(.*)\`|\1|g;s|\.|/|g')
+>   grep -v ^%%% $f > "$path.md"  # quotes are needed
 >   rm $f
 > done
+```
+
+If the regular expression solution presented here (which works for *my* needs) does not
+fulfill, it is pretty easy to clobber it:
+
+```python
+import ast
+import astdocs
+
+def my_docstring_parser(docstring: str) -> str:
+    # process docstring
+    return string
+
+def format_docstring(n):
+    return my_docstring_parser(ast.get_docstring(n))
+
+astdocs.format_docstring = format_docstring
+
+print(astdocs.render(filepath))
 ```
 
 Attributes
@@ -283,12 +305,24 @@ def parse_functiondef(n: typing.Union[ast.AsyncFunctionDef, ast.FunctionDef]):
     """
     dc = [f'`{format_annotation(d, "@")}`' for d in n.decorator_list]
 
+    # argument gets its own line if many parameters
+    if len(n.args.args) > os.environ.get("ASTDOCS_FOLD_ARGS_AFTER", 3):
+        prefix = "\n    "
+    else:
+        prefix = ""
+
     if not n.name.startswith("_"):
         _funcdefs[f"{n.ancestry}.{n.name}"] = {
             "ancestry": n.ancestry,
             "args": ", ".join(
-                [f'{a.arg}{format_annotation(a.annotation, ": ")}' for a in n.args.args]
-            ),
+                [
+                    f'{prefix}{a.arg}{format_annotation(a.annotation, ": ")}'
+                    for a in n.args.args
+                ]
+            )
+            + "\n"
+            if len(prefix)
+            else "",
             "decoration": "**Decoration** via " + ", ".join(dc) + "." if dc else "",
             "endlineno": n.end_lineno,
             "funcdocs": format_docstring(n),
@@ -521,4 +555,9 @@ def render(filepath: str) -> str:
 
 
 if __name__ == "__main__":
+    if len(sys.argv) > 2:
+        sys.exit(
+            "Too many arguments!"
+            f'Please read the docs via `pydoc {sys.argv[0].replace(".py", "")}` or so.'
+        )
     print(render(sys.argv[1]))
