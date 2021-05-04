@@ -28,12 +28,13 @@ The behaviour of this little stunt can be modified via environment variables:
 * `ASTDOCS_FOLD_ARGS_AFTER` to fold long object (function/method) definition (many
   parameters). Defaults to 3.
 * `ASTDOCS_SPLIT_BY` taking the `m` (default), `mc` or `mfc`: split each [m]odule,
-  [f]unction and [c]lass apart (by adding markers in the output). Classes will
-  always keep their methods. In case `mfc` is provided, the module will only keep its
-  docstring, and each function will be marked.
+  [f]unction and [c]lass apart (by adding `%%%BX` markers in the output, `X` being
+  either `F` or `C`). Classes will always keep their methods. In case `mfc` is
+  provided, the module will only keep its docstring, and each function will be marked.
 * `ASTDOCS_WITH_LINENOS` taking the `1`, `on`, `true` or `yes` values (anything else
-  will be ignored) to show the line numbers of the object in the codebase (to be
-  processed later on by your favourite `Markdown` renderer).
+  will be ignored) to show the line numbers of the object in the code source (to be
+  processed later on by your favourite `Markdown` renderer). Look for a `%%%SOURCE`
+  marker.
 
 ```shell
 $ ASTDOCS_WITH_LINENOS=on python astdocs.py astdocs.py
@@ -93,6 +94,8 @@ import typing
 CLASSDEF_TPL = string.Template(
     "\n$hashtags `$ancestry.$classname`"
     "\n"
+    "\n%%%SOURCE $path:$lineno:$endlineno"
+    "\n"
     "\n$classdocs"
     "\n"
     "\n$decoration"
@@ -120,6 +123,8 @@ FUNCTIONDEF_TPL = string.Template(
     "\n$funcdocs"
     "\n"
     "\n$decoration"
+    "\n"
+    "\n%%%SOURCE $path:$lineno:$endlineno"
 )
 
 SUMMARY_TPL = string.Template(
@@ -136,9 +141,13 @@ if "f" in _split_by:
     FUNCTIONDEF_TPL.template = "%%%BF" + FUNCTIONDEF_TPL.template
 
 # if requested, add the line numbers to the source
-if os.environ.get("ASTDOCS_WITH_LINENOS", None) in ("1", "on", "true", "yes"):
-    CLASSDEF_TPL += "\n\n%include $path:$lineno:$endlineno%"
-    FUNCTIONDEF_TPL += "\n\n%include $path:$lineno:$endlineno%"
+if os.environ.get("ASTDOCS_WITH_LINENOS", "off") not in ("1", "on", "true", "yes"):
+    CLASSDEF_TPL.template = CLASSDEF_TPL.template.replace(
+        "\n%%%SOURCE $path:$lineno:$endlineno\n", ""
+    )
+    FUNCTIONDEF_TPL.template = FUNCTIONDEF_TPL.template.replace(
+        "\n%%%SOURCE $path:$lineno:$endlineno\n", ""
+    )
 
 
 _classdefs = {}
@@ -334,7 +343,7 @@ def parse_tree(n: typing.Any):
     The present function calls the formatting function corresponding to the node name
     (if supported) to parse/format it.
 
-    Add a `.ancestry` attribute on each traversed children object containing the
+    Add an `.ancestry` attribute on each traversed children object containing the
     complete path to that object. This path is used to identify ownership of objects
     (function *vs.* method for instance).
 
@@ -544,7 +553,7 @@ def render(filepath: str) -> str:
 
     s = TPL.substitute(sub).strip()
     s = re.sub(r"\n{3,}", "\n\n", s)
-    s = re.sub(r"\n{2,}%%%", "\n%%%", s)
+    s = re.sub(r"\n{2,}%%%B", "\n%%%B", s)
 
     return s
 
