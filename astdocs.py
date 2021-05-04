@@ -46,8 +46,8 @@ $ ASTDOCS_SPLIT_BY=mfc python astdocs.py module.py | csplit -qz - '/%%%B/' '{*}'
 $ mv xx00 module.md
 $ mkdir module
 $ for f in xx??; do
->   path=$(grep -m1 ^# $f | sed -r 's|#{1,} \`(.*)\`|\1|g;s|\.|/|g')
->   grep -v ^%%% $f > "$path.md"  # quotes are needed
+>   path=$(grep -m1 '^#' $f | sed -r 's|#{1,} \`(.*)\`|\1|g;s|\.|/|g')
+>   grep -v '^%%%' $f > "$path.md"  # quotes are needed
 >   rm $f
 > done
 ```
@@ -223,7 +223,8 @@ def format_docstring(
     Expect some stiff `NumPy`-ish formatting (see
     [this](https://numpydoc.readthedocs.io/en/latest/example.html#example) or
     [that](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html).
-    Do try to **type** all your input parameters/returned objects.
+    Do try to **type** all your input parameters/returned objects. Anduse a linter on
+    the output.
 
     Parameters
     ----------
@@ -237,7 +238,7 @@ def format_docstring(
 
     Known problems
     --------------
-    * Overall naive and opinionated.
+    * Overall naive and *very* opinionated (for my use).
     * Does not support list in parameter/return entries.
     """
     s = ast.get_docstring(n) or ""
@@ -263,12 +264,6 @@ def format_docstring(
 
     # rework list of types/descriptions (return values)
     s = re.sub(r"\n: ([A-Za-z0-9_\[\],\. ]+)\n {2,}(.*)", r"\n* [`\1`]: \2", s)
-
-    # unwrap paragraph
-    s = re.sub(r"([\w\[\]\(\),;:\.\*_]+)\n(?:\s+)?([\w\[\]\(\)]+)", r"\1 \2", s)
-
-    # unwrap paragraph with following line starting with *one* backtick
-    s = re.sub(r"(\w+)\n(\`\w+)", r"\1 \2", s)
 
     return s.strip()
 
