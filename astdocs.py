@@ -4,7 +4,7 @@ In more details, parse the underlying Abstract Syntax Tree (AST) description. (S
 [documentation](https://docs.python.org/3/library/ast.html) of the standard library
 module with same name.)
 
-The only requirement is to use the standard library **only** (even the
+The only requirement is to use the standard library **exclusively** (even the
 [templating](https://docs.python.org/3/library/string.html#template-strings)), and keep
 it as lean as possible. Support for corner cases is scarse... for one, no
 class-in-function (or the opposite) or function-in-function.
@@ -29,8 +29,9 @@ The behaviour of this little stunt can be modified via environment variables:
   parameters). Defaults to 3.
 * `ASTDOCS_SPLIT_BY` taking the `m` (default), `mc` or `mfc`: split each [m]odule,
   [f]unction and [c]lass apart (by adding `%%%BX` markers in the output, `X` being
-  either `F` or `C`). Classes will always keep their methods. In case `mfc` is
-  provided, the module will only keep its docstring, and each function will be marked.
+  either `F` -functions/methods- or `C` -classes). Classes will always keep their
+  methods. In case `mfc` is provided, the module will only keep its docstring, and
+  each function will be marked.
 * `ASTDOCS_WITH_LINENOS` taking the `1`, `on`, `true` or `yes` values (anything else
   will be ignored) to show the line numbers of the object in the code source (to be
   processed later on by your favourite `Markdown` renderer). Look for a `%%%SOURCE`
