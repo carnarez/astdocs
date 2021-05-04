@@ -121,8 +121,6 @@ See the code itself for some line-by-line documentation.
 
 - \[`str`\]: The formatted annotation.
 
-%%%SOURCE astdocs.py:157:224
-
 ### `astdocs.format_docstring`
 
 ```python
@@ -151,8 +149,6 @@ output.
 - Overall naive and *very* opinionated (for my use).
 - Does not support list in parameter/return entries.
 
-%%%SOURCE astdocs.py:227:277
-
 ### `astdocs.parse_classdef`
 
 ```python
@@ -164,8 +160,6 @@ Parse a `class` statement.
 **Parameters:**
 
 - `n` \[`ast.ClassDef`\]: The node to extract information from.
-
-%%%SOURCE astdocs.py:280:299
 
 ### `astdocs.parse_functiondef`
 
@@ -179,8 +173,6 @@ Parse a `def` statement.
 
 - `n` \[`typing.Union[ast.AsyncFunctionDef, ast.FunctionDef]`\]: The node to extract
   information from.
-
-%%%SOURCE astdocs.py:302:337
 
 ### `astdocs.parse_tree`
 
@@ -201,8 +193,6 @@ method for instance).
 
 - \[`n`\]: Any type of node to extract information from.
 
-%%%SOURCE astdocs.py:340:374
-
 ### `astdocs.render_classdef`
 
 ```python
@@ -219,8 +209,6 @@ Render a `class` object, according to the defined `CLASSDEF_TPL` template.
 **Returns:**
 
 - \[`str`\]: `Markdown`-formatted description of the class object.
-
-%%%SOURCE astdocs.py:377:429
 
 ### `astdocs.render_functiondef`
 
@@ -240,8 +228,6 @@ Follow the defined `FUNCTIONDEF_TPL` template.
 **Returns:**
 
 - \[`str`\]: `Markdown`-formatted description of the function/method object.
-
-%%%SOURCE astdocs.py:432:452
 
 ### `astdocs.render_summary`
 
@@ -263,8 +249,6 @@ Follow the defined `SUMMARY_TPL` template.
 
 - \[`str`\]: `Markdown`-formatted description of the whole module.
 
-%%%SOURCE astdocs.py:455:501
-
 ### `astdocs.render`
 
 ```python
@@ -280,5 +264,3 @@ Run the whole pipeline (wrapper method).
 **Returns:**
 
 - \[`str`\]: `Markdown`-formatted content.
-
-%%%SOURCE astdocs.py:504:558

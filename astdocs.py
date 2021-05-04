@@ -143,10 +143,10 @@ if "f" in _split_by:
 # if requested, add the line numbers to the source
 if os.environ.get("ASTDOCS_WITH_LINENOS", "off") not in ("1", "on", "true", "yes"):
     CLASSDEF_TPL.template = CLASSDEF_TPL.template.replace(
-        "\n%%%SOURCE $path:$lineno:$endlineno\n", ""
+        "\n\n%%%SOURCE $path:$lineno:$endlineno", ""
     )
     FUNCTIONDEF_TPL.template = FUNCTIONDEF_TPL.template.replace(
-        "\n%%%SOURCE $path:$lineno:$endlineno\n", ""
+        "\n\n%%%SOURCE $path:$lineno:$endlineno", ""
     )
 
 
