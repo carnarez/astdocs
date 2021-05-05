@@ -143,9 +143,13 @@ TPL = string.Template("$summary\n\n$functions\n\n$classes")
 # if requested, split things up with %%% markers
 _split_by = os.environ.get("ASTDOCS_SPLIT_BY", "m")
 if "c" in _split_by:
-    CLASSDEF_TPL.template = "%%%BEGIN CLASSDEF" + CLASSDEF_TPL.template
+    CLASSDEF_TPL.template = (
+        f"%%%BEGIN CLASSDEF $ancestry.$classname\n{CLASSDEF_TPL.template}"
+    )
 if "f" in _split_by:
-    FUNCTIONDEF_TPL.template = "%%%BEGIN FUNCTIONDEF" + FUNCTIONDEF_TPL.template
+    FUNCTIONDEF_TPL.template = (
+        f"%%%BEGIN FUNCTIONDEF $ancestry.$funcname\n{FUNCTIONDEF_TPL.template}"
+    )
 
 # if requested, add the line numbers to the source
 _with_linenos = os.environ.get("ASTDOCS_WITH_LINENOS", "off")
@@ -626,13 +630,17 @@ def render_summary(name: str, docstring: str = "") -> str:
     return SUMMARY_TPL.substitute(sub).strip()
 
 
-def render(filepath: str) -> str:
+def render(filepath: str, remove_from_path: str = "") -> str:
     """Run the whole pipeline (useful wrapper function when this gets used as a module).
 
     Parameters
     ----------
     filepath : str
         The path to the module to process.
+    remove_from_path : str
+        Part of the path to be removed. If one is rendering the content of a file buried
+        deep down in a complicated folder tree *but* does not want this to appear in the
+        ancestry of the module.
 
     Returns
     -------
@@ -640,7 +648,12 @@ def render(filepath: str) -> str:
         `Markdown`-formatted content.
     """
     with open(filepath) as f:
-        m = filepath.replace("/", ".").replace(".py", "")
+
+        # module ancestry
+        m = filepath
+        if remove_from_path:
+            m = m.replace(remove_from_path, "")
+        m = m.replace("/", ".").replace(".py", "")
 
         # traverse the ast
         n = ast.parse(f.read())
