@@ -29,14 +29,15 @@ The behaviour of this little stunt can be modified via environment variables:
 
 * `ASTDOCS_FOLD_ARGS_AFTER` to fold long object (function/method) definition (many
   parameters). Defaults to 3.
-* `ASTDOCS_SPLIT_BY` taking the `m` (default), `mc` or `mfc`: split each [m]odule,
-  [f]unction and [c]lass apart (by adding `%%%BEGIN ...` markers in the output).
-  Classes will always keep their methods. In case `mfc` is provided, the module will
-  only keep its docstring, and each function will be marked.
+* `ASTDOCS_SPLIT_BY` taking the `m` (default behaviour, all module content in one
+  output), `mc` or `mfc` values: split each **m**odule, **f**unction and **c**lass apart
+  (by adding `%%%BEGIN ...` markers in the output). Classes will always keep their
+  methods. In case `mfc` is provided, the module will only keep its docstring, and each
+  function will be marked.
 * `ASTDOCS_WITH_LINENOS` taking the `1`, `on`, `true` or `yes` values (anything else
   will be ignored) to show the line numbers of the object in the code source (to be
   processed later on by your favourite `Markdown` renderer). Look for the `%%%SOURCE`
-  marker.
+  markers.
 
 ```shell
 $ ASTDOCS_WITH_LINENOS=on python astdocs.py astdocs.py
