@@ -28,7 +28,7 @@ $ for f in $(find . -name "*.py"); do
 The behaviour of this little stunt can be modified via environment variables:
 
 * `ASTDOCS_FOLD_ARGS_AFTER` to fold long object (function/method) definition (many
-  parameters). Defaults to 3.
+  parameters). Defaults to 88 characters, `black` default.
 * `ASTDOCS_SPLIT_BY` taking the `m` (default behaviour, all module content in one
   output), `mc` or `mfc` values: split each **m**odule, **f**unction and **c**lass apart
   (by adding `%%%BEGIN ...` markers in the output). Classes will always keep their
@@ -308,6 +308,8 @@ def parse_classdef(n: ast.ClassDef):
     dc = [f'`{format_annotation(d, "@")}`' for d in n.decorator_list]
 
     if not n.name.startswith("_"):
+
+        # save the interesting details (more to come during rendering)
         _classdefs[f"{n.ancestry}.{n.name}"] = {
             "ancestry": n.ancestry,
             "classname": n.name,
@@ -339,28 +341,32 @@ def parse_functiondef(n: typing.Union[ast.AsyncFunctionDef, ast.FunctionDef]):
     # parse decorator objects
     dc = [f'`{format_annotation(d, "@")}`' for d in n.decorator_list]
 
-    # argument gets its own line if many parameters
-    if len(n.args.args) > os.environ.get("ASTDOCS_FOLD_ARGS_AFTER", 3):
-        prefix = "\n    "
-    else:
-        prefix = ""
+    # parse/format arguments and annotations
+    params = [f'{a.arg}{format_annotation(a.annotation, ": ")}' for a in n.args.args]
+    returns = format_annotation(n.returns, " -> ")
 
-    # parse arguments
-    params = [
-        f'{prefix}{a.arg}{format_annotation(a.annotation, ": ")}' for a in n.args.args
-    ]
+    # add line breaks if the function call is long (pre-render this latter first, no way
+    # around it)
+    rendered = len(f'{n.name}({", ".join(params)}){returns}')
+    if rendered > os.environ.get("ASTDOCS_FOLD_ARGS_AFTER", 88):
+        params = [f"\n    {p}" for p in params]
+        suffix = "\n"
+    else:
+        suffix = ""
 
     if not n.name.startswith("_") or n.name == "__init__":
+
+        # save the interesting details
         _funcdefs[f"{n.ancestry}.{n.name}"] = {
             "ancestry": n.ancestry,
-            "params": ", ".join(params) + ("\n" if len(prefix) else ""),
+            "params": ", ".join(params) + suffix,
             "decoration": ("**Decoration** via " + ", ".join(dc) + ".") if dc else "",
             "endlineno": n.end_lineno,
             "funcdocs": format_docstring(n),
             "funcname": n.name,
             "hashtags": ht,
             "lineno": n.lineno,
-            "returns": format_annotation(n.returns, " -> "),
+            "returns": returns,
         }
 
         # save the object
@@ -372,7 +378,7 @@ def parse_import(n: typing.Union[ast.Import, ast.ImportFrom]):
 
     The content built by this function is currently *not* used. This latter is kept in
     case all the objects (and aliases) accessible within a module is required for a
-    post-processing or else.
+    post-processing or some later smart implementations.
 
     Parameters
     ----------

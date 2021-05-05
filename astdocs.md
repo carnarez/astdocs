@@ -30,7 +30,7 @@ $ for f in $(find . -name "*.py"); do
 The behaviour of this little stunt can be modified via environment variables:
 
 - `ASTDOCS_FOLD_ARGS_AFTER` to fold long object (function/method) definition (many
-  parameters). Defaults to 3.
+  parameters). Defaults to 88 characters, `black` default.
 - `ASTDOCS_SPLIT_BY` taking the `m` (default behaviour, all module content in one output),
   `mc` or `mfc` values: split each **m**odule, **f**unction and **c**lass apart (by adding
   `%%%BEGIN ...` markers in the output). Classes will always keep their methods. In case
@@ -133,7 +133,9 @@ See the code itself for some line-by-line documentation.
 ### `astdocs.format_docstring`
 
 ```python
-format_docstring(n: typing.Union[ast.AsyncFunctionDef, ast.ClassDef, ast.FunctionDef, ast.Module]) -> str:
+format_docstring(
+    n: typing.Union[ast.AsyncFunctionDef, ast.ClassDef, ast.FunctionDef, ast.Module]
+) -> str:
 ```
 
 Format the object docstring.
@@ -193,7 +195,7 @@ Parse `import ... [as ...]` and `from ... import ... [as ...]` statements.
 
 The content built by this function is currently *not* used. This latter is kept in case
 all the objects (and aliases) accessible within a module is required for a
-post-processing or else.
+post-processing or some later smart implementations.
 
 **Parameters:**
 
