@@ -143,14 +143,14 @@ if "f" in _split_by:
     FUNCTIONDEF_TPL.template = "%%%BEGIN FUNCTIONDEF" + FUNCTIONDEF_TPL.template
 
 # if requested, add the line numbers to the source
-if os.environ.get("ASTDOCS_WITH_LINENOS", "off") not in ("1", "on", "true", "yes"):
+_with_linenos = os.environ.get("ASTDOCS_WITH_LINENOS", "off")
+if _with_linenos not in ("1", "on", "true", "yes"):
     CLASSDEF_TPL.template = CLASSDEF_TPL.template.replace(
         "\n\n%%%SOURCE $path:$lineno:$endlineno", ""
     )
     FUNCTIONDEF_TPL.template = FUNCTIONDEF_TPL.template.replace(
         "\n\n%%%SOURCE $path:$lineno:$endlineno", ""
     )
-
 
 _classdefs = {}
 _funcdefs = {}
@@ -349,7 +349,7 @@ def parse_functiondef(n: typing.Union[ast.AsyncFunctionDef, ast.FunctionDef]):
         f'{prefix}{a.arg}{format_annotation(a.annotation, ": ")}' for a in n.args.args
     ]
 
-    if not n.name.startswith("_"):
+    if not n.name.startswith("_") or n.name == "__init__":
         _funcdefs[f"{n.ancestry}.{n.name}"] = {
             "ancestry": n.ancestry,
             "params": ", ".join(params) + ("\n" if len(prefix) else ""),
@@ -382,7 +382,6 @@ def parse_import(n: typing.Union[ast.Import, ast.ImportFrom]):
     else:
         path = ""
 
-    if path.startswith(os.environ.get("ASTDOCS_LINK_FOR", sys.argv[1].split("/")[-1])):
         for i in n.names:
             if i.asname is not None:
                 objct = i.asname
@@ -503,18 +502,22 @@ def render_classdef(filepath: str, name: str) -> str:
     init = f"{name}.__init__"
     if init in fn:
         fn.pop(fn.index(init))
-        fd = _funcdefs.pop(init)
-        params = fd["params"]
-        docstr = fd["constdocs"]
+        f = _funcdefs.pop(init)
+        params = f["params"]
+        docstr = f["funcdocs"]
+        lineno = f["lineno"]
+        endlineno = f["endlineno"]
+        if _with_linenos in ("1", "on", "true", "yes"):
+            docstr += f"\n\n%%%SOURCE {filepath}:{lineno}:{endlineno}"
     else:
         params = ""
         docstr = ""
 
     # render all methods
-    fd = []
+    fr = []
     for f in fn:
         _funcdefs[f].update({"hashtags": f"{ht}##"})
-        fd.append(render_functiondef(filepath, f))
+        fr.append(render_functiondef(filepath, f))
 
     # methods bullet list
     for i, f in enumerate(fn):
@@ -527,7 +530,7 @@ def render_classdef(filepath: str, name: str) -> str:
         {
             "params": params,
             "constdocs": docstr,
-            "funcdefs": (ht + "# Methods\n\n" + "\n\n".join(fd)) if fd else "",
+            "funcdefs": (ht + "# Methods\n\n" + "\n\n".join(fr)) if fr else "",
             "funcnames": ("**Methods:**\n\n" + "\n".join(fn)) if fn else "",
             "path": filepath,
         }
