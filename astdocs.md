@@ -87,6 +87,7 @@ print(astdocs.render(...))
 
 - [`format_annotation()`](#astdocsformat_annotation)
 - [`format_docstring()`](#astdocsformat_docstring)
+- [`postrender()`](#astdocspostrender)
 - [`parse_classdef()`](#astdocsparse_classdef)
 - [`parse_functiondef()`](#astdocsparse_functiondef)
 - [`parse_tree()`](#astdocsparse_tree)
@@ -122,6 +123,10 @@ See the code itself for some line-by-line documentation.
 
 - \[`str`\]: The formatted annotation.
 
+**Known problems:**
+
+- Does not support `lambda` functions.
+
 ### `astdocs.format_docstring`
 
 ```python
@@ -149,6 +154,22 @@ output.
 
 - Overall naive and *very* opinionated (for my use).
 - Does not support list in parameter/return entries.
+
+### `astdocs.postrender`
+
+```python
+postrender(func: typing.Callable) -> str:
+```
+
+Apply a post-rendering function on the output of the decorated function.
+
+**Parameters:**
+
+- `func` \[`typing.Callable`\]: The function to apply; should take a `str` as lone input.
+
+**Returns:**
+
+- \[`str`\]: `Markdown`-formatted content.
 
 ### `astdocs.parse_classdef`
 
