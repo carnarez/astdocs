@@ -1,13 +1,15 @@
 r"""Extract and format documentation from `Python` code.
 
-In more details, parse the underlying Abstract Syntax Tree (AST) description. (See
-[documentation](https://docs.python.org/3/library/ast.html) of the standard library
-module with same name.)
+In a few more words, parse the underlying Abstract Syntax Tree (AST) description. (See
+the [documentation](https://docs.python.org/3/library/ast.html) of the standard library
+module with same name.) It expects a relatively clean input (demonstrated in this very
+script) which forces me to keep my code somewhat well documented.
 
-The only requirement is to use the standard library **exclusively** (even the
-[templating](https://docs.python.org/3/library/string.html#template-strings)), and keep
-it as lean as possible. Support for corner cases is scarse... for one, no
-class-in-function (or the opposite), or function-in-function (considered private).
+My only requirement was to use the `Python` standard library **exclusively** (even the
+[templating](https://docs.python.org/3/library/string.html#template-strings)) as it is
+quite [overly] complete these day, and keep it as *lean* as possible. Support for corner
+cases is scarse... for one, no class-in- nor function-in-function (which I consider
+private, in the `Python` sense).
 
 The simplest way to check this is to run it on itself:
 
@@ -440,16 +442,18 @@ def postrender(func: typing.Callable) -> str:
 
     def fix_that(md: str) -> str:
         # process markdown
-        return md
+        return string
 
     def fix_this(md: str) -> str:
         # process markdown
-        return md
+        return string
 
     @astodcs.postrender(fix_that)
     @astodcs.postrender(fix_this)
-    def my_render(filepath: str) -> str:
+    def render(filepath: str) -> str:  # simple wrapper function
         return astodcs.render(filepath)
+
+    print(render(...))
     ```
 
     This can be used to streamline the linting of the output, or immediately convert to
