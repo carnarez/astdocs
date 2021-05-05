@@ -284,17 +284,18 @@ def format_docstring(
 def link_objects(md: str) -> str:
     """Post-process the rendered `Markdown` content to add links to internal objects.
 
+    This expects the input parameters/return values to be **correctly** formatted. One
+    way to ensure this is to use a docstring checker (via IDE or else).
+
     Parameters
     ----------
-    asd : render
-        asdasdasd
+    a : Union[parse_classdef, render]
+        blabla
     md : str
         `Markdown`-formatted content.
 
     Returns
     -------
-    : parse_classdef
-        asdasdasd
     : str
         `Markdown`-formatted content, with links.
     """
@@ -302,9 +303,24 @@ def link_objects(md: str) -> str:
 
     for line in md.split("\n"):
 
-        # ...
+        # fetch annotation, if present (determined by checking pattern)
+        match = re.match(r"\* (\`.*\` )?\[(\`.*\`)\]: (.*)", line)
+        if match:
+            var = match.group(1) or ""
+            ann = match.group(2)
+            des = match.group(3)
 
-        lines.append(line)
+            # make a list of unique annotations (not to replace twice)
+            uniq_ann = [a for a in list(set(re.split(r"[\`\[\]\,\s]+", ann))) if a]
+
+            for a in uniq_ann:
+                if a in _objects:
+                    lnk = _objects[a].replace(".", "/")
+                    ann = ann.replace(a, f"`[`{a}`]({lnk}.md)`")
+
+            lines.append(f"* {var}[{ann}]: {des}")
+        else:
+            lines.append(line)
 
     return "\n".join(lines)
 
@@ -337,6 +353,7 @@ def parse_classdef(n: ast.ClassDef):
             "lineno": n.lineno,
         }
 
+        # save the object
         _objects[n.name] = f"{n.ancestry}.{n.name}"
 
 
@@ -381,6 +398,7 @@ def parse_functiondef(n: typing.Union[ast.AsyncFunctionDef, ast.FunctionDef]):
             "returns": format_annotation(n.returns, " -> "),
         }
 
+        # save the object
         _objects[n.name] = f"{n.ancestry}.{n.name}"
 
 
@@ -407,6 +425,7 @@ def parse_import(n: typing.Union[ast.Import, ast.ImportFrom]):
             else:
                 objct = i.name
 
+        # save the object
         _objects[objct] = f"{path}.{i.name}".lstrip(".")
 
 
@@ -667,5 +686,4 @@ if __name__ == "__main__":
             "Too many arguments!"
             f'Please read the docs via `pydoc {sys.argv[0].replace(".py", "")}` or so.'
         )
-    render(sys.argv[1])
     print(render(sys.argv[1]))
