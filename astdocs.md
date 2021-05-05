@@ -9,7 +9,7 @@ module with same name.)
 The only requirement is to use the standard library **exclusively** (even the
 [templating](https://docs.python.org/3/library/string.html#template-strings)), and keep
 it as lean as possible. Support for corner cases is scarse... for one, no
-class-in-function (or the opposite) or function-in-function.
+class-in-function (or the opposite), or function-in-function (considered private).
 
 The simplest way to check this is to run it on itself:
 
@@ -36,7 +36,7 @@ The behaviour of this little stunt can be modified via environment variables:
   will be marked.
 - `ASTDOCS_WITH_LINENOS` taking the `1`, `on`, `true` or `yes` values (anything else will
   be ignored) to show the line numbers of the object in the code source (to be processed
-  later on by your favourite `Markdown` renderer). Look for a `%%%SOURCE` marker.
+  later on by your favourite `Markdown` renderer). Look for the `%%%SOURCE` marker.
 
 ```shell
 $ ASTDOCS_WITH_LINENOS=on python astdocs.py astdocs.py
@@ -71,7 +71,7 @@ def format_docstring(n):
 
 astdocs.format_docstring = format_docstring
 
-print(astdocs.render(filepath))
+print(astdocs.render(...))
 ```
 
 **Attributes:**
@@ -80,8 +80,8 @@ print(astdocs.render(filepath))
 - `FUNCTIONDEF_TPL` \[`string.Template`\]: Template to render `def` objects (async or
   not).
 - `SUMMARY_TPL` \[`string.Template`\]: Template to render the module summary.
-- `TPL` \[`string.Template`\]: Template to render the overall page (currently only governs
-  order of objects)
+- `TPL` \[`string.Template`\]: Template to render the overall page (only governs order of
+  objects in the output).
 
 **Functions:**
 
