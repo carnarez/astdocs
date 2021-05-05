@@ -29,11 +29,13 @@ The behaviour of this little stunt can be modified via environment variables:
 
 - `ASTDOCS_FOLD_ARGS_AFTER` to fold long object (function/method) definition (many
   parameters). Defaults to 3.
+- `ASTDOCS_LINK_FOR` to try to generate links against objects from this package or module
+  (defaults to the name of the processed module, as given by
+  `sys.argv[1].split(".")[-2]`).
 - `ASTDOCS_SPLIT_BY` taking the `m` (default), `mc` or `mfc`: split each \[m\]odule,
-  \[f\]unction and \[c\]lass apart (by adding `%%%BX` markers in the output, `X` being
-  either `F` -functions/methods- or `C` -classes). Classes will always keep their methods.
-  In case `mfc` is provided, the module will only keep its docstring, and each function
-  will be marked.
+  \[f\]unction and \[c\]lass apart (by adding `%%%BEGIN ...` markers in the output).
+  Classes will always keep their methods. In case `mfc` is provided, the module will only
+  keep its docstring, and each function will be marked.
 - `ASTDOCS_WITH_LINENOS` taking the `1`, `on`, `true` or `yes` values (anything else will
   be ignored) to show the line numbers of the object in the code source (to be processed
   later on by your favourite `Markdown` renderer). Look for the `%%%SOURCE` marker.
@@ -87,9 +89,12 @@ print(astdocs.render(...))
 
 - [`format_annotation()`](#astdocsformat_annotation)
 - [`format_docstring()`](#astdocsformat_docstring)
+- [`link_objects()`](#astdocslink_objects)
 - [`parse_classdef()`](#astdocsparse_classdef)
 - [`parse_functiondef()`](#astdocsparse_functiondef)
+- [`parse_import()`](#astdocsparse_import)
 - [`parse_tree()`](#astdocsparse_tree)
+- [`postrender()`](#astdocspostrender)
 - [`render_classdef()`](#astdocsrender_classdef)
 - [`render_functiondef()`](#astdocsrender_functiondef)
 - [`render_summary()`](#astdocsrender_summary)
@@ -150,6 +155,28 @@ output.
 - Overall naive and *very* opinionated (for my use).
 - Does not support list in parameter/return entries.
 
+### `astdocs.link_objects`
+
+```python
+link_objects(md: str) -> str:
+```
+
+Post-process the rendered `Markdown` content to add links to internal objects.
+
+This expects the input parameters/return values to be **correctly** formatted. One way
+to ensure this is to use a docstring checker (via IDE or else).
+
+**Parameters:**
+
+- `a`
+  \[`Union[`[`parse_classdef`](astdocs/parse_classdef.md)`, `[`render`](astdocs/render.md)`]`\]:
+  blabla
+- `md` \[`str`\]: `Markdown`-formatted content.
+
+**Returns:**
+
+- \[`str`\]: `Markdown`-formatted content, with links.
+
 ### `astdocs.parse_classdef`
 
 ```python
@@ -175,6 +202,19 @@ Parse a `def` statement.
 - `n` \[`typing.Union[ast.AsyncFunctionDef, ast.FunctionDef]`\]: The node to extract
   information from.
 
+### `astdocs.parse_import`
+
+```python
+parse_import(n: typing.Union[ast.Import, ast.ImportFrom]):
+```
+
+Parse `import ... [as ...]` and `from ... import ...` statements.
+
+**Parameters:**
+
+- `n` \[`typing.Union[ast.Import, ast.ImportFrom]`\]: The node to extract information
+  from.
+
 ### `astdocs.parse_tree`
 
 ```python
@@ -193,6 +233,22 @@ method for instance).
 **Parameters:**
 
 - \[`n`\]: Any type of node to extract information from.
+
+### `astdocs.postrender`
+
+```python
+postrender(func: typing.Callable) -> str:
+```
+
+Apply a post-rendering function on the output of the decorated function.
+
+**Parameters:**
+
+- `func` \[`typing.Callable`\]: The function to apply; should take a `str` as lone input.
+
+**Returns:**
+
+- \[`str`\]: `Markdown`-formatted content.
 
 ### `astdocs.render_classdef`
 
@@ -265,3 +321,5 @@ Run the whole pipeline (wrapper method).
 **Returns:**
 
 - \[`str`\]: `Markdown`-formatted content.
+
+**Decoration** via `@`.
