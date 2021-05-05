@@ -30,10 +30,9 @@ The behaviour of this little stunt can be modified via environment variables:
 - `ASTDOCS_FOLD_ARGS_AFTER` to fold long object (function/method) definition (many
   parameters). Defaults to 3.
 - `ASTDOCS_SPLIT_BY` taking the `m` (default), `mc` or `mfc`: split each \[m\]odule,
-  \[f\]unction and \[c\]lass apart (by adding `%%%BX` markers in the output, `X` being
-  either `F` -functions/methods- or `C` -classes). Classes will always keep their methods.
-  In case `mfc` is provided, the module will only keep its docstring, and each function
-  will be marked.
+  \[f\]unction and \[c\]lass apart (by adding `%%%BEGIN ...` markers in the output).
+  Classes will always keep their methods. In case `mfc` is provided, the module will only
+  keep its docstring, and each function will be marked.
 - `ASTDOCS_WITH_LINENOS` taking the `1`, `on`, `true` or `yes` values (anything else will
   be ignored) to show the line numbers of the object in the code source (to be processed
   later on by your favourite `Markdown` renderer). Look for the `%%%SOURCE` marker.
@@ -87,10 +86,11 @@ print(astdocs.render(...))
 
 - [`format_annotation()`](#astdocsformat_annotation)
 - [`format_docstring()`](#astdocsformat_docstring)
-- [`postrender()`](#astdocspostrender)
 - [`parse_classdef()`](#astdocsparse_classdef)
 - [`parse_functiondef()`](#astdocsparse_functiondef)
+- [`parse_import()`](#astdocsparse_import)
 - [`parse_tree()`](#astdocsparse_tree)
+- [`postrender()`](#astdocspostrender)
 - [`render_classdef()`](#astdocsrender_classdef)
 - [`render_functiondef()`](#astdocsrender_functiondef)
 - [`render_summary()`](#astdocsrender_summary)
@@ -155,22 +155,6 @@ output.
 - Overall naive and *very* opinionated (for my use).
 - Does not support list in parameter/return entries.
 
-### `astdocs.postrender`
-
-```python
-postrender(func: typing.Callable) -> str:
-```
-
-Apply a post-rendering function on the output of the decorated function.
-
-**Parameters:**
-
-- `func` \[`typing.Callable`\]: The function to apply; should take a `str` as lone input.
-
-**Returns:**
-
-- \[`str`\]: `Markdown`-formatted content.
-
 ### `astdocs.parse_classdef`
 
 ```python
@@ -196,6 +180,19 @@ Parse a `def` statement.
 - `n` \[`typing.Union[ast.AsyncFunctionDef, ast.FunctionDef]`\]: The node to extract
   information from.
 
+### `astdocs.parse_import`
+
+```python
+parse_import(n: typing.Union[ast.Import, ast.ImportFrom]):
+```
+
+Parse `import ... [as ...]` and `from ... import ...` statements.
+
+**Parameters:**
+
+- `n` \[`typing.Union[ast.Import, ast.ImportFrom]`\]: The node to extract information
+  from.
+
 ### `astdocs.parse_tree`
 
 ```python
@@ -214,6 +211,42 @@ method for instance).
 **Parameters:**
 
 - \[`n`\]: Any type of node to extract information from.
+
+### `astdocs.postrender`
+
+```python
+postrender(func: typing.Callable) -> str:
+```
+
+Apply a post-rendering function on the output of the decorated function.
+
+```python
+import astdocs
+
+def fix_that(md: str) -> str:
+    # process markdown
+    return md
+
+def fix_this(md: str) -> str:
+    # process markdown
+    return md
+
+@astodcs.postrender(fix_that)
+@astodcs.postrender(fix_this)
+def my_render(filepath: str) -> str:
+    return astodcs.render(filepath)
+```
+
+This can be used to streamline the linting of the output, or immediately convert to
+`HTML` for instance.
+
+**Parameters:**
+
+- `func` \[`typing.Callable`\]: The function to apply; should take a `str` as lone input.
+
+**Returns:**
+
+- \[`str`\]: `Markdown`-formatted content.
 
 ### `astdocs.render_classdef`
 
