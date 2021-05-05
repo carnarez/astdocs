@@ -314,7 +314,7 @@ Follow the defined `SUMMARY_TPL` template.
 render(filepath: str) -> str:
 ```
 
-Run the whole pipeline (wrapper method).
+Run the whole pipeline (useful wrapper function when this gets used as a module).
 
 **Parameters:**
 
