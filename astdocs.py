@@ -7,7 +7,7 @@ module with same name.)
 The only requirement is to use the standard library **exclusively** (even the
 [templating](https://docs.python.org/3/library/string.html#template-strings)), and keep
 it as lean as possible. Support for corner cases is scarse... for one, no
-class-in-function (or the opposite) or function-in-function.
+class-in-function (or the opposite), or function-in-function (considered private).
 
 The simplest way to check this is to run it on itself:
 
@@ -34,7 +34,7 @@ The behaviour of this little stunt can be modified via environment variables:
   each function will be marked.
 * `ASTDOCS_WITH_LINENOS` taking the `1`, `on`, `true` or `yes` values (anything else
   will be ignored) to show the line numbers of the object in the code source (to be
-  processed later on by your favourite `Markdown` renderer). Look for a `%%%SOURCE`
+  processed later on by your favourite `Markdown` renderer). Look for the `%%%SOURCE`
   marker.
 
 ```shell
@@ -70,7 +70,7 @@ def format_docstring(n):
 
 astdocs.format_docstring = format_docstring
 
-print(astdocs.render(filepath))
+print(astdocs.render(...))
 ```
 
 Attributes
@@ -82,7 +82,7 @@ FUNCTIONDEF_TPL : string.Template
 SUMMARY_TPL : string.Template
     Template to render the module summary.
 TPL : string.Template
-    Template to render the overall page (currently only governs order of objects)
+    Template to render the overall page (only governs order of objects in the output).
 """
 
 import ast
@@ -95,21 +95,21 @@ import typing
 CLASSDEF_TPL = string.Template(
     "\n$hashtags `$ancestry.$classname`"
     "\n"
-    "\n%%%SOURCE $path:$lineno:$endlineno"
-    "\n"
     "\n$classdocs"
     "\n"
     "\n$decoration"
     "\n"
+    "\n$funcnames"
+    "\n"
+    "\n%%%SOURCE $path:$lineno:$endlineno"
+    "\n"
     "\n$hashtags# Constructor"
     "\n"
     "\n```python"
-    "\n$classname($args)"
+    "\n$classname($params)"
     "\n```"
     "\n"
     "\n$constdocs"
-    "\n"
-    "\n$funcnames"
     "\n"
     "\n$funcdefs"
 )
@@ -118,7 +118,7 @@ FUNCTIONDEF_TPL = string.Template(
     "\n$hashtags `$ancestry.$funcname`"
     "\n"
     "\n```python"
-    "\n$funcname($args)$returns:"
+    "\n$funcname($params)$returns:"
     "\n```"
     "\n"
     "\n$funcdocs"
@@ -286,6 +286,13 @@ def parse_classdef(n: ast.ClassDef):
     n : ast.ClassDef
         The node to extract information from.
     """
+    # determine the title level
+    if "c" in _split_by:
+        ht = "#"
+    else:
+        ht = "###"
+
+    # parse decorator objects
     dc = [f'`{format_annotation(d, "@")}`' for d in n.decorator_list]
 
     if not n.name.startswith("_"):
@@ -295,7 +302,7 @@ def parse_classdef(n: ast.ClassDef):
             "classdocs": format_docstring(n),
             "decoration": "**Decoration:** via " + ", ".join(dc) + "." if dc else "",
             "endlineno": n.end_lineno,
-            "hashtags": "###",
+            "hashtags": ht,
             "lineno": n.lineno,
         }
 
@@ -308,6 +315,13 @@ def parse_functiondef(n: typing.Union[ast.AsyncFunctionDef, ast.FunctionDef]):
     n : typing.Union[ast.AsyncFunctionDef, ast.FunctionDef]
         The node to extract information from.
     """
+    # determine the title level
+    if "f" in _split_by:
+        ht = "#"
+    else:
+        ht = "###"
+
+    # parse decorator objects
     dc = [f'`{format_annotation(d, "@")}`' for d in n.decorator_list]
 
     # argument gets its own line if many parameters
@@ -316,19 +330,20 @@ def parse_functiondef(n: typing.Union[ast.AsyncFunctionDef, ast.FunctionDef]):
     else:
         prefix = ""
 
-    args = [
+    # parse arguments
+    params = [
         f'{prefix}{a.arg}{format_annotation(a.annotation, ": ")}' for a in n.args.args
     ]
 
     if not n.name.startswith("_"):
         _funcdefs[f"{n.ancestry}.{n.name}"] = {
             "ancestry": n.ancestry,
-            "args": ", ".join(args) + ("\n" if len(prefix) else ""),
-            "decoration": "**Decoration** via " + ", ".join(dc) + "." if dc else "",
+            "params": ", ".join(params) + ("\n" if len(prefix) else ""),
+            "decoration": ("**Decoration** via " + ", ".join(dc) + ".") if dc else "",
             "endlineno": n.end_lineno,
             "funcdocs": format_docstring(n),
             "funcname": n.name,
-            "hashtags": "###",
+            "hashtags": ht,
             "lineno": n.lineno,
             "returns": format_annotation(n.returns, " -> "),
         }
@@ -386,6 +401,8 @@ def render_classdef(filepath: str, name: str) -> str:
     : str
         `Markdown`-formatted description of the class object.
     """
+    ht = _classdefs[name]["hashtags"]
+
     # select related methods
     fn = [f for f in _funcdefs if f.startswith(f"{name}.")]
 
@@ -394,16 +411,16 @@ def render_classdef(filepath: str, name: str) -> str:
     if init in fn:
         fn.pop(fn.index(init))
         fd = _funcdefs.pop(init)
-        args = fd["args"]
-        docs = fd["constdocs"]
+        params = fd["params"]
+        docstr = fd["constdocs"]
     else:
-        args = ""
-        docs = ""
+        params = ""
+        docstr = ""
 
     # render all methods
     fd = []
     for f in fn:
-        _funcdefs[f]["hashtags"] += "##"
+        _funcdefs[f].update({"hashtags": f"{ht}##"})
         fd.append(render_functiondef(filepath, f))
 
     # methods bullet list
@@ -415,10 +432,10 @@ def render_classdef(filepath: str, name: str) -> str:
     # update the description of the object
     _classdefs[name].update(
         {
-            "args": args,
-            "constdocs": docs,
-            "funcdefs": "#### Methods\n\n" + "\n\n".join(fd) if fd else "",
-            "funcnames": "**Methods:**\n\n" + "\n".join(fn) if fn else "",
+            "params": params,
+            "constdocs": docstr,
+            "funcdefs": (ht + "# Methods\n\n" + "\n\n".join(fd)) if fd else "",
+            "funcnames": ("**Methods:**\n\n" + "\n".join(fn)) if fn else "",
             "path": filepath,
         }
     )
