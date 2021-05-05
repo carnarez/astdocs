@@ -188,7 +188,11 @@ Parse a `def` statement.
 parse_import(n: typing.Union[ast.Import, ast.ImportFrom]):
 ```
 
-Parse `import ... [as ...]` and `from ... import ...` statements.
+Parse `import ... [as ...]` and `from ... import ... [as ...]` statements.
+
+The content built by this function is currently *not* used. This latter is kept in case
+all the objects (and aliases) accessible within a module is required for a
+post-processing or else.
 
 **Parameters:**
 
