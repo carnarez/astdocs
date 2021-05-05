@@ -322,7 +322,7 @@ Follow the defined `SUMMARY_TPL` template.
 ### `astdocs.render`
 
 ```python
-render(filepath: str) -> str:
+render(filepath: str, remove_from_path: str) -> str:
 ```
 
 Run the whole pipeline (useful wrapper function when this gets used as a module).
@@ -330,6 +330,9 @@ Run the whole pipeline (useful wrapper function when this gets used as a module)
 **Parameters:**
 
 - `filepath` \[`str`\]: The path to the module to process.
+- `remove_from_path` \[`str`\]: Part of the path to be removed. If one is rendering the
+  content of a file buried deep down in a complicated folder tree *but* does not want this
+  to appear in the ancestry of the module.
 
 **Returns:**
 
