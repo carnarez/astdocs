@@ -28,10 +28,9 @@ The behaviour of this little stunt can be modified via environment variables:
 * `ASTDOCS_FOLD_ARGS_AFTER` to fold long object (function/method) definition (many
   parameters). Defaults to 3.
 * `ASTDOCS_SPLIT_BY` taking the `m` (default), `mc` or `mfc`: split each [m]odule,
-  [f]unction and [c]lass apart (by adding `%%%BX` markers in the output, `X` being
-  either `F` -functions/methods- or `C` -classes). Classes will always keep their
-  methods. In case `mfc` is provided, the module will only keep its docstring, and
-  each function will be marked.
+  [f]unction and [c]lass apart (by adding `%%%BEGIN ...` markers in the output).
+  Classes will always keep their methods. In case `mfc` is provided, the module will
+  only keep its docstring, and each function will be marked.
 * `ASTDOCS_WITH_LINENOS` taking the `1`, `on`, `true` or `yes` values (anything else
   will be ignored) to show the line numbers of the object in the code source (to be
   processed later on by your favourite `Markdown` renderer). Look for the `%%%SOURCE`
@@ -137,9 +136,9 @@ TPL = string.Template("$summary\n\n$functions\n\n$classes")
 # if requested, split things up with %%% markers
 _split_by = os.environ.get("ASTDOCS_SPLIT_BY", "m")
 if "c" in _split_by:
-    CLASSDEF_TPL.template = "%%%BC" + CLASSDEF_TPL.template
+    CLASSDEF_TPL.template = "%%%BEGIN CLASSDEF" + CLASSDEF_TPL.template
 if "f" in _split_by:
-    FUNCTIONDEF_TPL.template = "%%%BF" + FUNCTIONDEF_TPL.template
+    FUNCTIONDEF_TPL.template = "%%%BEGIN FUNCTIONDEF" + FUNCTIONDEF_TPL.template
 
 # if requested, add the line numbers to the source
 if os.environ.get("ASTDOCS_WITH_LINENOS", "off") not in ("1", "on", "true", "yes"):
@@ -153,6 +152,7 @@ if os.environ.get("ASTDOCS_WITH_LINENOS", "off") not in ("1", "on", "true", "yes
 
 _classdefs = {}
 _funcdefs = {}
+_objects = {}
 
 
 def format_annotation(a: typing.Union[ast.Attribute, ast.Name], char: str = "") -> str:
@@ -287,29 +287,6 @@ def format_docstring(
     return s.strip()
 
 
-def postrender(func: typing.Callable) -> str:
-    """Apply a post-rendering function on the output of the decorated function.
-
-    Parameters
-    ----------
-    func : typing.Callable
-        The function to apply; should take a `str` as lone input.
-
-    Returns
-    -------
-    : str
-        `Markdown`-formatted content.
-    """
-
-    def decorator(f):
-        def wrapper(*args, **kwargs):
-            return func(f(*args, **kwargs))
-
-        return wrapper
-
-    return decorator
-
-
 def parse_classdef(n: ast.ClassDef):
     """Parse a `class` statement.
 
@@ -337,6 +314,9 @@ def parse_classdef(n: ast.ClassDef):
             "hashtags": ht,
             "lineno": n.lineno,
         }
+
+        # save the object
+        _objects[n.name] = f"{n.ancestry}.{n.name}"
 
 
 def parse_functiondef(n: typing.Union[ast.AsyncFunctionDef, ast.FunctionDef]):
@@ -380,6 +360,36 @@ def parse_functiondef(n: typing.Union[ast.AsyncFunctionDef, ast.FunctionDef]):
             "returns": format_annotation(n.returns, " -> "),
         }
 
+        # save the object
+        _objects[n.name] = f"{n.ancestry}.{n.name}"
+
+
+def parse_import(n: typing.Union[ast.Import, ast.ImportFrom]):
+    """Parse `import ... [as ...]` and `from ... import ...` statements.
+
+    Parameters
+    ----------
+    n : typing.Union[ast.Import, ast.ImportFrom]
+        The node to extract information from.
+    """
+    if hasattr(n, "module"):
+        if n.module is None:
+            path = ".".join(n.ancestry.split(".")[:-1])
+        else:
+            path = n.module
+    else:
+        path = ""
+
+    if path.startswith(os.environ.get("ASTDOCS_LINK_FOR", sys.argv[1].split("/")[-1])):
+        for i in n.names:
+            if i.asname is not None:
+                objct = i.asname
+            else:
+                objct = i.name
+
+        # save the object
+        _objects[objct] = f"{path}.{i.name}".lstrip(".")
+
 
 def parse_tree(n: typing.Any):
     """Recursively traverse the nodes of the abstract syntax tree.
@@ -408,14 +418,61 @@ def parse_tree(n: typing.Any):
         else:
             c.ancestry = name
 
-        func = f'parse_{c.__class__.__name__.lower().replace("async", "")}'
+        func = "parse_" + (
+            c.__class__.__name__.lower()
+            .replace("async", "")
+            .replace("importfrom", "import")
+        )
         if func in globals():
-            globals()[func](c)
+            globals()[func](c)  # haha, nasty
 
         try:
             parse_tree(c)
         except AttributeError:
             continue
+
+
+def postrender(func: typing.Callable) -> str:
+    """Apply a post-rendering function on the output of the decorated function.
+
+    ```python
+    import astdocs
+
+    def fix_that(md: str) -> str:
+        # process markdown
+        return md
+
+    def fix_this(md: str) -> str:
+        # process markdown
+        return md
+
+    @astodcs.postrender(fix_that)
+    @astodcs.postrender(fix_this)
+    def my_render(filepath: str) -> str:
+        return astodcs.render(filepath)
+    ```
+
+    This can be used to streamline the linting of the output, or immediately convert to
+    `HTML` for instance.
+
+    Parameters
+    ----------
+    func : typing.Callable
+        The function to apply; should take a `str` as lone input.
+
+    Returns
+    -------
+    : str
+        `Markdown`-formatted content.
+    """
+
+    def decorator(f):
+        def wrapper(*args, **kwargs):
+            return func(f(*args, **kwargs))
+
+        return wrapper
+
+    return decorator
 
 
 def render_classdef(filepath: str, name: str) -> str:
