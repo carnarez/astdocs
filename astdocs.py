@@ -1,9 +1,11 @@
 r"""Extract and format documentation from `Python` code.
 
+*According to **my** standards.*
+
 In a few more words, parse the underlying Abstract Syntax Tree (AST) description. (See
 the [documentation](https://docs.python.org/3/library/ast.html) of the standard library
 module with same name.) It expects a relatively clean input (demonstrated in this very
-script) which forces me to keep my code somewhat well documented.
+script) which forces me to keep my code somewhat correctly documented.
 
 My only requirement was to use the `Python` standard library **exclusively** (even the
 [templating](https://docs.python.org/3/library/string.html#template-strings)) as it is
@@ -11,10 +13,10 @@ quite [overly] complete these day, and keep it as *lean* as possible. Support fo
 cases is scarse... for one, no class-in- nor function-in-function (which I consider
 private, in the `Python` sense).
 
-The simplest way to check this is to run it on itself:
+The simplest way to check by example is to run this script on itself:
 
 ```shell
-$ python astdocs.py astdocs.py
+$ python astdocs.py astdocs.py  # pipe it to your favourite markdown linter
 ```
 
 or even:
@@ -27,8 +29,10 @@ $ for f in $(find . -name "*.py"); do
 
 The behaviour of this little stunt can be modified via environment variables:
 
-* `ASTDOCS_FOLD_ARGS_AFTER` to fold long object (function/method) definition (many
-  parameters). Defaults to 88 characters, `black` default.
+* `ASTDOCS_FOLD_ARGS_AFTER` to fold long object (function/method) definitions (many
+  parameters). Defaults to 88 characters, [`black`](https://github.com/psf/black)
+  [recommended](https://www.youtube.com/watch?v=wf-BqAjZb8M&t=260s&ab_channel=PyCon2015)
+  default.
 * `ASTDOCS_SPLIT_BY` taking the `m` (default behaviour, all module content in one
   output), `mc` or `mfc` values: split each **m**odule, **f**unction and **c**lass apart
   (by adding `%%%BEGIN ...` markers in the output). Classes will always keep their
@@ -46,12 +50,12 @@ $ ASTDOCS_WITH_LINENOS=on python astdocs.py astdocs.py
 or to split marked sections:
 
 ```shell
-$ ASTDOCS_SPLIT_BY=mfc python astdocs.py module.py | csplit -qz - '/%%%B/' '{*}'
+$ ASTDOCS_SPLIT_BY=mfc python astdocs.py module.py | csplit -qz - '/%%%BEGIN/' '{*}'
 $ mv xx00 module.md
 $ mkdir module
 $ for f in xx??; do
 >   path=$(grep -m1 '^#' $f | sed -r 's|#{1,} \`(.*)\`|\1|g;s|\.|/|g')
->   grep -v '^%%%' $f > "$path.md"  # quotes are needed
+>   grep -v '^%%%' $f > "$path.md"  # double quotes are needed
 >   rm $f
 > done
 ```
@@ -450,16 +454,16 @@ def postrender(func: typing.Callable) -> str:
     ```python
     import astdocs
 
-    def fix_that(md: str) -> str:
+    def extend_that(md: str) -> str:
         # process markdown
         return string
 
-    def fix_this(md: str) -> str:
+    def apply_this(md: str) -> str:
         # process markdown
         return string
 
-    @astodcs.postrender(fix_that)
-    @astodcs.postrender(fix_this)
+    @astdocs.postrender(extend_that)
+    @astdocs.postrender(apply_this)
     def render(filepath: str) -> str:  # simple wrapper function
         return astodcs.render(filepath)
 
@@ -673,8 +677,10 @@ def render(filepath: str) -> str:
     }
 
     s = TPL.substitute(sub).strip()
+
+    # cleanup (trailing line breaks
     s = re.sub(r"\n{3,}", "\n\n", s)
-    s = re.sub(r"\n{2,}%%%B", "\n%%%B", s)
+    s = re.sub(r"\n{2,}%%%BEGIN", "\n%%%BEGIN", s)
 
     return s
 
