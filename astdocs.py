@@ -176,6 +176,10 @@ def format_annotation(a: typing.Union[ast.Attribute, ast.Name], char: str = "") 
     -------
     : str
         The formatted annotation.
+
+    Known problems
+    --------------
+    * Does not support `lambda` functions.
     """
     s = ""
 
@@ -221,6 +225,11 @@ def format_annotation(a: typing.Union[ast.Attribute, ast.Name], char: str = "") 
             s += f'[{", ".join([format_annotation(a_) for a_ in a.slice.value.elts])}]'
         else:
             s += format_annotation(a.slice.value)
+
+    # another complicate case: decorator with arguments
+    if hasattr(a, "func"):
+        s += format_annotation(a.func)
+        s += f'({", ".join([format_annotation(a_) for a_ in a.args])}))'
 
     return s
 
@@ -276,6 +285,29 @@ def format_docstring(
     s = re.sub(r"\n: ([A-Za-z0-9_\[\],\. ]+)\n {2,}(.*)", r"\n* [`\1`]: \2", s)
 
     return s.strip()
+
+
+def postrender(func: typing.Callable) -> str:
+    """Apply a post-rendering function on the output of the decorated function.
+
+    Parameters
+    ----------
+    func : typing.Callable
+        The function to apply; should take a `str` as lone input.
+
+    Returns
+    -------
+    : str
+        `Markdown`-formatted content.
+    """
+
+    def decorator(f):
+        def wrapper(*args, **kwargs):
+            return func(f(*args, **kwargs))
+
+        return wrapper
+
+    return decorator
 
 
 def parse_classdef(n: ast.ClassDef):
