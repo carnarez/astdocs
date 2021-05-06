@@ -2,7 +2,7 @@
 
 Extract and format documentation from `Python` code.
 
-*According to **my** standards.*
+> *According to **my** standards.*
 
 In a few more words, parse the underlying Abstract Syntax Tree (AST) description. (See
 the [documentation](https://docs.python.org/3/library/ast.html) of the standard library
@@ -32,6 +32,8 @@ $ for f in $(find . -name "*.py"); do
 
 The behaviour of this little stunt can be modified via environment variables:
 
+- `ASTDOCS_DRY_RUN` to parse and render everything in the background, but only show the
+  list of the encountered objects.
 - `ASTDOCS_FOLD_ARGS_AFTER` to fold long object (function/method) definitions (many
   parameters). Defaults to 88 characters, [`black`](https://github.com/psf/black)
   [recommended](https://www.youtube.com/watch?v=wf-BqAjZb8M&t=260s&ab_channel=PyCon2015)
@@ -79,6 +81,7 @@ $ for f in xx??; do
 
 - [`format_annotation()`](#astdocsformat_annotation)
 - [`format_docstring()`](#astdocsformat_docstring)
+- [`list_objects()`](#astdocslist_objects)
 - [`parse_classdef()`](#astdocsparse_classdef)
 - [`parse_functiondef()`](#astdocsparse_functiondef)
 - [`parse_import()`](#astdocsparse_import)
@@ -174,6 +177,21 @@ print(astdocs.render(...))
 
 - Overall naive and *very* opinionated (again, for *my* use).
 - Does not support list in parameter/return entries.
+
+### `astdocs.list_objects`
+
+```python
+list_objects() -> str:
+```
+
+List all parsed objects from a **lone module** (does not work recursively).
+
+This is intended to *test* the docstring parsing, and simply look at the structure of a
+module. Nothing more.
+
+**Returns:**
+
+- \[`str`\]: One per line.
 
 ### `astdocs.parse_classdef`
 
