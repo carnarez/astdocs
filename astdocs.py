@@ -573,11 +573,14 @@ def render_classdef(filepath: str, name: str) -> str:
             fr.append(render_functiondef(filepath, f))
 
     # methods bullet list
+    # clobber the previous list (in case we need to take the private method out)
+    fn_ = []
     for i, f in enumerate(fn):
         n = f.split(".")[-1]
         if not n.startswith("_") or _show_private:
             link = f.replace(".", "").lower()  # github syntax
-            fn[i] = f"* [`{n}()`](#{link})"
+            fn_.append(f"* [`{n}()`](#{link})")
+    fn = fn_
 
     # update the description of the object
     _classdefs[name].update(
