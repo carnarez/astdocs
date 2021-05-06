@@ -81,7 +81,6 @@ $ for f in xx??; do
 
 - [`format_annotation()`](#astdocsformat_annotation)
 - [`format_docstring()`](#astdocsformat_docstring)
-- [`list_objects()`](#astdocslist_objects)
 - [`parse_classdef()`](#astdocsparse_classdef)
 - [`parse_functiondef()`](#astdocsparse_functiondef)
 - [`parse_import()`](#astdocsparse_import)
@@ -92,6 +91,7 @@ $ for f in xx??; do
 - [`render_module()`](#astdocsrender_module)
 - [`render()`](#astdocsrender)
 - [`render_recursively()`](#astdocsrender_recursively)
+- [`list_objects()`](#astdocslist_objects)
 
 ## Functions
 
@@ -177,21 +177,6 @@ print(astdocs.render(...))
 
 - Overall naive and *very* opinionated (again, for *my* use).
 - Does not support list in parameter/return entries.
-
-### `astdocs.list_objects`
-
-```python
-list_objects() -> str:
-```
-
-List all parsed objects from a **lone module** (does not work recursively).
-
-This is intended to *test* the docstring parsing, and simply look at the structure of a
-module. Nothing more.
-
-**Returns:**
-
-- \[`str`\]: One per line.
 
 ### `astdocs.parse_classdef`
 
@@ -405,3 +390,19 @@ for line in astdocs.render_recursively(...).split("\n"):
         output.write(f"{line}\n")
 output.close()
 ```
+
+### `astdocs.list_objects`
+
+```python
+list_objects() -> str:
+```
+
+List all parsed objects from a **lone module** (does not work recursively).
+
+Only invoked when the `ASTDOCS_DRY_RUN` environment variable is set to `1`, `on`, `true`
+or `yes`. This is intended to *test* the docstring parsing, and simply look at the
+structure of a module. Nothing more.
+
+**Returns:**
+
+- \[`str`\]: One per line.
