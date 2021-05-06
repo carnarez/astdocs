@@ -163,7 +163,10 @@ _funcdefs = {}
 _objects = {}
 
 
-def format_annotation(a: typing.Union[ast.Attribute, ast.Name], char: str = "") -> str:
+def format_annotation(
+    a: typing.Union[ast.Attribute, ast.Constant, ast.List, ast.Name, ast.Subscript],
+    char: str = "",
+) -> str:
     """Format an annotation (object type or decorator).
 
     Dive as deep as necessary within the children nodes until reaching the name of the
@@ -174,7 +177,7 @@ def format_annotation(a: typing.Union[ast.Attribute, ast.Name], char: str = "") 
 
     Parameters
     ----------
-    a : typing.Union[ast.Attribute, ast.Name]
+    a : typing.Union[ast.Attribute, ast.Constant, ast.List, ast.Name, ast.Subscript]
         The starting node to extract annotation information from.
     char : str
         The additional character to place at the beginning of the annotation; `"@"` for
@@ -694,10 +697,9 @@ def render(filepath: str, remove_from_path: str = "") -> str:
     with open(filepath) as f:
 
         # module ancestry
-        m = filepath
         if remove_from_path:
-            m = m.replace(remove_from_path, "")
-        m = re.sub(r"\.py$", "", m.replace("/", "."))
+            filepath = filepath.replace(remove_from_path, "")
+        m = re.sub(r"\.py$", "", filepath.replace("/", "."))
 
         # traverse the ast
         n = ast.parse(f.read())
