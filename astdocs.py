@@ -291,6 +291,14 @@ def format_docstring(
     """
     s = ast.get_docstring(n) or ""
 
+    # extract code blocks by replacing them by a placeholder
+    blocks = []
+    patterns = [r"(\`\`\`\`[^\`\`\`\`]*\`\`\`\`)", r"(\`\`\`[^\`\`\`]*\`\`\`)"]
+    for p in patterns:
+        for i, m in enumerate(re.finditer(p, s)):
+            blocks.append(m.group(1))
+            s = s.replace(m.group(1), f"%%%BLOCK{i}", 1)
+
     # remove trailing spaces
     s = re.sub(r" {1,}\n", r"\n", s)
 
@@ -312,6 +320,10 @@ def format_docstring(
 
     # rework list of types/descriptions (return values)
     s = re.sub(r"\n: ([A-Za-z0-9_\[\],\. ]+)\n {2,}(.*)", r"\n* [`\1`]: \2", s)
+
+    # put the code blocks back in
+    for i, b in enumerate(blocks):
+        s = s.replace(f"%%%BLOCK{i}", b)
 
     return s.strip()
 
@@ -754,13 +766,13 @@ def render_recursively(path: str, remove_from_path: str = "") -> str:
     ```python
     import astdocs
 
-    for line in astdocs.render_recursively(src).split("\n"):
+    for line in astdocs.render_recursively(...).split("\n"):
         if line.startswith("%%%BEGIN"):
             try:
                 output.close()
             except NameError:
                 pass
-            filepath = f'{book}/{line.split()[2].replace(".", "/")}.md'
+            filepath = f'{line.split()[2].replace(".", "/")}.md'
             folder = "/".join(filepath.split("/")[:-1])
             os.makedirs(folder, exist_ok=True)
             output = open(filepath, "w")

@@ -370,12 +370,13 @@ Run pipeline on each `Python` module found in a folder and its subfolders.
 ```python
 import astdocs
 
-for line in astdocs.render_recursively(src).split("\n"):
+for line in astdocs.render_recursively(...).split("\n"):
     if line.startswith("%%%BEGIN"):
         try:
             output.close()
         except NameError:
-* [`            pass`]: filepath = f'{book}/{line.split()[2].replace(".", "/")}.md'
+            pass
+        filepath = f'{line.split()[2].replace(".", "/")}.md'
         folder = "/".join(filepath.split("/")[:-1])
         os.makedirs(folder, exist_ok=True)
         output = open(filepath, "w")
