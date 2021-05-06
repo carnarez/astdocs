@@ -1,5 +1,3 @@
-%%%BEGIN MODULE astdocs
-
 # Module `astdocs`
 
 Extract and format documentation from `Python` code.
@@ -60,8 +58,8 @@ $ ASTDOCS_SPLIT_BY=mc python astdocs.py module.py | csplit -qz - '/%%%BEGIN/' '{
 $ mv xx00 module.md
 $ mkdir module
 $ for f in xx??; do
->   path=$(grep -m1 '^#' $f | sed -r 's|#{1,} \`(.*)\`|\1|g;s|\.|/|g')
->   grep -v '^%%%' $f > "$path.md"  # double quotes are needed
+>   path=$(grep -m1 '^%%%BEGIN' $f | sed -r 's|%%%[.*] [.*] (.*)|\1|g;s|\.|/|g')
+>   grep -v '^%%%BEGIN' $f > "$path.md"  # double quotes are needed
 >   rm $f
 > done
 ```
