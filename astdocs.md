@@ -95,7 +95,10 @@ $ for f in xx??; do
 ### `astdocs.format_annotation`
 
 ```python
-format_annotation(a: typing.Union[ast.Attribute, ast.Name], char: str) -> str:
+format_annotation(
+    a: typing.Union[ast.Attribute, ast.Constant, ast.List, ast.Name, ast.Subscript], 
+    char: str
+) -> str:
 ```
 
 Format an annotation (object type or decorator).
@@ -108,8 +111,8 @@ See the code itself for some line-by-line documentation.
 
 **Parameters:**
 
-- `a` \[`typing.Union[ast.Attribute, ast.Name]`\]: The starting node to extract annotation
-  information from.
+- `a` \[`typing.Union[ast.Attribute, ast.Constant, ast.List, ast.Name, ast.Subscript]`\]:
+  The starting node to extract annotation information from.
 - `char` \[`str`\]: The additional character to place at the beginning of the annotation;
   `"@"` for a decorator, `" -> "` for a return type, *etc.* (defaults to empty string).
 
