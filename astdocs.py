@@ -58,8 +58,8 @@ $ ASTDOCS_SPLIT_BY=mc python astdocs.py module.py | csplit -qz - '/%%%BEGIN/' '{
 $ mv xx00 module.md
 $ mkdir module
 $ for f in xx??; do
->   path=$(grep -m1 '^#' $f | sed -r 's|#{1,} \`(.*)\`|\1|g;s|\.|/|g')
->   grep -v '^%%%' $f > "$path.md"  # double quotes are needed
+>   path=$(grep -m1 '^%%%BEGIN' $f | sed -r 's|%%%[.*] [.*] (.*)|\1|g;s|\.|/|g')
+>   grep -v '^%%%BEGIN' $f > "$path.md"  # double quotes are needed
 >   rm $f
 > done
 ```
@@ -134,7 +134,7 @@ _show_private = (
 )
 
 # if requested, split things up with %%% markers
-_split_by = os.environ.get("ASTDOCS_SPLIT_BY", "m")
+_split_by = os.environ.get("ASTDOCS_SPLIT_BY", "")
 if "c" in _split_by:
     TPL_CLASSDEF.template = (
         f"%%%BEGIN CLASSDEF $ancestry.$classname{TPL_CLASSDEF.template}"
@@ -751,7 +751,7 @@ def render_recursively(path: str, remove_from_path: str = "") -> str:
     # render each module
     for filepath in sorted(glob.glob(f"{path}/**/*.py", recursive=True)):
         name = filepath.split("/")[-1]
-        if not name.startswith("_") or _show_private:
+        if not name.startswith("_") or _show_private or name == "__init__.py":
             mr.append(render(filepath, remove_from_path))
 
     s = "\n\n".join(mr)
