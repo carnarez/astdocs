@@ -51,7 +51,8 @@ The behaviour of this little stunt can be modified via environment variables:
 $ ASTDOCS_WITH_LINENOS=on python astdocs.py astdocs.py
 ```
 
-or to split marked sections:
+or to split marked sections into separate files (in `bash` below; see also the `Python`
+example in the docstring of the `astdocs.render_recursively()` function):
 
 ```shell
 $ ASTDOCS_SPLIT_BY=mc python astdocs.py module.py | csplit -qz - '/%%%BEGIN/' '{*}'
@@ -59,6 +60,7 @@ $ mv xx00 module.md
 $ mkdir module
 $ for f in xx??; do
 >   path=$(grep -m1 '^%%%BEGIN' $f | sed -r 's|%%%[.*] [.*] (.*)|\1|g;s|\.|/|g')
+>   mkdir -p $(dirname $path)
 >   grep -v '^%%%BEGIN' $f > "$path.md"  # double quotes are needed
 >   rm $f
 > done
@@ -362,3 +364,22 @@ Run pipeline on each `Python` module found in a folder and its subfolders.
 **Returns:**
 
 - \[`str`\]: `Markdown`-formatted content for all `Python` modules within the path.
+
+**Example:**
+
+```python
+import astdocs
+
+for line in astdocs.render_recursively(src).split("\n"):
+    if line.startswith("%%%BEGIN"):
+        try:
+            output.close()
+        except NameError:
+* [`            pass`]: filepath = f'{book}/{line.split()[2].replace(".", "/")}.md'
+        folder = "/".join(filepath.split("/")[:-1])
+        os.makedirs(folder, exist_ok=True)
+        output = open(filepath, "w")
+    else:
+        output.write(f"{line}\n")
+output.close()
+```
