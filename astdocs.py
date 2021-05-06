@@ -697,7 +697,7 @@ def render(filepath: str, remove_from_path: str = "") -> str:
         m = filepath
         if remove_from_path:
             m = m.replace(remove_from_path, "")
-        m = m.replace("/", ".").replace(".py", "")
+        m = re.sub(r"\.py$", "", m.replace("/", "."))
 
         # traverse the ast
         n = ast.parse(f.read())
