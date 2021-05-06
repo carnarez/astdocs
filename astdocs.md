@@ -25,15 +25,11 @@ $ python astdocs.py astdocs.py  # pipe it to your favourite markdown linter
 or even:
 
 ```shell
-$ for f in $(find . -name "*.py"); do
->   python astdocs.py $f > ${f/py/md}
-> done
+$ python astdocs.py .  # recursively look for *.py files in the current directory
 ```
 
 The behaviour of this little stunt can be modified via environment variables:
 
-- `ASTDOCS_DRY_RUN` to parse and render everything in the background, but only show the
-  list of the encountered objects.
 - `ASTDOCS_FOLD_ARGS_AFTER` to fold long object (function/method) definitions (many
   parameters). Defaults to 88 characters, [`black`](https://github.com/psf/black)
   [recommended](https://www.youtube.com/watch?v=wf-BqAjZb8M&t=260s&ab_channel=PyCon2015)
@@ -53,7 +49,7 @@ The behaviour of this little stunt can be modified via environment variables:
 $ ASTDOCS_WITH_LINENOS=on python astdocs.py astdocs.py
 ```
 
-or to split marked sections into separate files (in `bash` below; see also the `Python`
+or to split marked sections into separate files (in `Bash` below; see also the `Python`
 example in the docstring of the `astdocs.render_recursively()` function):
 
 ```shell
@@ -91,7 +87,6 @@ $ for f in xx??; do
 - [`render_module()`](#astdocsrender_module)
 - [`render()`](#astdocsrender)
 - [`render_recursively()`](#astdocsrender_recursively)
-- [`list_objects()`](#astdocslist_objects)
 
 ## Functions
 
@@ -154,7 +149,7 @@ output.
 
 **Notes:**
 
-If the regular expression solution presented here (which works for *my* needs) does not
+If the regular expression solution used here (which works for *my* needs) does not
 fulfill your standards, it is pretty easy to clobber it:
 
 ```python
@@ -165,7 +160,7 @@ def my_docstring_parser(docstring: str) -> str:
     # process docstring
     return string
 
-def format_docstring(n):
+def format_docstring(n: ast.*) -> str:  # simple wrapper function
     return my_docstring_parser(ast.get_docstring(n))
 
 astdocs.format_docstring = format_docstring
@@ -390,19 +385,3 @@ for line in astdocs.render_recursively(...).split("\n"):
         output.write(f"{line}\n")
 output.close()
 ```
-
-### `astdocs.list_objects`
-
-```python
-list_objects() -> str:
-```
-
-List all parsed objects from a **lone module** (does not work recursively).
-
-Only invoked when the `ASTDOCS_DRY_RUN` environment variable is set to `1`, `on`, `true`
-or `yes`. This is intended to *test* the docstring parsing, and simply look at the
-structure of a module. Nothing more.
-
-**Returns:**
-
-- \[`str`\]: One per line.
