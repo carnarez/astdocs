@@ -5,7 +5,8 @@ r"""Extract and format documentation from `Python` code.
 In a few more words, parse the underlying Abstract Syntax Tree (AST) description. (See
 the [documentation](https://docs.python.org/3/library/ast.html) of the standard library
 module with same name.) It expects a relatively clean input (demonstrated in this very
-script) which forces me to keep my code somewhat correctly documented.
+script) which forces me to keep my code somewhat correctly documented and without fancy
+syntax.
 
 My only requirement was to use the `Python` standard library **exclusively** (even the
 [templating](https://docs.python.org/3/library/string.html#template-strings)) as it is
@@ -33,11 +34,11 @@ The behaviour of this little stunt can be modified via environment variables:
   parameters). Defaults to 88 characters, [`black`](https://github.com/psf/black)
   [recommended](https://www.youtube.com/watch?v=wf-BqAjZb8M&t=260s&ab_channel=PyCon2015)
   default.
-* `ASTDOCS_SPLIT_BY` taking the `m` (default behaviour, all module content in one
-  output), `mc` or `mfc` values: split each **m**odule, **f**unction and **c**lass apart
-  (by adding `%%%BEGIN ...` markers in the output). Classes will always keep their
-  methods. In case `mfc` is provided, the module will only keep its docstring, and each
-  function will be marked.
+* `ASTDOCS_SPLIT_BY` taking the `m`, `mc`, `mfc` or an empty value (default, all
+  rendered content in one output): split each **m**odule, **f**unction and/or **c**lass
+  (by adding `%%%BEGIN ...` markers). Classes will always keep their methods. In case
+  `mfc` is provided, the module will only keep its docstring, and each function will be
+  marked.
 * `ASTDOCS_WITH_LINENOS` taking the `1`, `on`, `true` or `yes` values (anything else
   will be ignored) to show the line numbers of the object in the code source (to be
   processed later on by your favourite `Markdown` renderer). Look for the `%%%SOURCE`
@@ -50,7 +51,7 @@ $ ASTDOCS_WITH_LINENOS=on python astdocs.py astdocs.py
 or to split marked sections:
 
 ```shell
-$ ASTDOCS_SPLIT_BY=mfc python astdocs.py module.py | csplit -qz - '/%%%BEGIN/' '{*}'
+$ ASTDOCS_SPLIT_BY=mc python astdocs.py module.py | csplit -qz - '/%%%BEGIN/' '{*}'
 $ mv xx00 module.md
 $ mkdir module
 $ for f in xx??; do
@@ -81,24 +82,25 @@ print(astdocs.render(...))
 
 Attributes
 ----------
-CLASSDEF_TPL : string.Template
+TPL_CLASSDEF : string.Template
     Template to render `class` objects.
-FUNCTIONDEF_TPL : string.Template
+TPL_FUNCTIONDEF : string.Template
     Template to render `def` objects (async or not).
-SUMMARY_TPL : string.Template
+TPL_MODULE : string.Template
     Template to render the module summary.
 TPL : string.Template
     Template to render the overall page (only governs order of objects in the output).
 """
 
 import ast
+import glob
 import os
 import re
 import string
 import sys
 import typing
 
-CLASSDEF_TPL = string.Template(
+TPL_CLASSDEF = string.Template(
     "\n$hashtags `$ancestry.$classname`"
     "\n"
     "\n$classdocs"
@@ -120,7 +122,7 @@ CLASSDEF_TPL = string.Template(
     "\n$funcdefs"
 )
 
-FUNCTIONDEF_TPL = string.Template(
+TPL_FUNCTIONDEF = string.Template(
     "\n$hashtags `$ancestry.$funcname`"
     "\n"
     "\n```python"
@@ -134,30 +136,32 @@ FUNCTIONDEF_TPL = string.Template(
     "\n%%%SOURCE $path:$lineno:$endlineno"
 )
 
-SUMMARY_TPL = string.Template(
+TPL_MODULE = string.Template(
     "\n# Module `$module`\n\n$docstring\n\n$funcnames\n\n$classnames"
 )
 
-TPL = string.Template("$summary\n\n$functions\n\n$classes")
+TPL = string.Template("$module\n\n$functions\n\n$classes")
 
 # if requested, split things up with %%% markers
 _split_by = os.environ.get("ASTDOCS_SPLIT_BY", "m")
 if "c" in _split_by:
-    CLASSDEF_TPL.template = (
-        f"%%%BEGIN CLASSDEF $ancestry.$classname\n{CLASSDEF_TPL.template}"
+    TPL_CLASSDEF.template = (
+        f"%%%BEGIN CLASSDEF $ancestry.$classname{TPL_CLASSDEF.template}"
     )
 if "f" in _split_by:
-    FUNCTIONDEF_TPL.template = (
-        f"%%%BEGIN FUNCTIONDEF $ancestry.$funcname\n{FUNCTIONDEF_TPL.template}"
+    TPL_FUNCTIONDEF.template = (
+        f"%%%BEGIN FUNCTIONDEF $ancestry.$funcname{TPL_FUNCTIONDEF.template}"
     )
+if "m" in _split_by:
+    TPL_MODULE.template = f"%%%BEGIN MODULE $module{TPL_MODULE.template}"
 
 # if requested, add the line numbers to the source
 _with_linenos = os.environ.get("ASTDOCS_WITH_LINENOS", "off")
 if _with_linenos not in ("1", "on", "true", "yes"):
-    CLASSDEF_TPL.template = CLASSDEF_TPL.template.replace(
+    TPL_CLASSDEF.template = TPL_CLASSDEF.template.replace(
         "\n\n%%%SOURCE $path:$lineno:$endlineno", ""
     )
-    FUNCTIONDEF_TPL.template = FUNCTIONDEF_TPL.template.replace(
+    TPL_FUNCTIONDEF.template = TPL_FUNCTIONDEF.template.replace(
         "\n\n%%%SOURCE $path:$lineno:$endlineno", ""
     )
 
@@ -498,7 +502,7 @@ def postrender(func: typing.Callable) -> str:
 
 
 def render_classdef(filepath: str, name: str) -> str:
-    """Render a `class` object, according to the defined `CLASSDEF_TPL` template.
+    """Render a `class` object, according to the defined `TPL_CLASSDEF` template.
 
     Parameters
     ----------
@@ -555,13 +559,13 @@ def render_classdef(filepath: str, name: str) -> str:
         }
     )
 
-    return CLASSDEF_TPL.substitute(_classdefs[name]).strip()
+    return TPL_CLASSDEF.substitute(_classdefs[name]).strip()
 
 
 def render_functiondef(filepath: str, name: str) -> str:
     """Render a `def` object (function or method).
 
-    Follow the defined `FUNCTIONDEF_TPL` template.
+    Follow the defined `TPL_FUNCTIONDEF` template.
 
     Parameters
     ----------
@@ -578,13 +582,13 @@ def render_functiondef(filepath: str, name: str) -> str:
     # update the description of the object
     _funcdefs[name].update({"path": filepath})
 
-    return FUNCTIONDEF_TPL.substitute(_funcdefs[name]).strip()
+    return TPL_FUNCTIONDEF.substitute(_funcdefs[name]).strip()
 
 
-def render_summary(name: str, docstring: str = "") -> str:
+def render_module(name: str, docstring: str = "") -> str:
     """Render a module summary as a `Markdown` file.
 
-    Follow the defined `SUMMARY_TPL` template.
+    Follow the defined `TPL_MODULE` template.
 
     Parameters
     ----------
@@ -627,7 +631,7 @@ def render_summary(name: str, docstring: str = "") -> str:
     if "f" in _split_by:
         sub["funcnames"] = ""
 
-    return SUMMARY_TPL.substitute(sub).strip()
+    return TPL_MODULE.substitute(sub).strip()
 
 
 def render(filepath: str, remove_from_path: str = "") -> str:
@@ -647,6 +651,16 @@ def render(filepath: str, remove_from_path: str = "") -> str:
     : str
         `Markdown`-formatted content.
     """
+    global _classdefs
+    global _funcdefs
+    global _objects
+
+    # make sure to flush the [global] objects in case multiple are rendered
+    # it could be interesting to keep track of all objects over a whole package
+    _classdefs = {}
+    _funcdefs = {}
+    _objects = {}
+
     with open(filepath) as f:
 
         # module ancestry
@@ -686,13 +700,42 @@ def render(filepath: str, remove_from_path: str = "") -> str:
                 "\n\n".join(fr) if fr else "",
             ]
         ),
-        "summary": render_summary(n.name, format_docstring(n)),
+        "module": render_module(n.name, format_docstring(n)),
     }
 
     s = TPL.substitute(sub).strip()
 
-    # cleanup (trailing line breaks
+    # cleanup (trailing line breaks)
     s = re.sub(r"\n{3,}", "\n\n", s)
+    s = re.sub(r"\n{2,}%%%BEGIN", "\n%%%BEGIN", s)
+
+    return s
+
+
+def render_recursively(path: str, remove_from_path: str = "") -> str:
+    """Run pipeline on each `Python` module found in a folder and its subfolders.
+
+    Parameters
+    ----------
+    path : str
+        The path to the folder to process.
+    remove_from_path : str
+        Part of the path to be removed.
+
+    Returns
+    -------
+    : str
+        `Markdown`-formatted content for all `Python` modules within the path.
+    """
+    # render each module
+    s = "\n\n".join(
+        [
+            render(filepath, remove_from_path)
+            for filepath in sorted(glob.glob(f"{path}/**/*.py", recursive=True))
+        ]
+    )
+
+    # cleanup (trailing line breaks)
     s = re.sub(r"\n{2,}%%%BEGIN", "\n%%%BEGIN", s)
 
     return s
@@ -704,4 +747,10 @@ if __name__ == "__main__":
             "Too many arguments!"
             f'Please read the docs via `pydoc {sys.argv[0].replace(".py", "")}` or so.'
         )
-    print(render(sys.argv[1]))
+
+    try:
+        md = render(sys.argv[1])
+    except IsADirectoryError:
+        md = render_recursively(sys.argv[1])
+
+    print(md)

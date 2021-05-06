@@ -1,3 +1,5 @@
+%%%BEGIN MODULE astdocs
+
 # Module `astdocs`
 
 Extract and format documentation from `Python` code.
@@ -7,7 +9,8 @@ Extract and format documentation from `Python` code.
 In a few more words, parse the underlying Abstract Syntax Tree (AST) description. (See
 the [documentation](https://docs.python.org/3/library/ast.html) of the standard library
 module with same name.) It expects a relatively clean input (demonstrated in this very
-script) which forces me to keep my code somewhat correctly documented.
+script) which forces me to keep my code somewhat correctly documented and without fancy
+syntax.
 
 My only requirement was to use the `Python` standard library **exclusively** (even the
 [templating](https://docs.python.org/3/library/string.html#template-strings)) as it is
@@ -35,11 +38,10 @@ The behaviour of this little stunt can be modified via environment variables:
   parameters). Defaults to 88 characters, [`black`](https://github.com/psf/black)
   [recommended](https://www.youtube.com/watch?v=wf-BqAjZb8M&t=260s&ab_channel=PyCon2015)
   default.
-- `ASTDOCS_SPLIT_BY` taking the `m` (default behaviour, all module content in one output),
-  `mc` or `mfc` values: split each **m**odule, **f**unction and **c**lass apart (by adding
-  `%%%BEGIN ...` markers in the output). Classes will always keep their methods. In case
-  `mfc` is provided, the module will only keep its docstring, and each function will be
-  marked.
+- `ASTDOCS_SPLIT_BY` taking the `m`, `mc`, `mfc` or an empty value (default, all rendered
+  content in one output): split each **m**odule, **f**unction and/or **c**lass (by adding
+  `%%%BEGIN ...` markers). Classes will always keep their methods. In case `mfc` is
+  provided, the module will only keep its docstring, and each function will be marked.
 - `ASTDOCS_WITH_LINENOS` taking the `1`, `on`, `true` or `yes` values (anything else will
   be ignored) to show the line numbers of the object in the code source (to be processed
   later on by your favourite `Markdown` renderer). Look for the `%%%SOURCE` markers.
@@ -51,7 +53,7 @@ $ ASTDOCS_WITH_LINENOS=on python astdocs.py astdocs.py
 or to split marked sections:
 
 ```shell
-$ ASTDOCS_SPLIT_BY=mfc python astdocs.py module.py | csplit -qz - '/%%%BEGIN/' '{*}'
+$ ASTDOCS_SPLIT_BY=mc python astdocs.py module.py | csplit -qz - '/%%%BEGIN/' '{*}'
 $ mv xx00 module.md
 $ mkdir module
 $ for f in xx??; do
@@ -82,10 +84,10 @@ print(astdocs.render(...))
 
 **Attributes:**
 
-- `CLASSDEF_TPL` \[`string.Template`\]: Template to render `class` objects.
-- `FUNCTIONDEF_TPL` \[`string.Template`\]: Template to render `def` objects (async or
+- `TPL_CLASSDEF` \[`string.Template`\]: Template to render `class` objects.
+- `TPL_FUNCTIONDEF` \[`string.Template`\]: Template to render `def` objects (async or
   not).
-- `SUMMARY_TPL` \[`string.Template`\]: Template to render the module summary.
+- `TPL_MODULE` \[`string.Template`\]: Template to render the module summary.
 - `TPL` \[`string.Template`\]: Template to render the overall page (only governs order of
   objects in the output).
 
@@ -100,8 +102,9 @@ print(astdocs.render(...))
 - [`postrender()`](#astdocspostrender)
 - [`render_classdef()`](#astdocsrender_classdef)
 - [`render_functiondef()`](#astdocsrender_functiondef)
-- [`render_summary()`](#astdocsrender_summary)
+- [`render_module()`](#astdocsrender_module)
 - [`render()`](#astdocsrender)
+- [`render_recursively()`](#astdocsrender_recursively)
 
 ## Functions
 
@@ -269,7 +272,7 @@ This can be used to streamline the linting of the output, or immediately convert
 render_classdef(filepath: str, name: str) -> str:
 ```
 
-Render a `class` object, according to the defined `CLASSDEF_TPL` template.
+Render a `class` object, according to the defined `TPL_CLASSDEF` template.
 
 **Parameters:**
 
@@ -288,7 +291,7 @@ render_functiondef(filepath: str, name: str) -> str:
 
 Render a `def` object (function or method).
 
-Follow the defined `FUNCTIONDEF_TPL` template.
+Follow the defined `TPL_FUNCTIONDEF` template.
 
 **Parameters:**
 
@@ -299,15 +302,15 @@ Follow the defined `FUNCTIONDEF_TPL` template.
 
 - \[`str`\]: `Markdown`-formatted description of the function/method object.
 
-### `astdocs.render_summary`
+### `astdocs.render_module`
 
 ```python
-render_summary(name: str, docstring: str) -> str:
+render_module(name: str, docstring: str) -> str:
 ```
 
 Render a module summary as a `Markdown` file.
 
-Follow the defined `SUMMARY_TPL` template.
+Follow the defined `TPL_MODULE` template.
 
 **Parameters:**
 
@@ -337,3 +340,20 @@ Run the whole pipeline (useful wrapper function when this gets used as a module)
 **Returns:**
 
 - \[`str`\]: `Markdown`-formatted content.
+
+### `astdocs.render_recursively`
+
+```python
+render_recursively(path: str, remove_from_path: str) -> str:
+```
+
+Run pipeline on each `Python` module found in a folder and its subfolders.
+
+**Parameters:**
+
+- `path` \[`str`\]: The path to the folder to process.
+- `remove_from_path` \[`str`\]: Part of the path to be removed.
+
+**Returns:**
+
+- \[`str`\]: `Markdown`-formatted content for all `Python` modules within the path.
