@@ -340,20 +340,6 @@ def format_docstring(
     return s.strip()
 
 
-def list_objects() -> str:
-    """List all parsed objects from a **lone module** (does not work recursively).
-
-    This is intended to *test* the docstring parsing, and simply look at the structure
-    of a module. Nothing more.
-
-    Returns
-    -------
-    : str
-        One per line.
-    """
-    return "\n".join(list(_classdefs.keys()) + list(_funcdefs.keys()))
-
-
 def parse_classdef(n: ast.ClassDef):
     """Parse a `class` statement.
 
@@ -823,6 +809,21 @@ def render_recursively(path: str, remove_from_path: str = "") -> str:
     s = re.sub(r"\n{2,}%%%BEGIN", "\n%%%BEGIN", s)
 
     return s
+
+
+def list_objects() -> str:
+    """List all parsed objects from a **lone module** (does not work recursively).
+
+    Only invoked when the `ASTDOCS_DRY_RUN` environment variable is set to `1`, `on`,
+    `true` or `yes`. This is intended to *test* the docstring parsing, and simply look
+    at the structure of a module. Nothing more.
+
+    Returns
+    -------
+    : str
+        One per line.
+    """
+    return "\n".join(list(_classdefs.keys()) + list(_funcdefs.keys()))
 
 
 if __name__ == "__main__":
