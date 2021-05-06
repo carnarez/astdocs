@@ -34,6 +34,9 @@ The behaviour of this little stunt can be modified via environment variables:
   parameters). Defaults to 88 characters, [`black`](https://github.com/psf/black)
   [recommended](https://www.youtube.com/watch?v=wf-BqAjZb8M&t=260s&ab_channel=PyCon2015)
   default.
+* `ASTDOCS_SHOW_PRIVATE` taking the `1`, `on`, `true` or `yes` values (anything else
+   will be ignored/counted as negative) to show `Python` private objects (which names
+   start with an underscore).
 * `ASTDOCS_SPLIT_BY` taking the `m`, `mc`, `mfc` or an empty value (default, all
   rendered content in one output): split each **m**odule, **f**unction and/or **c**lass
   (by adding `%%%BEGIN ...` markers). Classes will always keep their methods. In case
@@ -59,25 +62,6 @@ $ for f in xx??; do
 >   grep -v '^%%%' $f > "$path.md"  # double quotes are needed
 >   rm $f
 > done
-```
-
-If the regular expression solution presented here (which works for *my* needs) does not
-fulfill, it is pretty easy to clobber it:
-
-```python
-import ast
-import astdocs
-
-def my_docstring_parser(docstring: str) -> str:
-    # process docstring
-    return string
-
-def format_docstring(n):
-    return my_docstring_parser(ast.get_docstring(n))
-
-astdocs.format_docstring = format_docstring
-
-print(astdocs.render(...))
 ```
 
 Attributes
@@ -141,6 +125,13 @@ TPL_MODULE = string.Template(
 )
 
 TPL = string.Template("$module\n\n$functions\n\n$classes")
+
+# if requested, show private objects in the output
+_show_private = (
+    True
+    if os.environ.get("ASTDOCS_SHOW_PRIVATE", "off") in ("1", "on", "true", "yes")
+    else False
+)
 
 # if requested, split things up with %%% markers
 _split_by = os.environ.get("ASTDOCS_SPLIT_BY", "m")
@@ -270,9 +261,30 @@ def format_docstring(
     : str
         The formatted docstring.
 
+    Notes
+    -----
+    If the regular expression solution presented here (which works for *my* needs) does
+    not fulfill your standards, it is pretty easy to clobber it:
+
+    ```python
+    import ast
+    import astdocs
+
+    def my_docstring_parser(docstring: str) -> str:
+        # process docstring
+        return string
+
+    def format_docstring(n):
+        return my_docstring_parser(ast.get_docstring(n))
+
+    astdocs.format_docstring = format_docstring
+
+    print(astdocs.render(...))
+    ```
+
     Known problems
     --------------
-    * Overall naive and *very* opinionated (for my use).
+    * Overall naive and *very* opinionated (again, for *my* use).
     * Does not support list in parameter/return entries.
     """
     s = ast.get_docstring(n) or ""
@@ -319,21 +331,19 @@ def parse_classdef(n: ast.ClassDef):
     # parse decorator objects
     dc = [f'`{format_annotation(d, "@")}`' for d in n.decorator_list]
 
-    if not n.name.startswith("_"):
+    # save the interesting details (more to come during rendering)
+    _classdefs[f"{n.ancestry}.{n.name}"] = {
+        "ancestry": n.ancestry,
+        "classname": n.name,
+        "classdocs": format_docstring(n),
+        "decoration": "**Decoration:** via " + ", ".join(dc) + "." if dc else "",
+        "endlineno": n.end_lineno,
+        "hashtags": ht,
+        "lineno": n.lineno,
+    }
 
-        # save the interesting details (more to come during rendering)
-        _classdefs[f"{n.ancestry}.{n.name}"] = {
-            "ancestry": n.ancestry,
-            "classname": n.name,
-            "classdocs": format_docstring(n),
-            "decoration": "**Decoration:** via " + ", ".join(dc) + "." if dc else "",
-            "endlineno": n.end_lineno,
-            "hashtags": ht,
-            "lineno": n.lineno,
-        }
-
-        # save the object
-        _objects[n.name] = f"{n.ancestry}.{n.name}"
+    # save the object
+    _objects[n.name] = f"{n.ancestry}.{n.name}"
 
 
 def parse_functiondef(n: typing.Union[ast.AsyncFunctionDef, ast.FunctionDef]):
@@ -366,23 +376,21 @@ def parse_functiondef(n: typing.Union[ast.AsyncFunctionDef, ast.FunctionDef]):
     else:
         suffix = ""
 
-    if not n.name.startswith("_") or n.name == "__init__":
+    # save the interesting details
+    _funcdefs[f"{n.ancestry}.{n.name}"] = {
+        "ancestry": n.ancestry,
+        "params": ", ".join(params) + suffix,
+        "decoration": ("**Decoration** via " + ", ".join(dc) + ".") if dc else "",
+        "endlineno": n.end_lineno,
+        "funcdocs": format_docstring(n),
+        "funcname": n.name,
+        "hashtags": ht,
+        "lineno": n.lineno,
+        "returns": returns,
+    }
 
-        # save the interesting details
-        _funcdefs[f"{n.ancestry}.{n.name}"] = {
-            "ancestry": n.ancestry,
-            "params": ", ".join(params) + suffix,
-            "decoration": ("**Decoration** via " + ", ".join(dc) + ".") if dc else "",
-            "endlineno": n.end_lineno,
-            "funcdocs": format_docstring(n),
-            "funcname": n.name,
-            "hashtags": ht,
-            "lineno": n.lineno,
-            "returns": returns,
-        }
-
-        # save the object
-        _objects[n.name] = f"{n.ancestry}.{n.name}"
+    # save the object
+    _objects[n.name] = f"{n.ancestry}.{n.name}"
 
 
 def parse_import(n: typing.Union[ast.Import, ast.ImportFrom]):
@@ -459,6 +467,22 @@ def parse_tree(n: typing.Any):
 def postrender(func: typing.Callable) -> str:
     """Apply a post-rendering function on the output of the decorated function.
 
+    This can be used to streamline the linting of the output, or immediately convert to
+    `HTML` for instance.
+
+    Parameters
+    ----------
+    func : typing.Callable
+        The function to apply; should take a `str` as lone input.
+
+    Returns
+    -------
+    : str
+        `Markdown`-formatted content.
+
+    Example
+    -------
+
     ```python
     import astdocs
 
@@ -477,19 +501,6 @@ def postrender(func: typing.Callable) -> str:
 
     print(render(...))
     ```
-
-    This can be used to streamline the linting of the output, or immediately convert to
-    `HTML` for instance.
-
-    Parameters
-    ----------
-    func : typing.Callable
-        The function to apply; should take a `str` as lone input.
-
-    Returns
-    -------
-    : str
-        `Markdown`-formatted content.
     """
 
     def decorator(f):
@@ -539,14 +550,17 @@ def render_classdef(filepath: str, name: str) -> str:
     # render all methods
     fr = []
     for f in fn:
-        _funcdefs[f].update({"hashtags": f"{ht}##"})
-        fr.append(render_functiondef(filepath, f))
+        n = f.split(".")[-1]
+        if not n.startswith("_") or _show_private:
+            _funcdefs[f].update({"hashtags": f"{ht}##"})
+            fr.append(render_functiondef(filepath, f))
 
     # methods bullet list
     for i, f in enumerate(fn):
         n = f.split(".")[-1]
-        link = f.replace(".", "").lower()  # github/mdbook
-        fn[i] = f"* [`{n}()`](#{link})"
+        if not n.startswith("_") or _show_private:
+            link = f.replace(".", "").lower()  # github syntax
+            fn[i] = f"* [`{n}()`](#{link})"
 
     # update the description of the object
     _classdefs[name].update(
@@ -607,16 +621,18 @@ def render_module(name: str, docstring: str = "") -> str:
     for f in _funcdefs:
         if f.count(".") == name.count(".") + 1:
             n = f.split(".")[-1]
-            link = f.replace(".", "").lower()  # github/mdbook
-            fn.append(f"* [`{n}()`](#{link})")
+            if not n.startswith("_") or _show_private:
+                link = f.replace(".", "").lower()  # github syntax
+                fn.append(f"* [`{n}()`](#{link})")
 
     # classes bullet list
     cn = []
     for c in _classdefs:
         if c.count(".") == name.count(".") + 1:
             n = c.split(".")[-1]
-            link = c.replace(".", "").lower()  # github/mdbook
-            cn.append(f"* [`{n}`](#{link})")
+            if not n.startswith("_") or _show_private:
+                link = c.replace(".", "").lower()  # github syntax
+                cn.append(f"* [`{n}`](#{link})")
 
     sub = {
         "classnames": "**Classes:**\n\n" + "\n".join(cn) if cn else "",
@@ -675,16 +691,19 @@ def render(filepath: str, remove_from_path: str = "") -> str:
         parse_tree(n)
 
     # only the objects at the root of the module
-    fr = [
-        render_functiondef(filepath, f)
-        for f in _funcdefs
-        if f.count(".") == n.name.count(".") + 1
-    ]
-    cr = [
-        render_classdef(filepath, c)
-        for c in _classdefs
-        if c.count(".") == n.name.count(".") + 1
-    ]
+    fr = []
+    for f in _funcdefs:
+        if f.count(".") == n.name.count(".") + 1:
+            name = f.split(".")[-1]
+            if not name.startswith("_") or _show_private:
+                fr.append(render_functiondef(filepath, f))
+
+    cr = []
+    for c in _classdefs:
+        if c.count(".") == n.name.count(".") + 1:
+            name = c.split(".")[-1]
+            if not name.startswith("_") or _show_private:
+                cr.append(render_classdef(filepath, c))
 
     # render each section
     sub = {
@@ -705,7 +724,7 @@ def render(filepath: str, remove_from_path: str = "") -> str:
 
     s = TPL.substitute(sub).strip()
 
-    # cleanup (trailing line breaks)
+    # cleanup (extra line breaks)
     s = re.sub(r"\n{3,}", "\n\n", s)
     s = re.sub(r"\n{2,}%%%BEGIN", "\n%%%BEGIN", s)
 
@@ -727,15 +746,17 @@ def render_recursively(path: str, remove_from_path: str = "") -> str:
     : str
         `Markdown`-formatted content for all `Python` modules within the path.
     """
-    # render each module
-    s = "\n\n".join(
-        [
-            render(filepath, remove_from_path)
-            for filepath in sorted(glob.glob(f"{path}/**/*.py", recursive=True))
-        ]
-    )
+    mr = []
 
-    # cleanup (trailing line breaks)
+    # render each module
+    for filepath in sorted(glob.glob(f"{path}/**/*.py", recursive=True)):
+        name = filepath.split("/")[-1]
+        if not name.startswith("_") or _show_private:
+            mr.append(render(filepath, remove_from_path))
+
+    s = "\n\n".join(mr)
+
+    # cleanup (extra line breaks)
     s = re.sub(r"\n{2,}%%%BEGIN", "\n%%%BEGIN", s)
 
     return s
