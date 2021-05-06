@@ -10,9 +10,9 @@ syntax.
 
 My only requirement was to use the `Python` standard library **exclusively** (even the
 [templating](https://docs.python.org/3/library/string.html#template-strings)) as it is
-quite [overly] complete these day, and keep it as *lean* as possible. Support for corner
-cases is scarse... for one, no class-in- nor function-in-function (which I consider
-private, in the `Python` sense).
+quite [overly] complete these days, and keep it as *lean* as possible. Support for
+corner cases is scarse... for one, no class-in- nor function-in-function (which I
+consider private, in the `Python` sense).
 
 The simplest way to check by example is to run this script on itself:
 
