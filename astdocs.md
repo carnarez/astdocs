@@ -38,6 +38,9 @@ The behaviour of this little stunt can be modified via environment variables:
   parameters). Defaults to 88 characters, [`black`](https://github.com/psf/black)
   [recommended](https://www.youtube.com/watch?v=wf-BqAjZb8M&t=260s&ab_channel=PyCon2015)
   default.
+- `ASTDOCS_SHOW_PRIVATE` taking the `1`, `on`, `true` or `yes` values (anything else will
+  be ignored/counted as negative) to show `Python` private objects (which names start with
+  an underscore).
 - `ASTDOCS_SPLIT_BY` taking the `m`, `mc`, `mfc` or an empty value (default, all rendered
   content in one output): split each **m**odule, **f**unction and/or **c**lass (by adding
   `%%%BEGIN ...` markers). Classes will always keep their methods. In case `mfc` is
@@ -61,25 +64,6 @@ $ for f in xx??; do
 >   grep -v '^%%%' $f > "$path.md"  # double quotes are needed
 >   rm $f
 > done
-```
-
-If the regular expression solution presented here (which works for *my* needs) does not
-fulfill, it is pretty easy to clobber it:
-
-```python
-import ast
-import astdocs
-
-def my_docstring_parser(docstring: str) -> str:
-    # process docstring
-    return string
-
-def format_docstring(n):
-    return my_docstring_parser(ast.get_docstring(n))
-
-astdocs.format_docstring = format_docstring
-
-print(astdocs.render(...))
 ```
 
 **Attributes:**
@@ -162,9 +146,30 @@ output.
 
 - \[`str`\]: The formatted docstring.
 
+**Notes:**
+
+If the regular expression solution presented here (which works for *my* needs) does not
+fulfill your standards, it is pretty easy to clobber it:
+
+```python
+import ast
+import astdocs
+
+def my_docstring_parser(docstring: str) -> str:
+    # process docstring
+    return string
+
+def format_docstring(n):
+    return my_docstring_parser(ast.get_docstring(n))
+
+astdocs.format_docstring = format_docstring
+
+print(astdocs.render(...))
+```
+
 **Known problems:**
 
-- Overall naive and *very* opinionated (for my use).
+- Overall naive and *very* opinionated (again, for *my* use).
 - Does not support list in parameter/return entries.
 
 ### `astdocs.parse_classdef`
@@ -236,6 +241,19 @@ postrender(func: typing.Callable) -> str:
 
 Apply a post-rendering function on the output of the decorated function.
 
+This can be used to streamline the linting of the output, or immediately convert to
+`HTML` for instance.
+
+**Parameters:**
+
+- `func` \[`typing.Callable`\]: The function to apply; should take a `str` as lone input.
+
+**Returns:**
+
+- \[`str`\]: `Markdown`-formatted content.
+
+**Example:**
+
 ```python
 import astdocs
 
@@ -254,17 +272,6 @@ def render(filepath: str) -> str:  # simple wrapper function
 
 print(render(...))
 ```
-
-This can be used to streamline the linting of the output, or immediately convert to
-`HTML` for instance.
-
-**Parameters:**
-
-- `func` \[`typing.Callable`\]: The function to apply; should take a `str` as lone input.
-
-**Returns:**
-
-- \[`str`\]: `Markdown`-formatted content.
 
 ### `astdocs.render_classdef`
 
