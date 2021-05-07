@@ -239,7 +239,7 @@ def format_annotation(
     # another complicate case: decorator with arguments
     if hasattr(a, "func"):
         s += format_annotation(a.func)
-        s += f'({", ".join([format_annotation(a_) for a_ in a.args])}))'
+        s += f'({", ".join([format_annotation(a_) for a_ in a.args])})'
 
     return s
 
