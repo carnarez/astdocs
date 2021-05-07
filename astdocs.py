@@ -800,7 +800,7 @@ def postrender(func: typing.Callable) -> str:
     @astdocs.postrender(extend_that)
     @astdocs.postrender(apply_this)
     def render(filepath: str) -> str:  # simple wrapper function
-        return astodcs.render(filepath)
+        return astdocs.render(filepath)
 
     print(render(...))
     ```
