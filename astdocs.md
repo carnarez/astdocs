@@ -1,4 +1,4 @@
-# Module `..astdocs`
+# Module `astdocs`
 
 Extract and format documentation from `Python` code.
 
@@ -40,7 +40,8 @@ The behaviour of this little stunt can be modified via environment variables:
 - `ASTDOCS_SPLIT_BY` taking the `m`, `mc`, `mfc` or an empty value (default, all rendered
   content in one output): split each **m**odule, **f**unction and/or **c**lass (by adding
   `%%%BEGIN ...` markers). Classes will always keep their methods. In case `mfc` is
-  provided, the module will only keep its docstring, and each function will be marked.
+  provided, the module will only keep its docstring, and each function/class/method will
+  be marked.
 - `ASTDOCS_WITH_LINENOS` taking the `1`, `on`, `true` or `yes` values (anything else will
   be ignored) to show the line numbers of the object in the code source (to be processed
   later on by your favourite `Markdown` renderer). Look for the `%%%SOURCE` markers.
@@ -90,7 +91,7 @@ $ for f in xx??; do
 
 ## Functions
 
-### `..astdocs.format_annotation`
+### `astdocs.format_annotation`
 
 ```python
 format_annotation(
@@ -122,7 +123,7 @@ See the code itself for some line-by-line documentation.
 
 - Does not support `lambda` functions.
 
-### `..astdocs.format_docstring`
+### `astdocs.format_docstring`
 
 ```python
 format_docstring(
@@ -173,7 +174,7 @@ print(astdocs.render(...))
 - Overall naive and *very* opinionated (again, for *my* use).
 - Does not support list in parameter/return entries.
 
-### `..astdocs.parse_classdef`
+### `astdocs.parse_classdef`
 
 ```python
 parse_classdef(n: ast.ClassDef):
@@ -185,7 +186,7 @@ Parse a `class` statement.
 
 - `n` \[`ast.ClassDef`\]: The node to extract information from.
 
-### `..astdocs.parse_functiondef`
+### `astdocs.parse_functiondef`
 
 ```python
 parse_functiondef(n: typing.Union[ast.AsyncFunctionDef, ast.FunctionDef]):
@@ -198,7 +199,7 @@ Parse a `def` statement.
 - `n` \[`typing.Union[ast.AsyncFunctionDef, ast.FunctionDef]`\]: The node to extract
   information from.
 
-### `..astdocs.parse_import`
+### `astdocs.parse_import`
 
 ```python
 parse_import(n: typing.Union[ast.Import, ast.ImportFrom]):
@@ -215,7 +216,7 @@ post-processing or some later smart implementations.
 - `n` \[`typing.Union[ast.Import, ast.ImportFrom]`\]: The node to extract information
   from.
 
-### `..astdocs.parse_tree`
+### `astdocs.parse_tree`
 
 ```python
 parse_tree(n: typing.Any):
@@ -234,7 +235,7 @@ method for instance).
 
 - \[`n`\]: Any type of node to extract information from.
 
-### `..astdocs.render_classdef`
+### `astdocs.render_classdef`
 
 ```python
 render_classdef(filepath: str, name: str) -> str:
@@ -251,7 +252,7 @@ Render a `class` object, according to the defined `TPL_CLASSDEF` template.
 
 - \[`str`\]: `Markdown`-formatted description of the class object.
 
-### `..astdocs.render_functiondef`
+### `astdocs.render_functiondef`
 
 ```python
 render_functiondef(filepath: str, name: str) -> str:
@@ -270,7 +271,7 @@ Follow the defined `TPL_FUNCTIONDEF` template.
 
 - \[`str`\]: `Markdown`-formatted description of the function/method object.
 
-### `..astdocs.render_module`
+### `astdocs.render_module`
 
 ```python
 render_module(name: str, docstring: str) -> str:
@@ -290,7 +291,7 @@ Follow the defined `TPL_MODULE` template.
 
 - \[`str`\]: `Markdown`-formatted description of the whole module.
 
-### `..astdocs.render`
+### `astdocs.render`
 
 ```python
 render(filepath: str, remove_from_path: str) -> str:
@@ -309,7 +310,7 @@ Run the whole pipeline (useful wrapper function when this gets used as a module)
 
 - \[`str`\]: `Markdown`-formatted content.
 
-### `..astdocs.render_recursively`
+### `astdocs.render_recursively`
 
 ```python
 render_recursively(path: str, remove_from_path: str) -> str:
@@ -352,7 +353,7 @@ except NameError:
     pass
 ```
 
-### `..astdocs.postrender`
+### `astdocs.postrender`
 
 ```python
 postrender(func: typing.Callable) -> str:

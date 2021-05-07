@@ -38,8 +38,8 @@ The behaviour of this little stunt can be modified via environment variables:
 * `ASTDOCS_SPLIT_BY` taking the `m`, `mc`, `mfc` or an empty value (default, all
   rendered content in one output): split each **m**odule, **f**unction and/or **c**lass
   (by adding `%%%BEGIN ...` markers). Classes will always keep their methods. In case
-  `mfc` is provided, the module will only keep its docstring, and each function will be
-  marked.
+  `mfc` is provided, the module will only keep its docstring, and each
+  function/class/method will be marked.
 * `ASTDOCS_WITH_LINENOS` taking the `1`, `on`, `true` or `yes` values (anything else
   will be ignored) to show the line numbers of the object in the code source (to be
   processed later on by your favourite `Markdown` renderer). Look for the `%%%SOURCE`
@@ -658,7 +658,7 @@ def render(filepath: str, remove_from_path: str = "") -> str:
         # module ancestry
         if remove_from_path:
             filepath = filepath.replace(remove_from_path, "")
-        m = re.sub(r"\.py$", "", filepath.replace("/", "."))
+        m = re.sub(r"\.py$", "", filepath.replace("/", ".")).lstrip(".")
 
         _module = m
         _objects[m] = {}
