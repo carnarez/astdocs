@@ -1,4 +1,4 @@
-# Module `astdocs`
+# Module `..astdocs`
 
 Extract and format documentation from `Python` code.
 
@@ -81,16 +81,16 @@ $ for f in xx??; do
 - [`parse_functiondef()`](#astdocsparse_functiondef)
 - [`parse_import()`](#astdocsparse_import)
 - [`parse_tree()`](#astdocsparse_tree)
-- [`postrender()`](#astdocspostrender)
 - [`render_classdef()`](#astdocsrender_classdef)
 - [`render_functiondef()`](#astdocsrender_functiondef)
 - [`render_module()`](#astdocsrender_module)
 - [`render()`](#astdocsrender)
 - [`render_recursively()`](#astdocsrender_recursively)
+- [`postrender()`](#astdocspostrender)
 
 ## Functions
 
-### `astdocs.format_annotation`
+### `..astdocs.format_annotation`
 
 ```python
 format_annotation(
@@ -122,7 +122,7 @@ See the code itself for some line-by-line documentation.
 
 - Does not support `lambda` functions.
 
-### `astdocs.format_docstring`
+### `..astdocs.format_docstring`
 
 ```python
 format_docstring(
@@ -173,7 +173,7 @@ print(astdocs.render(...))
 - Overall naive and *very* opinionated (again, for *my* use).
 - Does not support list in parameter/return entries.
 
-### `astdocs.parse_classdef`
+### `..astdocs.parse_classdef`
 
 ```python
 parse_classdef(n: ast.ClassDef):
@@ -185,7 +185,7 @@ Parse a `class` statement.
 
 - `n` \[`ast.ClassDef`\]: The node to extract information from.
 
-### `astdocs.parse_functiondef`
+### `..astdocs.parse_functiondef`
 
 ```python
 parse_functiondef(n: typing.Union[ast.AsyncFunctionDef, ast.FunctionDef]):
@@ -198,7 +198,7 @@ Parse a `def` statement.
 - `n` \[`typing.Union[ast.AsyncFunctionDef, ast.FunctionDef]`\]: The node to extract
   information from.
 
-### `astdocs.parse_import`
+### `..astdocs.parse_import`
 
 ```python
 parse_import(n: typing.Union[ast.Import, ast.ImportFrom]):
@@ -215,7 +215,7 @@ post-processing or some later smart implementations.
 - `n` \[`typing.Union[ast.Import, ast.ImportFrom]`\]: The node to extract information
   from.
 
-### `astdocs.parse_tree`
+### `..astdocs.parse_tree`
 
 ```python
 parse_tree(n: typing.Any):
@@ -234,7 +234,125 @@ method for instance).
 
 - \[`n`\]: Any type of node to extract information from.
 
-### `astdocs.postrender`
+### `..astdocs.render_classdef`
+
+```python
+render_classdef(filepath: str, name: str) -> str:
+```
+
+Render a `class` object, according to the defined `TPL_CLASSDEF` template.
+
+**Parameters:**
+
+- `filepath` \[`str`\]: Path to the module (file) defining the object.
+- `name` \[`str`\]: The name (full path including all ancestors) of the object to render.
+
+**Returns:**
+
+- \[`str`\]: `Markdown`-formatted description of the class object.
+
+### `..astdocs.render_functiondef`
+
+```python
+render_functiondef(filepath: str, name: str) -> str:
+```
+
+Render a `def` object (function or method).
+
+Follow the defined `TPL_FUNCTIONDEF` template.
+
+**Parameters:**
+
+- `filepath` \[`str`\]: Path to the module (file) defining the object.
+- `name` \[`str`\]: The name (full path including all ancestors) of the object to render.
+
+**Returns:**
+
+- \[`str`\]: `Markdown`-formatted description of the function/method object.
+
+### `..astdocs.render_module`
+
+```python
+render_module(name: str, docstring: str) -> str:
+```
+
+Render a module summary as a `Markdown` file.
+
+Follow the defined `TPL_MODULE` template.
+
+**Parameters:**
+
+- `name` \[`str`\]: Name of the module being parsed.
+- `docstring` \[`str`\]: The docstring of the module itself, if present (defaults to an
+  empty string).
+
+**Returns:**
+
+- \[`str`\]: `Markdown`-formatted description of the whole module.
+
+### `..astdocs.render`
+
+```python
+render(filepath: str, remove_from_path: str) -> str:
+```
+
+Run the whole pipeline (useful wrapper function when this gets used as a module).
+
+**Parameters:**
+
+- `filepath` \[`str`\]: The path to the module to process.
+- `remove_from_path` \[`str`\]: Part of the path to be removed. If one is rendering the
+  content of a file buried deep down in a complicated folder tree *but* does not want this
+  to appear in the ancestry of the module.
+
+**Returns:**
+
+- \[`str`\]: `Markdown`-formatted content.
+
+### `..astdocs.render_recursively`
+
+```python
+render_recursively(path: str, remove_from_path: str) -> str:
+```
+
+Run pipeline on each `Python` module found in a folder and its subfolders.
+
+**Parameters:**
+
+- `path` \[`str`\]: The path to the folder to process.
+- `remove_from_path` \[`str`\]: Part of the path to be removed.
+
+**Returns:**
+
+- \[`str`\]: `Markdown`-formatted content for all `Python` modules within the path.
+
+**Example:**
+
+```python
+import astdocs
+
+output_folder = "docs"
+
+for line in astdocs.render_recursively(...).split("\n"):
+    if line.startswith("%%%BEGIN"):
+        try:
+            output.close()
+        except NameError:
+            pass
+        x = line.split()[2].split(".")
+        basename = f"{x[-1]}.md"
+        dirname = f"{output_folder}/" + "/".join(x[:-1])
+        os.makedirs(dirname, exist_ok=True)
+        output = open(f"{dirname}/{basename}", "w")
+    else:
+        output.write(f"{line}\n")
+try:
+    output.close()
+except NameError:
+    pass
+```
+
+### `..astdocs.postrender`
 
 ```python
 postrender(func: typing.Callable) -> str:
@@ -272,116 +390,4 @@ def render(filepath: str) -> str:  # simple wrapper function
     return astodcs.render(filepath)
 
 print(render(...))
-```
-
-### `astdocs.render_classdef`
-
-```python
-render_classdef(filepath: str, name: str) -> str:
-```
-
-Render a `class` object, according to the defined `TPL_CLASSDEF` template.
-
-**Parameters:**
-
-- `filepath` \[`str`\]: Path to the module (file) defining the object.
-- `name` \[`str`\]: The name (full path including all ancestors) of the object to render.
-
-**Returns:**
-
-- \[`str`\]: `Markdown`-formatted description of the class object.
-
-### `astdocs.render_functiondef`
-
-```python
-render_functiondef(filepath: str, name: str) -> str:
-```
-
-Render a `def` object (function or method).
-
-Follow the defined `TPL_FUNCTIONDEF` template.
-
-**Parameters:**
-
-- `filepath` \[`str`\]: Path to the module (file) defining the object.
-- `name` \[`str`\]: The name (full path including all ancestors) of the object to render.
-
-**Returns:**
-
-- \[`str`\]: `Markdown`-formatted description of the function/method object.
-
-### `astdocs.render_module`
-
-```python
-render_module(name: str, docstring: str) -> str:
-```
-
-Render a module summary as a `Markdown` file.
-
-Follow the defined `TPL_MODULE` template.
-
-**Parameters:**
-
-- `name` \[`str`\]: Name of the module being parsed.
-- `docstring` \[`str`\]: The docstring of the module itself, if present (defaults to an
-  empty string).
-
-**Returns:**
-
-- \[`str`\]: `Markdown`-formatted description of the whole module.
-
-### `astdocs.render`
-
-```python
-render(filepath: str, remove_from_path: str) -> str:
-```
-
-Run the whole pipeline (useful wrapper function when this gets used as a module).
-
-**Parameters:**
-
-- `filepath` \[`str`\]: The path to the module to process.
-- `remove_from_path` \[`str`\]: Part of the path to be removed. If one is rendering the
-  content of a file buried deep down in a complicated folder tree *but* does not want this
-  to appear in the ancestry of the module.
-
-**Returns:**
-
-- \[`str`\]: `Markdown`-formatted content.
-
-### `astdocs.render_recursively`
-
-```python
-render_recursively(path: str, remove_from_path: str) -> str:
-```
-
-Run pipeline on each `Python` module found in a folder and its subfolders.
-
-**Parameters:**
-
-- `path` \[`str`\]: The path to the folder to process.
-- `remove_from_path` \[`str`\]: Part of the path to be removed.
-
-**Returns:**
-
-- \[`str`\]: `Markdown`-formatted content for all `Python` modules within the path.
-
-**Example:**
-
-```python
-import astdocs
-
-for line in astdocs.render_recursively(...).split("\n"):
-    if line.startswith("%%%BEGIN"):
-        try:
-            output.close()
-        except NameError:
-            pass
-        filepath = f'{line.split()[2].replace(".", "/")}.md'
-        folder = "/".join(filepath.split("/")[:-1])
-        os.makedirs(folder, exist_ok=True)
-        output = open(filepath, "w")
-    else:
-        output.write(f"{line}\n")
-output.close()
 ```

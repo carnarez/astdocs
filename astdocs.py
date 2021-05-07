@@ -158,6 +158,7 @@ if _with_linenos not in ("1", "on", "true", "yes"):
 
 _classdefs = {}
 _funcdefs = {}
+_module = ""
 _objects = {}
 
 
@@ -358,7 +359,9 @@ def parse_classdef(n: ast.ClassDef):
     }
 
     # save the object
-    _objects[n.name] = f"{n.ancestry}.{n.name}"
+    absolute = f"{n.ancestry}.{n.name}"
+    local = absolute.replace(f"{_module}", "", 1).lstrip(".")
+    _objects[_module][local] = absolute
 
 
 def parse_functiondef(n: typing.Union[ast.AsyncFunctionDef, ast.FunctionDef]):
@@ -405,7 +408,9 @@ def parse_functiondef(n: typing.Union[ast.AsyncFunctionDef, ast.FunctionDef]):
     }
 
     # save the object
-    _objects[n.name] = f"{n.ancestry}.{n.name}"
+    absolute = f"{n.ancestry}.{n.name}"
+    local = absolute.replace(f"{_module}", "", 1).lstrip(".")
+    _objects[_module][local] = absolute
 
 
 def parse_import(n: typing.Union[ast.Import, ast.ImportFrom]):
@@ -428,14 +433,15 @@ def parse_import(n: typing.Union[ast.Import, ast.ImportFrom]):
     else:
         path = ""
 
-        for i in n.names:
-            if i.asname is not None:
-                objct = i.asname
-            else:
-                objct = i.name
+    for i in n.names:
+        if i.asname is not None:
+            local = i.asname
+        else:
+            local = i.name
 
         # save the object
-        _objects[objct] = f"{path}.{i.name}".lstrip(".")
+        absolute = f"{path}.{i.name}".lstrip(".")
+        _objects[_module][local] = absolute
 
 
 def parse_tree(n: typing.Any):
@@ -477,54 +483,6 @@ def parse_tree(n: typing.Any):
             parse_tree(c)
         except AttributeError:
             continue
-
-
-def postrender(func: typing.Callable) -> str:
-    """Apply a post-rendering function on the output of the decorated function.
-
-    This can be used to streamline the linting of the output, or immediately convert to
-    `HTML` for instance.
-
-    Parameters
-    ----------
-    func : typing.Callable
-        The function to apply; should take a `str` as lone input.
-
-    Returns
-    -------
-    : str
-        `Markdown`-formatted content.
-
-    Example
-    -------
-
-    ```python
-    import astdocs
-
-    def extend_that(md: str) -> str:
-        # process markdown
-        return string
-
-    def apply_this(md: str) -> str:
-        # process markdown
-        return string
-
-    @astdocs.postrender(extend_that)
-    @astdocs.postrender(apply_this)
-    def render(filepath: str) -> str:  # simple wrapper function
-        return astodcs.render(filepath)
-
-    print(render(...))
-    ```
-    """
-
-    def decorator(f):
-        def wrapper(*args, **kwargs):
-            return func(f(*args, **kwargs))
-
-        return wrapper
-
-    return decorator
 
 
 def render_classdef(filepath: str, name: str) -> str:
@@ -687,13 +645,13 @@ def render(filepath: str, remove_from_path: str = "") -> str:
     """
     global _classdefs
     global _funcdefs
+    global _module
     global _objects
 
     # make sure to flush the [global] objects in case multiple are rendered
-    # it could be interesting to keep track of all objects over a whole package
+    # note all objects encountered over a whole package are kept track of
     _classdefs = {}
     _funcdefs = {}
-    _objects = {}
 
     with open(filepath) as f:
 
@@ -701,6 +659,9 @@ def render(filepath: str, remove_from_path: str = "") -> str:
         if remove_from_path:
             filepath = filepath.replace(remove_from_path, "")
         m = re.sub(r"\.py$", "", filepath.replace("/", "."))
+
+        _module = m
+        _objects[m] = {}
 
         # traverse the ast
         n = ast.parse(f.read())
@@ -769,19 +730,25 @@ def render_recursively(path: str, remove_from_path: str = "") -> str:
     ```python
     import astdocs
 
+    output_folder = "docs"
+
     for line in astdocs.render_recursively(...).split("\n"):
         if line.startswith("%%%BEGIN"):
             try:
                 output.close()
             except NameError:
                 pass
-            filepath = f'{line.split()[2].replace(".", "/")}.md'
-            folder = "/".join(filepath.split("/")[:-1])
-            os.makedirs(folder, exist_ok=True)
-            output = open(filepath, "w")
+            x = line.split()[2].split(".")
+            basename = f"{x[-1]}.md"
+            dirname = f"{output_folder}/" + "/".join(x[:-1])
+            os.makedirs(dirname, exist_ok=True)
+            output = open(f"{dirname}/{basename}", "w")
         else:
             output.write(f"{line}\n")
-    output.close()
+    try:
+        output.close()
+    except NameError:
+        pass
     ```
     """
     mr = []
@@ -798,6 +765,54 @@ def render_recursively(path: str, remove_from_path: str = "") -> str:
     s = re.sub(r"\n{2,}%%%BEGIN", "\n%%%BEGIN", s)
 
     return s
+
+
+def postrender(func: typing.Callable) -> str:
+    """Apply a post-rendering function on the output of the decorated function.
+
+    This can be used to streamline the linting of the output, or immediately convert to
+    `HTML` for instance.
+
+    Parameters
+    ----------
+    func : typing.Callable
+        The function to apply; should take a `str` as lone input.
+
+    Returns
+    -------
+    : str
+        `Markdown`-formatted content.
+
+    Example
+    -------
+
+    ```python
+    import astdocs
+
+    def extend_that(md: str) -> str:
+        # process markdown
+        return string
+
+    def apply_this(md: str) -> str:
+        # process markdown
+        return string
+
+    @astdocs.postrender(extend_that)
+    @astdocs.postrender(apply_this)
+    def render(filepath: str) -> str:  # simple wrapper function
+        return astodcs.render(filepath)
+
+    print(render(...))
+    ```
+    """
+
+    def decorator(f):
+        def wrapper(*args, **kwargs):
+            return func(f(*args, **kwargs))
+
+        return wrapper
+
+    return decorator
 
 
 if __name__ == "__main__":
