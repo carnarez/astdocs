@@ -2,16 +2,16 @@
 
 Prepare an output to visualize the dependency graph of a module/package.
 
-Visualization is intended to be generated via [`D3.js`](https://d3js.org/). ~~See the
-code in this folder, or~~ refer to the example by the creator of the library himself
+Visualization is intended to be generated via [`D3.js`](https://d3js.org/). See the
+~~code in this folder, or refer to the~~ example by the creator of the library himself
 [there](https://observablehq.com/@d3/force-directed-graph).
 
 **Notes:**
 
-- One can abuse the example at the page linked above: replace the data (browse a bit, find
-  the cell, click on the small clip icon).
-- If the nodes are flying all over when applying the forces on the graph data, try to
-  modify the parameters of the simulation:
+One can abuse the example at the page linked above: replace the data (browse a bit, find
+find the right cell, click on the small paperclip icon). If the nodes are flying all
+over when applying the forces on the graph data, try to modify the parameters of the
+simulation:
 
 ```javascript
 const simulation = d3.forceSimulation(nodes)
@@ -39,7 +39,7 @@ See the meaning of those parameters [here](https://github.com/d3/d3-force).
 ### `process.is_local`
 
 ```python
-is_local(o: str, objects: typing.Liststr) -> bool:
+is_local(o: str, objects: typing.List[str]) -> bool:
 ```
 
 Check whether an object is local, or external, looking at its path.
@@ -56,7 +56,7 @@ Check whether an object is local, or external, looking at its path.
 ### `process.add_node`
 
 ```python
-add_node(nodes: typing.Listtyping.Dict[str, str], o: str, g: int):
+add_node(nodes: typing.List[typing.Dict[str, str]], o: str, g: int):
 ```
 
 Add a node to the pool if not yet present.
@@ -75,7 +75,7 @@ Add a node to the pool if not yet present.
 ### `process.add_edge`
 
 ```python
-add_edge(edges: typing.Listtyping.Dict[str, str], so: str, to: str):
+add_edge(edges: typing.List[typing.Dict[str, str]], so: str, to: str):
 ```
 
 Add an edge to the pool if not yet present.
@@ -96,7 +96,7 @@ Add an edge to the pool if not yet present.
 ```python
 graph(
     objects: typing.Dict[str, typing.Dict[str, str]]
-) -> typing.Dict[str, typing.Listtyping.Dict[str, str]]:
+) -> typing.Dict[str, typing.List[typing.Dict[str, str]]]:
 ```
 
 Generate graph, *e.g.*, nodes and edges.

@@ -1,15 +1,15 @@
 """Prepare an output to visualize the dependency graph of a module/package.
 
-Visualization is intended to be generated via [`D3.js`](https://d3js.org/). ~~See the
-code in this folder, or~~ refer to the example by the creator of the library himself
+Visualization is intended to be generated via [`D3.js`](https://d3js.org/). See the
+~~code in this folder, or refer to the~~ example by the creator of the library himself
 [there](https://observablehq.com/@d3/force-directed-graph).
 
 Notes
 -----
-* One can abuse the example at the page linked above: replace the data (browse a bit,
-  find the cell, click on the small clip icon).
-* If the nodes are flying all over when applying the forces on the graph data, try to
-  modify the parameters of the simulation:
+One can abuse the example at the page linked above: replace the data (browse a bit, find
+find the right cell, click on the small paperclip icon). If the nodes are flying all
+over when applying the forces on the graph data, try to modify the parameters of the
+simulation:
 
 ```javascript
 const simulation = d3.forceSimulation(nodes)
