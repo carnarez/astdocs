@@ -392,7 +392,7 @@ def parse_functiondef(n: typing.Union[ast.AsyncFunctionDef, ast.FunctionDef]):
     # add line breaks if the function call is long (pre-render this latter first, no way
     # around it)
     rendered = len(f'{n.name}({", ".join(params)}){returns}')
-    if rendered > os.environ.get("ASTDOCS_FOLD_ARGS_AFTER", 88):
+    if rendered > int(os.environ.get("ASTDOCS_FOLD_ARGS_AFTER", 88)):
         params = [f"\n    {p}" for p in params]
         suffix = "\n"
     else:
