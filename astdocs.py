@@ -238,7 +238,7 @@ def format_annotation(
 
         # a bit frustrating, but the List need to be fixed with an ad-hoc substitute or
         # no surrounding square brackets show up
-        s = re.sub(r"List([^\[][A-Za-z0-9\._\[\], ]+)", r"List[\1]", s)
+        s = re.sub(r"List([^\[,][A-Za-z0-9\._\[\], ]+)", r"List[\1]", s)
 
     # another complicate case: decorator with arguments
     if hasattr(a, "func"):
