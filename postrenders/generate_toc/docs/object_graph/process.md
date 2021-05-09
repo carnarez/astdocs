@@ -1,4 +1,4 @@
-# Module `process`
+# Module `object_graph.process`
 
 Prepare an output to visualize the dependency graph of a module/package.
 
@@ -29,14 +29,14 @@ See the meaning of those parameters [here](https://github.com/d3/d3-force).
 
 **Functions:**
 
-- [`is_local()`](#processis_local)
-- [`add_node()`](#processadd_node)
-- [`add_edge()`](#processadd_edge)
-- [`graph()`](#processgraph)
+- [`is_local()`](#object_graphprocessis_local)
+- [`add_node()`](#object_graphprocessadd_node)
+- [`add_edge()`](#object_graphprocessadd_edge)
+- [`graph()`](#object_graphprocessgraph)
 
 ## Functions
 
-### `process.is_local`
+### `object_graph.process.is_local`
 
 ```python
 is_local(o: str, objects: typing.List[str]) -> bool:
@@ -53,7 +53,7 @@ Check whether an object is local, or external, looking at its path.
 
 - \[`bool`\]: Whether the object is local or external to the `Python` parsed package(s).
 
-### `process.add_node`
+### `object_graph.process.add_node`
 
 ```python
 add_node(nodes: typing.List[typing.Dict[str, str]], o: str, g: int):
@@ -72,7 +72,7 @@ Add a node to the pool if not yet present.
 - `nodes` \[`typing.List[typing.Dict[str, str]]`\]: List of defined nodes, updated (or
   not).
 
-### `process.add_edge`
+### `object_graph.process.add_edge`
 
 ```python
 add_edge(edges: typing.List[typing.Dict[str, str]], so: str, to: str):
@@ -91,7 +91,7 @@ Add an edge to the pool if not yet present.
 - `edges` \[`typing.List[typing.Dict[str, str]]`\]: List of defined edges, updated (or
   not).
 
-### `process.graph`
+### `object_graph.process.graph`
 
 ```python
 graph(

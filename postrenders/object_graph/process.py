@@ -109,13 +109,13 @@ def add_edge(edges: typing.List[typing.Dict[str, str]], so: str, to: str):
 
 
 def graph(
-    objects: typing.Dict[str, typing.Dict[str, str]],
+    objects: typing.Dict[str, typing.Dict[str, typing.Dict[str, str]]],
 ) -> typing.Dict[str, typing.List[typing.Dict[str, str]]]:
     """Generate graph, *e.g.*, nodes and edges.
 
     Parameters
     ----------
-    objects : typing.Dict[str, typing.Dict[str, str]]
+    objects : typing.Dict[str, typing.Dict[str, typing.Dict[str, str]]]
         Dictionary of objects encountered in all modules parsed by `astdocs`.
 
     Returns
@@ -136,36 +136,41 @@ def graph(
     nodes = []
 
     for g, m in enumerate(objects):
-        for lp, ap in objects[m].items():
-            lp = f"{m}.{lp}"
+        for t in ["classes", "functions", "imports"]:
+            for lp, ap in objects[m][t].items():
+                lp = f"{m}.{lp}"
 
-            # actual object (absolute path thereto)
-            nodes = add_node(nodes, ap, g + 1 if is_local(ap, modules) else 0)
+                # actual object (absolute path thereto)
+                nodes = add_node(nodes, ap, g + 1 if is_local(ap, modules) else 0)
 
-            # module (local) representation of the object
-            nodes = add_node(nodes, lp, g + 1 if is_local(lp, modules) else 0)
+                # module (local) representation of the object
+                nodes = add_node(nodes, lp, g + 1 if is_local(lp, modules) else 0)
 
-            # actual object -> its module representation
-            edges = add_edge(edges, ap, lp)
+                # actual object -> its module representation
+                edges = add_edge(edges, ap, lp)
 
-            # module -> object representation if directly linked
-            if lp.count(".") == 1:
-                edges = add_edge(edges, m, lp)
+                # module -> object representation if directly linked
+                if lp.count(".") == 1:
+                    edges = add_edge(edges, m, lp)
 
-            if ap.count("."):
-                x = ap.split(".")
-                for i in range(len(x) - 1):
-                    pp = ".".join(x[: i + 1])
-                    cp = ".".join(x[: i + 2])
+                if ap.count("."):
+                    x = ap.split(".")
+                    for i in range(len(x) - 1):
+                        pp = ".".join(x[: i + 1])
+                        cp = ".".join(x[: i + 2])
 
-                    # parent object
-                    nodes = add_node(nodes, pp, g + 1 if is_local(pp, modules) else 0)
+                        # parent object
+                        nodes = add_node(
+                            nodes, pp, g + 1 if is_local(pp, modules) else 0
+                        )
 
-                    # child object
-                    nodes = add_node(nodes, cp, g + 1 if is_local(cp, modules) else 0)
+                        # child object
+                        nodes = add_node(
+                            nodes, cp, g + 1 if is_local(cp, modules) else 0
+                        )
 
-                    # actual object -> its module representation
-                    edges = add_edge(edges, pp, cp)
+                        # actual object -> its module representation
+                        edges = add_edge(edges, pp, cp)
 
     return {"nodes": nodes, "links": edges}
 

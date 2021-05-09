@@ -57,11 +57,11 @@ or to split marked sections into separate files (in `Bash` below; see also the `
 example in the docstring of the `astdocs.render_recursively()` function):
 
 ```shell
-$ ASTDOCS_SPLIT_BY=mc python astdocs.py module.py | csplit -qz - '/%%%BEGIN/' '{*}'
-$ mv xx00 module.md
-$ mkdir module
+$ ASTDOCS_SPLIT_BY=mc python astdocs.py module.py | csplit -qz - '/^%%%BEGIN/' '{*}'
+$ grep -v '^%%%' xx00 > module.md
+$ rm xx00
 $ for f in xx??; do
->   path=$(grep -m1 '^%%%BEGIN' $f | sed -r 's|%%%[.*] [.*] (.*)|\1|g;s|\.|/|g')
+>   path=$(grep -m1 '^%%%BEGIN' $f | sed -r 's|%%%.* (.*)|\1|g;s|\.|/|g')
 >   mkdir -p $(dirname $path)
 >   grep -v '^%%%BEGIN' $f > "$path.md"  # double quotes are needed
 >   rm $f
