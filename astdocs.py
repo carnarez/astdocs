@@ -42,8 +42,8 @@ The behaviour of this little stunt can be modified via environment variables:
   function/class/method will be marked.
 * `ASTDOCS_WITH_LINENOS` taking the `1`, `on`, `true` or `yes` values (anything else
   will be ignored) to show the line numbers of the object in the code source (to be
-  processed later on by your favourite `Markdown` renderer). Look for the `%%%SOURCE`
-  markers.
+  processed later on by your favourite `Markdown` renderer). Look for the
+  `%%%SOURCE ...` markers.
 
 ```shell
 $ ASTDOCS_WITH_LINENOS=on python astdocs.py astdocs.py
@@ -62,6 +62,23 @@ $ for f in xx??; do
 >   grep -v '^%%%BEGIN' $f > "$path.md"  # double quotes are needed
 >   rm $f
 > done
+```
+
+Each of these environment variableis translates into a private attribute with the same
+name: the `ASTDOCS_FOLD_ARGS_AFTER` value is stored in the `_fold_args_after` variable
+for instance.
+
+When handled completely programmatically, this breaks the `Python` idiomatic ways:
+
+```python
+import os
+
+os.environ["ASTDOCS_FOLD_ARGS_AFTER"] = 88
+os.environ["ASTDOCS_WITH_LINENOS"] = "off"
+
+import astdocs
+
+md = astdocs.render_recursively(".")
 ```
 
 Attributes
@@ -126,6 +143,9 @@ TPL_MODULE = string.Template(
 
 TPL = string.Template("$module\n\n$functions\n\n$classes")
 
+# set the string length limit (black default)
+_fold_args_after = int(os.environ.get("ASTDOCS_FOLD_ARGS_AFTER", "88"))
+
 # if requested, show private objects in the output
 _show_private = (
     True
@@ -147,8 +167,12 @@ if "m" in _split_by:
     TPL_MODULE.template = f"%%%BEGIN MODULE $module{TPL_MODULE.template}"
 
 # if requested, add the line numbers to the source
-_with_linenos = os.environ.get("ASTDOCS_WITH_LINENOS", "off")
-if _with_linenos not in ("1", "on", "true", "yes"):
+_with_linenos = (
+    True
+    if os.environ.get("ASTDOCS_WITH_LINENOS", "off") in ("1", "on", "true", "yes")
+    else False
+)
+if not _with_linenos:
     TPL_CLASSDEF.template = TPL_CLASSDEF.template.replace(
         "\n\n%%%SOURCE $path:$lineno:$endlineno", ""
     )
@@ -391,8 +415,8 @@ def parse_functiondef(n: typing.Union[ast.AsyncFunctionDef, ast.FunctionDef]):
 
     # add line breaks if the function call is long (pre-render this latter first, no way
     # around it)
-    rendered = len(f'{n.name}({", ".join(params)}){returns}')
-    if rendered > int(os.environ.get("ASTDOCS_FOLD_ARGS_AFTER", 88)):
+    rendered = f'{n.name}({", ".join(params)}){returns}'
+    if len(rendered) > _fold_args_after:
         params = [f"\n    {p}" for p in params]
         suffix = "\n"
     else:
@@ -518,7 +542,7 @@ def render_classdef(filepath: str, name: str) -> str:
         docstr = f["funcdocs"]
         lineno = f["lineno"]
         endlineno = f["endlineno"]
-        if _with_linenos in ("1", "on", "true", "yes"):
+        if _with_linenos:
             docstr += f"\n\n%%%SOURCE {filepath}:{lineno}:{endlineno}"
     else:
         params = ""

@@ -44,7 +44,7 @@ The behaviour of this little stunt can be modified via environment variables:
   be marked.
 - `ASTDOCS_WITH_LINENOS` taking the `1`, `on`, `true` or `yes` values (anything else will
   be ignored) to show the line numbers of the object in the code source (to be processed
-  later on by your favourite `Markdown` renderer). Look for the `%%%SOURCE` markers.
+  later on by your favourite `Markdown` renderer). Look for the `%%%SOURCE ...` markers.
 
 ```shell
 $ ASTDOCS_WITH_LINENOS=on python astdocs.py astdocs.py
@@ -63,6 +63,23 @@ $ for f in xx??; do
 >   grep -v '^%%%BEGIN' $f > "$path.md"  # double quotes are needed
 >   rm $f
 > done
+```
+
+Each of these environment variableis translates into a private attribute with the same
+name: the `ASTDOCS_FOLD_ARGS_AFTER` value is stored in the `_fold_args_after` variable
+for instance.
+
+When handled completely programmatically, this breaks the `Python` idiomatic ways:
+
+```python
+import os
+
+os.environ["ASTDOCS_FOLD_ARGS_AFTER"] = 88
+os.environ["ASTDOCS_WITH_LINENOS"] = "off"
+
+import astdocs
+
+md = astdocs.render_recursively(".")
 ```
 
 **Attributes:**
