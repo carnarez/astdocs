@@ -28,13 +28,17 @@ $ python astdocs.py .  # recursively look for *.py files in the current director
 
 The behaviour of this little stunt can be modified via environment variables:
 
+* `ASTDOCS_BOUND_OBJECTS` taking the `1`, `on`, `true` or `yes` values (anything else
+  will be ignored/counted as negative) to add `%%%START ...` and `%%%END ...` markers
+  to indicate the beginning/end of an object (useful for further styling when rendering
+  in `HTML` for example).
 * `ASTDOCS_FOLD_ARGS_AFTER` to fold long object (function/method) definitions (many
   parameters). Defaults to 88 characters, [`black`](https://github.com/psf/black)
   [recommended](https://www.youtube.com/watch?v=wf-BqAjZb8M&t=260s&ab_channel=PyCon2015)
   default.
 * `ASTDOCS_SHOW_PRIVATE` taking the `1`, `on`, `true` or `yes` values (anything else
-   will be ignored/counted as negative) to show `Python` private objects (which names
-   start with an underscore).
+   will be ignored) to show `Python` private objects (which names start with an
+   underscore).
 * `ASTDOCS_SPLIT_BY` taking the `m`, `mc`, `mfc` or an empty value (default, all
   rendered content in one output): split each **m**odule, **f**unction and/or **c**lass
   (by adding `%%%BEGIN ...` markers). Classes will always keep their methods. In case
@@ -68,7 +72,8 @@ Each of these environment variableis translates into a private attribute with th
 name: the `ASTDOCS_FOLD_ARGS_AFTER` value is stored in the `_fold_args_after` variable
 for instance.
 
-When handled completely programmatically, this breaks the `Python` idiomatic ways:
+When handling options completely programmatically, this breaks the `Python` idiomatic
+ways (code in the middle of `import` statements):
 
 ```python
 import os
@@ -80,6 +85,9 @@ import astdocs
 
 md = astdocs.render_recursively(".")
 ```
+
+and that might make some checkers/linters unhappy. (This whole thing started with two
+flags but grew out of hands...)
 
 Attributes
 ----------
@@ -102,6 +110,7 @@ import sys
 import typing
 
 TPL_CLASSDEF = string.Template(
+    "\n%%%START CLASSDEF $ancestry.$classname"
     "\n$hashtags `$ancestry.$classname`"
     "\n"
     "\n$classdocs"
@@ -121,9 +130,11 @@ TPL_CLASSDEF = string.Template(
     "\n$constdocs"
     "\n"
     "\n$funcdefs"
+    "\n%%%END CLASSDEF $ancestry.$classname"
 )
 
 TPL_FUNCTIONDEF = string.Template(
+    "\n%%%START FUNCTIONDEF $ancestry.$funcname"
     "\n$hashtags `$ancestry.$funcname`"
     "\n"
     "\n```python"
@@ -135,13 +146,39 @@ TPL_FUNCTIONDEF = string.Template(
     "\n$decoration"
     "\n"
     "\n%%%SOURCE $path:$lineno:$endlineno"
+    "\n%%%END FUNCTIONDEF $ancestry.$funcname"
 )
 
 TPL_MODULE = string.Template(
-    "\n# Module `$module`\n\n$docstring\n\n$funcnames\n\n$classnames"
+    "\n%%%START MODULE $module"
+    "\n# Module `$module`"
+    "\n"
+    "\n$docstring"
+    "\n"
+    "\n$funcnames"
+    "\n"
+    "\n$classnames"
+    "\n%%%END MODULE $module"
 )
 
 TPL = string.Template("$module\n\n$functions\n\n$classes")
+
+# if requested, add markers indicating the start and end of an object definition
+_bound_objects = (
+    True
+    if os.environ.get("ASTDOCS_BOUND_OBJECTS", "off") in ("1", "on", "true", "yes")
+    else False
+)
+if not _bound_objects:
+    TPL_CLASSDEF.template = re.sub(
+        r"\n%%%[A-Z]+ CLASSDEF \$ancestry\.\$classname", "", TPL_CLASSDEF.template
+    )
+    TPL_FUNCTIONDEF.template = re.sub(
+        r"\n%%%[A-Z]+ FUNCTIONDEF \$ancestry\.\$funcname", "", TPL_FUNCTIONDEF.template
+    )
+    TPL_MODULE.template = re.sub(
+        r"\n%%%[A-Z]+ MODULE \$module", "", TPL_MODULE.template
+    )
 
 # set the string length limit (black default)
 _fold_args_after = int(os.environ.get("ASTDOCS_FOLD_ARGS_AFTER", "88"))
@@ -389,7 +426,7 @@ def parse_classdef(n: ast.ClassDef):
     # save the object
     absolute = f"{n.ancestry}.{n.name}"
     local = absolute.replace(f"{_module}", "", 1).lstrip(".")
-    _objects[_module][local] = absolute
+    _objects[_module]["classes"][local] = absolute
 
 
 def parse_functiondef(n: typing.Union[ast.AsyncFunctionDef, ast.FunctionDef]):
@@ -418,7 +455,7 @@ def parse_functiondef(n: typing.Union[ast.AsyncFunctionDef, ast.FunctionDef]):
     rendered = f'{n.name}({", ".join(params)}){returns}'
     if len(rendered) > _fold_args_after:
         params = [f"\n    {p}" for p in params]
-        suffix = "\n"
+        suffix = ",\n"
     else:
         suffix = ""
 
@@ -438,7 +475,7 @@ def parse_functiondef(n: typing.Union[ast.AsyncFunctionDef, ast.FunctionDef]):
     # save the object
     absolute = f"{n.ancestry}.{n.name}"
     local = absolute.replace(f"{_module}", "", 1).lstrip(".")
-    _objects[_module][local] = absolute
+    _objects[_module]["functions"][local] = absolute
 
 
 def parse_import(n: typing.Union[ast.Import, ast.ImportFrom]):
@@ -469,7 +506,7 @@ def parse_import(n: typing.Union[ast.Import, ast.ImportFrom]):
 
         # save the object
         absolute = f"{path}.{i.name}".lstrip(".")
-        _objects[_module][local] = absolute
+        _objects[_module]["imports"][local] = absolute
 
 
 def parse_tree(n: typing.Any):
@@ -689,7 +726,7 @@ def render(filepath: str, remove_from_path: str = "") -> str:
         m = re.sub(r"\.py$", "", filepath.replace("/", ".")).lstrip(".")
 
         _module = m
-        _objects[m] = {}
+        _objects[m] = {"classes": {}, "functions": {}, "imports": {}}
 
         # traverse the ast
         n = ast.parse(f.read())
@@ -732,7 +769,7 @@ def render(filepath: str, remove_from_path: str = "") -> str:
 
     # cleanup (extra line breaks)
     s = re.sub(r"\n{3,}", "\n\n", s)
-    s = re.sub(r"\n{2,}%%%BEGIN", "\n%%%BEGIN", s)
+    s = re.sub(r"\n{2,}%%%([A-Z]*)", r"\n%%%\1", s)
 
     return s
 
@@ -790,7 +827,7 @@ def render_recursively(path: str, remove_from_path: str = "") -> str:
     s = "\n\n".join(mr)
 
     # cleanup (extra line breaks)
-    s = re.sub(r"\n{2,}%%%BEGIN", "\n%%%BEGIN", s)
+    s = re.sub(r"\n{2,}%%%([A-Z]*)", r"\n%%%\1", s)
 
     return s
 
