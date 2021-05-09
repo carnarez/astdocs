@@ -1,6 +1,6 @@
 ASTDOCS_SPLIT_BY=m python3 process.py | csplit -qz - '/^%%%BEGIN/' '{*}'
 
-grep -v '^%%%BEGIN' xx00 > README.md
+grep -v '^%%%BEGIN' xx00 > tmp3
 rm xx00
 
 for f in xx??; do
@@ -10,4 +10,8 @@ for f in xx??; do
   rm $f
 done
 
-rm docs/*/astdocs.md  # cleanup
+python3 astdocs.py process.py > tmp1
+echo >> tmp2
+cat tmp? > README.md
+
+rm tmp? docs/*/astdocs.md  # cleanup

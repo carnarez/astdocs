@@ -7,8 +7,8 @@ Visualization is intended to be generated via [`D3.js`](https://d3js.org/). See 
 Notes
 -----
 One can abuse the example at the page linked above: replace the data (browse a bit, find
-find the right cell, click on the small paperclip icon). If the nodes are flying all
-over when applying the forces on the graph data, try to modify the parameters of the
+the right cell, click on the small paperclip icon). If the nodes are flying all over
+when applying the forces on the graph data, try to modify the parameters of the
 simulation:
 
 ```javascript
@@ -24,6 +24,11 @@ const simulation = d3.forceSimulation(nodes)
 ```
 
 See the meaning of those parameters [here](https://github.com/d3/d3-force).
+
+Known problems
+--------------
+This small toy thing breaks on `from ... import *` statements (cannot guess which
+objects are imported; but this is bad `Python` habits anyhow).
 """
 
 import json
