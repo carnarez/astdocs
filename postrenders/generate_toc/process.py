@@ -12,7 +12,6 @@ $ rm xx00
 >   grep -v '^%%%BEGIN' $f > "docs/$path.md"  # double quotes are needed
 >   rm $f
 > done
-$ rm docs/*/astdocs.md  # cleanup
 ```
 
 (See `process.sh` in this directory.)
@@ -76,7 +75,7 @@ md_toc = toc(astdocs._objects, "docs")
 print(
     "%%%BEGIN TOC\n"
     "# Table of Contents\n\n"
-    f'All [sub]modules in the `{cwd.split("/")[-2]}` directory:'
+    f'As an example, below all [sub]modules in the `{cwd.split("/")[-2]}` directory:'
 )
 print(md_toc)
 print(md_doc)

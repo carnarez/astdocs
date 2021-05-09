@@ -14,7 +14,6 @@ $ rm xx00
 >   grep -v '^%%%BEGIN' $f > "docs/$path.md"  # double quotes are needed
 >   rm $f
 > done
-$ rm docs/*/astdocs.md  # cleanup
 ```
 
 (See `process.sh` in this directory.)
