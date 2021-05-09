@@ -62,7 +62,10 @@ def toc(
             for t in ["functions", "classes"]:
                 for o in objects[m][t]:
                     anchor = m.replace(".", "") + o.replace(".", "")  # github
-                    md += f"\n    - [`{m}.{o}`]({path_prefix}/{path}.md#{anchor})"
+                    md += (
+                        f'\n    - {t.capitalize().rstrip("es")} '
+                        f"[`{m}.{o}`]({path_prefix}/{path}.md#{anchor})"
+                    )
 
     return md
 
