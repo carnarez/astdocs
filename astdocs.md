@@ -95,7 +95,7 @@ $ for f in xx??; do
 
 ```python
 format_annotation(
-    a: typing.Union[ast.Attribute, ast.Constant, ast.List[, ast.Name, ast.Subscript]], 
+    a: typing.Union[ast.Attribute, ast.Constant, ast.List, ast.Name, ast.Subscript], 
     char: str
 ) -> str:
 ```
