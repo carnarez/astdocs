@@ -19,3 +19,4 @@ All \[sub\]modules in the `postrenders` directory:
     [`object_graph.process.add_edge`](docs/object_graph/process.md#object_graphprocessadd_edge)
   - Function
     [`object_graph.process.graph`](docs/object_graph/process.md#object_graphprocessgraph)
+- Module [`to_html.process`](docs/to_html/process.md)

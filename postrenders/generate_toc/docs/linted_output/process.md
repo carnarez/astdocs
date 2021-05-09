@@ -43,7 +43,7 @@ Fetch/parse/render docstrings (simple wrapper function to allow decorators).
 
 **Parameters:**
 
-- `filepath` \[`str`\]: Path to the `Python` module to be processed
+- `filepath` \[`str`\]: Path to the `Python` module to be processed.
 
 **Returns:**
 
