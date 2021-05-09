@@ -39,7 +39,7 @@ def render(filepath: str) -> str:
     Parameters
     ----------
     filepath : str
-        Path to the `Python` module to be processed
+        Path to the `Python` module to be processed.
 
     Returns
     -------

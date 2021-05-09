@@ -1,0 +1,3 @@
+markdown
+minify-html
+pygments
