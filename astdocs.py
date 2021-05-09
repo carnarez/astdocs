@@ -5,14 +5,16 @@ r"""Extract and format documentation from `Python` code.
 In a few more words, parse the underlying Abstract Syntax Tree (AST) description. (See
 the [documentation](https://docs.python.org/3/library/ast.html) of the standard library
 module with same name.) It expects a relatively clean input (demonstrated in this very
-script) which forces me to keep my code somewhat correctly documented and without fancy
-syntax.
+script) which forces *me* to keep *my* code somewhat correctly documented and without
+fancy syntax.
 
 My only requirement was to use the `Python` standard library **exclusively** (even the
 [templating](https://docs.python.org/3/library/string.html#template-strings)) as it is
 quite [overly] complete these days, and keep it as *lean* as possible. Support for
 corner cases is scarse... for one, no class-in- nor function-in-function (which I
 consider private, in the `Python` sense).
+
+> *Use at your own risk.*
 
 The simplest way to check by example is to run this script on itself:
 
