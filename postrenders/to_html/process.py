@@ -1,6 +1,6 @@
 """Render the output in `HTML`, including syntax highlighting and anchor links.
 
-The html can be generated as follows:
+The `HTML` content can be generated as follows:
 
 ```shell
 $ python process.py astdocs.py > html/astdocs.html
