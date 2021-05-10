@@ -1,4 +1,4 @@
-# Module `to_html.process`
+# Module `process`
 
 Render the output in `HTML`, including syntax highlighting and anchor links.
 

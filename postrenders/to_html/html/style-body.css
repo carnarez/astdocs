@@ -45,18 +45,6 @@ h6 {
     margin: 3rem 0 0 -4rem;
 }
 
-a {
-    color: #3c78e6;
-    display: inline-block;
-    text-decoration: none;
-    transition: all .5s;
-}
-
-a:hover {
-    color: #3c5fa0;
-    text-decoration: underline;
-}
-
 blockquote {
     background-color: #ffffd7;
     border-color: #eeee07;
