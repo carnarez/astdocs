@@ -18,7 +18,7 @@ consider private, in the `Python` sense).
 
 > *Use at your own risk.*
 
-The simplest way to check by example is to run this script on itself:
+The simplest way to check the output of this script is to run it on itself:
 
 ```shell
 $ python astdocs.py astdocs.py  # pipe it to your favourite markdown linter
@@ -163,7 +163,7 @@ Expect some stiff `NumPy`-ish formatting (see
 [this](https://numpydoc.readthedocs.io/en/latest/example.html#example) or
 [that](https://sphinxcontrib-napoleon.readthedocs.io/en/latest/example_numpy.html)). Do
 try to **type** all your input parameters/returned objects. And use a linter on the
-output.
+output?
 
 **Parameters:**
 
@@ -173,6 +173,40 @@ output.
 **Returns:**
 
 - \[`str`\]: The formatted docstring.
+
+**Example:**
+
+Below the raw docstring example of what this very function is expecting as an input
+(very inceptional):
+
+```text
+Parameters
+----------
+n : typing.Union[ast.AsyncFunctionDef, ast.ClassDef, ast.FunctionDef, ast.Module]
+    Source node to extract/parse docstring from.
+
+Returns
+-------
+: str
+    The formatted docstring.
+```
+
+The code blocks are extracted and replaced by placeholders before applying the
+substitutions (then rolled back in). The regular expressions are then ran:
+
+- Leading hashtags (`#`) are removed from any lines starting with them as we do not want
+  them to conflict with the `Markdown` output.
+- Any series of words followed by a line with 3 or more dashes if assumed to be a section
+  marker (such as `Parameters`, `Returns`, `Example`, *etc.*).
+- Lines with `parameter : type` (`: type` optional) followed by a description preceded by
+  four space are formatted as input parameters
+- Lines with `: type` (providing a type is here *mandatory*) followed by a description
+  preceded by four spaces are formatted as returned values.
+
+Keep in mind that returning **the full path** to the returned object (if applicable) is
+always preferable. And indeed **some of it could be inferred** from the function call
+itself, or the `return` statement. BUT this whole thing is to force *myself* to
+structure my docstrings correctly.
 
 **Notes:**
 
