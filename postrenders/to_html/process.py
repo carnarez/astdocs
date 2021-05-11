@@ -9,7 +9,7 @@ $ python process.py astdocs.py > html/astdocs.html
 Note the CSS for the syntax highlighting was generated using:
 
 ```shell
-$ pygmentize -S default -f html -a .codehilite > html/styles-code.css
+$ pygmentize -S default -f html -a .codehilite > html/pygments.css
 ```
 
 after `pip install`ing [`Pygments`](https://pygments.org/).
@@ -26,8 +26,8 @@ headers = """
 <!DOCTYPE html>
 <html>
 <head>
-  <link rel="stylesheet" href="styles-body.css">
-  <link rel="stylesheet" href="styles-code.css">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="pygments.css">
 </head>
 <body>
 """
