@@ -1,37 +1,45 @@
-# the various linters/checkers to run
-# each will be run on each file individually
+# all hooks we need to run per extension
 
-# https://pycqa.github.io/isort/docs/configuration/options/
-isort="isort --multi-line=3 --profile=black --show-files"
-
-# https://black.readthedocs.io/en/stable/usage_and_configuration/the_basics.html
-black="black -v"
-
-# https://flake8.pycqa.org/en/latest/user/options.html
-# https://flake8.pycqa.org/en/latest/user/error-codes.html  
-flake8="flake8 --max-doc-length=88 --max-line-length=88"
-
-# http://www.pydocstyle.org/en/stable/usage.html
-pydoc="pydocstyle --convention=numpy"
-
-# https://mdformat.readthedocs.io/en/stable/users/style.html
-mdfmt="mdformat --wrap=88"
+declare -A hooks
+hooks=([md]=mdformat [py]=black,flake8,isort,pydocstyle)
 
 
-# fetch the list of modified files
-# making sure we handle spaces in filenames properly
-# loop is redundant but clear and fast
+# fetch the list of modified files from git itself
+# grep by extension defined in the associative array
+# if hook actions are required increment the error code before making them happen
+# issues with bash variable and nested loops in subshells asked for a lock file
 
-for hook in "$isort" "$black" "$flake8" "$pydoc"; do
-  echo $hook
-  git diff --name-only --diff-filter=ACM | grep '.py$' | while read f; do
-    $hook "$f"
+for e in ${!hooks[@]}; do
+  git diff --name-only --diff-filter=ACM | grep ".$e$" | while read f; do
+    for h in $(sed 's/,/ /g' <<< ${hooks[$e]}); do
+      echo -e "\n\e[1m$h:\e[0m"
+
+      o=$(grep -v "^\s*#" ~/hooks.y*ml | grep --after-context=3 "^$h:")
+      cmd=$(awk '$1=="cmd:" {$1="";print$0}' <<< $o | sed 's/^ //g')
+      flags=$(awk '$1=="flags:" {$1="";print$0}' <<< $o | sed 's/^ //g')
+      check=$(awk '$1=="check:" {$1="";print$0}' <<< $o | sed 's/^ //g')
+
+      if ! $cmd $check $flags "$f" &>/dev/null; then
+        $cmd $flags "$f" | sed 's/^/ /g'
+        > .commitlock
+        echo -e "\e[97;41m$cmd $flags\e[39;0m"
+      else
+        echo -e "\e[97;42m$cmd $flags\e[39;0m"
+      fi
+
+    done
   done
 done
 
-for hook in "$mdfmt"; do
-  echo $hook
-  git diff --name-only --diff-filter=ACM | grep '.md$' | while read f; do
-    $hook "$f"
-  done
-done
+
+# if lock file is present return an error code and the commit will be aborted
+# running things for a second time should fix it
+
+if [ -f .commitlock ]; then
+  rm .commitlock
+  echo -e "\nSome files need fixing, cancelling the commit."
+  exit 1
+else
+  echo -e "\nAll green, commit summary:"
+  exit 0
+fi
