@@ -1,17 +1,23 @@
-"""Make all objets available at the root of the package."""
+# flake8: noqa
+# isort: skip_file
 
-import astdocs
-from astdocs import format_annotation  # noqa
-from astdocs import format_docstring  # noqa
-from astdocs import parse_classdef  # noqa
-from astdocs import parse_functiondef  # noqa
-from astdocs import parse_import  # noqa
-from astdocs import parse_tree  # noqa
-from astdocs import postrender  # noqa
-from astdocs import render  # noqa
-from astdocs import render_classdef  # noqa
-from astdocs import render_functiondef  # noqa
-from astdocs import render_module  # noqa
-from astdocs import render_recursively  # noqa
+"""Make all objects available at the root of the package."""
 
-__doc__ = astdocs.__doc__
+from .astdocs import (
+    format_annotation,
+    format_docstring,
+    parse_classdef,
+    parse_functiondef,
+    parse_import,
+    parse_tree,
+    render_classdef,
+    render_functiondef,
+    render_module,
+    render,
+    render_recursively,
+    postrender,
+)
+
+from .astdocs import TPL, TPL_CLASSDEF, TPL_FUNCTIONDEF, TPL_MODULE
+
+from .astdocs import _classdefs, _funcdefs, _module, objects

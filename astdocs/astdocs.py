@@ -223,7 +223,8 @@ if not _with_linenos:
 _classdefs = {}
 _funcdefs = {}
 _module = ""
-_objects = {}
+
+objects = {}
 
 
 def format_annotation(
@@ -463,7 +464,7 @@ def parse_classdef(n: ast.ClassDef):
     # save the object
     absolute = f"{n.ancestry}.{n.name}"
     local = absolute.replace(f"{_module}", "", 1).lstrip(".")
-    _objects[_module]["classes"][local] = absolute
+    objects[_module]["classes"][local] = absolute
 
 
 def parse_functiondef(n: typing.Union[ast.AsyncFunctionDef, ast.FunctionDef]):
@@ -512,7 +513,7 @@ def parse_functiondef(n: typing.Union[ast.AsyncFunctionDef, ast.FunctionDef]):
     # save the object
     absolute = f"{n.ancestry}.{n.name}"
     local = absolute.replace(f"{_module}", "", 1).lstrip(".")
-    _objects[_module]["functions"][local] = absolute
+    objects[_module]["functions"][local] = absolute
 
 
 def parse_import(n: typing.Union[ast.Import, ast.ImportFrom]):
@@ -543,7 +544,7 @@ def parse_import(n: typing.Union[ast.Import, ast.ImportFrom]):
 
         # save the object
         absolute = f"{path}.{i.name}".lstrip(".")
-        _objects[_module]["imports"][local] = absolute
+        objects[_module]["imports"][local] = absolute
 
 
 def parse_tree(n: typing.Any):
@@ -748,7 +749,7 @@ def render(filepath: str, remove_from_path: str = "") -> str:
     global _classdefs
     global _funcdefs
     global _module
-    global _objects
+    global objects
 
     # make sure to flush the [global] objects in case multiple are rendered
     # note all objects encountered over a whole package are kept track of
@@ -763,7 +764,7 @@ def render(filepath: str, remove_from_path: str = "") -> str:
         m = re.sub(r"\.py$", "", filepath.replace("/", ".")).lstrip(".")
 
         _module = m
-        _objects[m] = {"classes": {}, "functions": {}, "imports": {}}
+        objects[m] = {"classes": {}, "functions": {}, "imports": {}}
 
         # traverse the ast
         n = ast.parse(f.read())
@@ -917,12 +918,10 @@ def postrender(func: typing.Callable) -> str:
     return decorator
 
 
-if __name__ == "__main__":
-    if len(sys.argv) > 2:
-        sys.exit(
-            "Too many arguments!"
-            f'Please read the docs via `pydoc {sys.argv[0].replace(".py", "")}` or so.'
-        )
+def __cli__():
+    """Process CLI calls."""
+    if len(sys.argv) != 2:
+        sys.exit("Wrong number of arguments! Accepting *one* only.")
 
     try:
         md = render(sys.argv[1])
@@ -930,3 +929,7 @@ if __name__ == "__main__":
         md = render_recursively(sys.argv[1])
 
     print(md)
+
+
+if __name__ == "__main__":
+    __cli__()
