@@ -4,6 +4,10 @@ Visualization is intended to be generated via [`D3.js`](https://d3js.org/). See 
 ~~code in this folder, or refer to the~~ example by the creator of the library himself
 [there](https://observablehq.com/@d3/force-directed-graph).
 
+Requirements
+------------
+* `astdocs`
+
 Notes
 -----
 One can abuse the example at the page linked above: replace the data (browse a bit, find
@@ -31,10 +35,10 @@ This small toy thing breaks on `from ... import *` statements (cannot guess whic
 objects are imported; but this is bad `Python` habits anyhow).
 """
 
+import hashlib
 import json
 import sys
 import typing
-from hashlib import md5  # actually not needed, just as example
 
 import astdocs
 
@@ -78,7 +82,7 @@ def add_node(nodes: typing.List[typing.Dict[str, str]], o: str, g: int):
     nodes : typing.List[typing.Dict[str, str]]
         List of defined nodes, updated (or not).
     """
-    h = md5(f"{o}".encode()).hexdigest()  # why not
+    h = hashlib.md5(f"{o}".encode()).hexdigest()  # why not
 
     if h not in _nodes:
         nodes.append({"id": o, "group": g})
@@ -104,7 +108,7 @@ def add_edge(edges: typing.List[typing.Dict[str, str]], so: str, to: str):
     edges : typing.List[typing.Dict[str, str]]
         List of defined edges, updated (or not).
     """
-    h = md5((f"{so}->{to}").encode()).hexdigest()
+    h = hashlib.md5((f"{so}->{to}").encode()).hexdigest()
 
     if h not in _edges and to != so:
         edges.append({"source": so, "target": to})
@@ -186,4 +190,4 @@ if __name__ == "__main__":
     except IsADirectoryError:
         astdocs.render_recursively(sys.argv[1])
 
-print(json.dumps(graph(astdocs._objects)))
+print(json.dumps(graph(astdocs.objects)))

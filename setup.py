@@ -1,4 +1,4 @@
-"""Make `astdocs` installable (including `pip install git+https://...`)."""
+"""Make `astdocs` installable (via `pip install git+https://...`)."""
 
 import setuptools
 

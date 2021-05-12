@@ -10,6 +10,7 @@ The `Python` linter chosen for this example is
 
 Requirements
 ------------
+* `astdocs`
 * [`mdformat`](https://github.com/executablebooks/mdformat)
 """
 
