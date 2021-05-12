@@ -2,7 +2,7 @@ FROM python:3.8-slim
 
 ARG uid=1000
 
-COPY requirements.txt /tmp/
+COPY requirements.txt /tmp/requirements.txt
 
 RUN apt-get update \
  && DEBIAN_FRONTEND=noninteractive \
@@ -10,7 +10,8 @@ RUN apt-get update \
  && pip install --no-cache-dir -r /tmp/requirements.txt \
  && useradd -d /home/pre-commit -m -s /bin/bash -u $uid pre-commit
 
-COPY entrypoint.sh /usr/local/bin/
+COPY hooks.yaml /home/pre-commit/hooks.yaml
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
 
 USER $uid
 

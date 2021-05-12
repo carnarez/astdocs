@@ -1,0 +1,20 @@
+black:
+    cmd: black
+    flags:
+    check: --check
+flake8:
+    cmd: flake8
+    flags: --max-doc-length=88 --max-line-length=88
+    check:
+isort:
+    cmd: isort
+    flags: --multi-line=3 --profile=black
+    check: --check
+mdformat:
+    cmd: mdformat
+    flags: --wrap=88
+    check: --check
+pydocstyle:
+    cmd: pydocstyle
+    flags: --convention=numpy
+    check:
