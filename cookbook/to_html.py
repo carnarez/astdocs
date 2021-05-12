@@ -4,6 +4,7 @@ Includes syntax highlighting (and code blocks), anchor links, minified `HTML` ou
 
 Requirements
 ------------
+* `astdocs`
 * [`markdown`](https://github.com/Python-Markdown/markdown)
 * [`minify-html`](https://github.com/wilsonzlin/minify-html)
 * [`pygments`](https://pygments.org/)

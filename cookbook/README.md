@@ -10,7 +10,7 @@ environment, either:
 $ python -m venv .venv
 $ .venv/bin/pip install -U pip
 $ .venv/bin/pip install --no-cache-dir git+https://github.com/carnarez/astdocs
-$ .venv/bin/pip install --no-cache-dir -r requirements.txt
+$ .venv/bin/pip install --no-cache-dir ...
 ```
 
 or even:
@@ -27,10 +27,16 @@ if you are like me fond of [`Docker`](https://www.docker.com/) and do **not** li
 sprinkle your entire filetree with random virtual environments. In this latter case keep
 in mind the user creating content (might need to play around with `chown`).
 
+To facilitate those steps a `Makefile` is provided. For instance:
+
+```shell
+$ make linted_output
+```
+
+will create virtual environment and install all necessary dependencies.
+
 # Snippets
 
-- [`generate_toc`](#generate_toc)
-  - [`generate_toc.toc`](#generate_toctoc)
 - [`linted_output`](#linted_output)
   - [`linted_output.lint`](#linted_outputlint)
   - [`linted_output.render`](#linted_outputrender)
@@ -40,35 +46,10 @@ in mind the user creating content (might need to play around with `chown`).
   - [`object_graph.add_edge`](#object_graphadd_edge)
   - [`object_graph.graph`](#object_graphgraph)
 - [`to_html`](#to_html)
+- [`with_toc`](#with_toc)
+  - [`with_toc.generate_toc`](#with_tocgenerate_toc)
 
-# Module `generate_toc`
-
-Generate a table of contents from listed objects.
-
-**Functions:**
-
-- [`toc()`](#generate_toctoc)
-
-## Functions
-
-### `generate_toc.toc`
-
-```python
-toc(objects: typing.Dict[str, typing.Dict[str, typing.Dict[str, str]]]) -> str:
-```
-
-Filter objects and generate the table of content.
-
-**Parameters:**
-
-- `objects` \[`typing.Dict[str, typing.Dict[str, typing.Dict[str, str]]]`\]: Dictionary of
-  objects encountered in all modules parsed by `astdocs`.
-
-**Returns:**
-
-- \[`str`\]: `Markdown`-formatted table of content.
-
-# Module `linted_output`
+## Module `linted_output`
 
 Pipe the output of `astdocs` to a linter.
 
@@ -82,6 +63,7 @@ The `Python` linter chosen for this example is
 
 **Requirements:**
 
+- `astdocs`
 - [`mdformat`](https://github.com/executablebooks/mdformat)
 
 **Functions:**
@@ -89,9 +71,9 @@ The `Python` linter chosen for this example is
 - [`lint()`](#linted_outputlint)
 - [`render()`](#linted_outputrender)
 
-## Functions
+### Functions
 
-### `linted_output.lint`
+#### `linted_output.lint`
 
 ```python
 lint(md: str) -> str:
@@ -107,7 +89,7 @@ Lint the `Markdown`.
 
 - \[`str`\]: Linted `Markdown`.
 
-### `linted_output.render`
+#### `linted_output.render`
 
 ```python
 render(filepath: str) -> str:
@@ -125,13 +107,17 @@ Fetch/parse/render docstrings (simple wrapper function to allow decorators).
 
 **Decoration** via `@astdocs.postrender(lint)`.
 
-# Module `object_graph`
+## Module `object_graph`
 
 Prepare an output to visualize the dependency graph of a module/package.
 
 Visualization is intended to be generated via [`D3.js`](https://d3js.org/). See the
 ~~code in this folder, or refer to the~~ example by the creator of the library himself
 [there](https://observablehq.com/@d3/force-directed-graph).
+
+**Requirements:**
+
+- `astdocs`
 
 **Notes:**
 
@@ -166,9 +152,9 @@ objects are imported; but this is bad `Python` habits anyhow).
 - [`add_edge()`](#object_graphadd_edge)
 - [`graph()`](#object_graphgraph)
 
-## Functions
+### Functions
 
-### `object_graph.is_local`
+#### `object_graph.is_local`
 
 ```python
 is_local(o: str, objects: typing.List[str]) -> bool:
@@ -185,7 +171,7 @@ Check whether an object is local, or external, looking at its path.
 
 - \[`bool`\]: Whether the object is local or external to the `Python` parsed package(s).
 
-### `object_graph.add_node`
+#### `object_graph.add_node`
 
 ```python
 add_node(nodes: typing.List[typing.Dict[str, str]], o: str, g: int):
@@ -204,7 +190,7 @@ Add a node to the pool if not yet present.
 - `nodes` \[`typing.List[typing.Dict[str, str]]`\]: List of defined nodes, updated (or
   not).
 
-### `object_graph.add_edge`
+#### `object_graph.add_edge`
 
 ```python
 add_edge(edges: typing.List[typing.Dict[str, str]], so: str, to: str):
@@ -223,7 +209,7 @@ Add an edge to the pool if not yet present.
 - `edges` \[`typing.List[typing.Dict[str, str]]`\]: List of defined edges, updated (or
   not).
 
-### `object_graph.graph`
+#### `object_graph.graph`
 
 ```python
 graph(
@@ -249,14 +235,15 @@ Generate graph, *e.g.*, nodes and edges.
 - Edges are defined as `{"source": ..., "target": ...}`, both being object names.
 - This gymnastics easily breaks on `from ... import *` and other ugliness.
 
-# Module `to_html`
+## Module `to_html`
 
-Render the output in `HTML`
+Render the output in `HTML`.
 
 Includes syntax highlighting (and code blocks), anchor links, minified `HTML` output.
 
 **Requirements:**
 
+- `astdocs`
 - [`markdown`](https://github.com/Python-Markdown/markdown)
 - [`minify-html`](https://github.com/wilsonzlin/minify-html)
 - [`pygments`](https://pygments.org/)
@@ -270,3 +257,34 @@ $ pygmentize -S default -f html -a .codehilite > html/pygments.css
 ```
 
 check the list of available styles with `pygmentize -L`.
+
+## Module `with_toc`
+
+Generate a table of contents from listed objects.
+
+**Requirements:**
+
+- `astdocs`
+
+**Functions:**
+
+- [`generate_toc()`](#with_tocgenerate_toc)
+
+### Functions
+
+#### `with_toc.generate_toc`
+
+```python
+generate_toc(objects: typing.Dict[str, typing.Dict[str, typing.Dict[str, str]]]) -> str:
+```
+
+Filter objects and generate the table of content.
+
+**Parameters:**
+
+- `objects` \[`typing.Dict[str, typing.Dict[str, typing.Dict[str, str]]]`\]: Dictionary of
+  objects encountered in all modules parsed by `astdocs`.
+
+**Returns:**
+
+- \[`str`\]: `Markdown`-formatted table of content.
