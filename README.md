@@ -5,8 +5,8 @@ modules.** Get it via a simple:
 $ pip install git+https://github.com/carnarez/astdocs@master
 ```
 
-then installing itself as an `astdocs` command line tool on top of adding the `Python`
-package to the `import` path, or:
+then installing itself as an `astdocs` command line tool (on top of adding the `Python`
+package to the `import` path), or:
 
 ```shell
 $ wget https://raw.githubusercontent.com/carnarez/astdocs/master/astdocs/astdocs.py
