@@ -1,4 +1,4 @@
-"""Make this installable (including `pip install git+https://...`)."""
+"""Make `astdocs` installable (including `pip install git+https://...`)."""
 
 import setuptools
 
@@ -7,7 +7,7 @@ with open("README.md") as f:
 
 setuptools.setup(
     name="astdocs",
-    version="0.0.0",
+    version="0.0.1",
     author="carnarez",
     description=desc,
     url="https://github.com/carnarez/astdocs",
