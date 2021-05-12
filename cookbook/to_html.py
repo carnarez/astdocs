@@ -1,18 +1,23 @@
-"""Render the output in `HTML`, including syntax highlighting and anchor links.
+"""Render the output in `HTML`.
 
-The `HTML` content can be generated as follows:
+Includes syntax highlighting (and code blocks), anchor links, minified `HTML` output.
 
-```shell
-$ python process.py astdocs.py > html/astdocs.html
-```
+Requirements
+------------
+* `astdocs`
+* [`markdown`](https://github.com/Python-Markdown/markdown)
+* [`minify-html`](https://github.com/wilsonzlin/minify-html)
+* [`pygments`](https://pygments.org/)
 
-Note the CSS for the syntax highlighting was generated using:
+Notes
+-----
+The CSS for the syntax highlighting can be generated using:
 
 ```shell
 $ pygmentize -S default -f html -a .codehilite > html/pygments.css
 ```
 
-after `pip install`ing [`Pygments`](https://pygments.org/).
+check the list of available styles with `pygmentize -L`.
 """
 
 import sys

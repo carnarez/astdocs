@@ -7,6 +7,11 @@ dependency, which is **out of scope**.)
 The `Python` linter chosen for this example is
 [`Mdformat`](https://github.com/executablebooks/mdformat), code style described
 [there](https://mdformat.readthedocs.io/en/stable/users/style.html).
+
+Requirements
+------------
+* `astdocs`
+* [`mdformat`](https://github.com/executablebooks/mdformat)
 """
 
 import sys
