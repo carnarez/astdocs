@@ -11,5 +11,6 @@ setuptools.setup(
     author="carnarez",
     description=desc,
     url="https://github.com/carnarez/astdocs",
-    packages=setuptools.find_packages(where="astdocs"),
+    packages=["astdocs"],
+    entry_points={"console_scripts": ["astdocs=astdocs.astdocs:__cli__"]},
 )
