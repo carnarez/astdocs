@@ -1,6 +1,6 @@
 r"""Extract and format documentation from `Python` code.
 
-> *According to **my** standards.*
+> **According to **my** standards.**
 
 In a few more words, parse the underlying Abstract Syntax Tree (AST) description. (See
 the [documentation](https://docs.python.org/3/library/ast.html) of the standard library
@@ -13,8 +13,6 @@ My only requirement was to use the `Python` standard library **exclusively** (ev
 quite [overly] complete these days, and keep it as *lean* as possible. Support for
 corner cases is scarse... for one, no class-in- nor function-in-function (which I
 consider private, in the `Python` sense).
-
-> *Use at your own risk.*
 
 The simplest way to check the output of this script is to run it on itself:
 
