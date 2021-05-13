@@ -1,4 +1,5 @@
-# all hooks we need to run per extension
+# all hooks we need to run, organised by extension
+# they will be run in the order provided
 
 declare -A hooks
 hooks=([md]=mdformat [py]=black,flake8,isort,pydocstyle)
@@ -7,7 +8,7 @@ hooks=([md]=mdformat [py]=black,flake8,isort,pydocstyle)
 # fetch the list of modified files from git itself
 # grep by extension defined in the associative array
 # if hook actions are required increment the error code before making them happen
-# issues with bash variable and nested loops in subshells asked for a lock file
+# issues with bash variables and nested loops in subshells asked for a lock file
 
 for e in ${!hooks[@]}; do
   git diff --name-only --diff-filter=ACM | grep ".$e$" | while read f; do
@@ -15,16 +16,16 @@ for e in ${!hooks[@]}; do
       echo -e "\n\e[1m$h:\e[0m"
 
       o=$(grep -v "^\s*#" ~/hooks.y*ml | grep --after-context=3 "^$h:")
-      cmd=$(awk '$1=="cmd:" {$1="";print$0}' <<< $o | sed 's/^ //g')
-      flags=$(awk '$1=="flags:" {$1="";print$0}' <<< $o | sed 's/^ //g')
-      check=$(awk '$1=="check:" {$1="";print$0}' <<< $o | sed 's/^ //g')
+      cmd=$(awk '$1=="cmd:" {$1="";print$0}' <<< $o | xargs)
+      flags=$(awk '$1=="flags:" {$1="";print$0}' <<< $o)
+      check=$(awk '$1=="check:" {$1="";print$0}' <<< $o)
 
       if ! $cmd $check $flags "$f" &>/dev/null; then
-        $cmd $flags "$f" | sed 's/^/ /g'
+        $cmd $flags "$f" 2>&1 | sed 's/^/ /g'
         > .commitlock
-        echo -e "\e[97;41m$cmd $flags\e[39;0m"
+        echo -e "\e[97;41m$cmd$flags\e[39;0m"
       else
-        echo -e "\e[97;42m$cmd $flags\e[39;0m"
+        echo -e "\e[97;42m$cmd$flags\e[39;0m"
       fi
 
     done
