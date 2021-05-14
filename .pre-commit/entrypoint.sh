@@ -10,10 +10,12 @@ hooks=([md]=mdformat [py]=black,flake8,isort,pydocstyle)
 # if hook actions are required increment the error code before making them happen
 # issues with bash variables and nested loops in subshells asked for a lock file
 
+
+
 for e in ${!hooks[@]}; do
   git diff --name-only --diff-filter=ACM | grep ".$e$" | while read f; do
     for h in $(sed 's/,/ /g' <<< ${hooks[$e]}); do
-      echo -e "\n\e[1m$h:\e[0m"
+      echo -e "\n$(tput bold)$h:$(tput sgr0)"
 
       o=$(grep -v "^\s*#" ~/hooks.y*ml | grep --after-context=3 "^$h:")
       cmd=$(awk '$1=="cmd:" {$1="";print$0}' <<< $o | xargs)
@@ -23,9 +25,9 @@ for e in ${!hooks[@]}; do
       if ! $cmd $check $flags "$f" &>/dev/null; then
         $cmd $flags "$f" 2>&1 | sed 's/^/ /g'
         > .commitlock
-        echo -e "\e[97;41m$cmd$flags\e[39;0m"
+        echo -e "$(tput setab 1)$cmd$flags$(tput setab 9)"
       else
-        echo -e "\e[97;42m$cmd$flags\e[39;0m"
+        echo -e "$(tput setab 2)$cmd$flags$(tput setab 9)"
       fi
 
     done
