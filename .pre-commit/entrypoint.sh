@@ -1,3 +1,5 @@
+export TERM=xterm-256color
+
 # all hooks we need to run, organised by extension
 # they will be run in the order provided
 
