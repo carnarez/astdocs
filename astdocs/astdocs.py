@@ -868,7 +868,7 @@ def render_recursively(path: str, remove_from_path: str = "") -> str:
     return s
 
 
-def postrender(func: typing.Callable) -> str:
+def postrender(func: typing.Callable):
     """Apply a post-rendering function on the output of the decorated function.
 
     This can be used to streamline the linting of the output, or immediately convert to
@@ -877,7 +877,8 @@ def postrender(func: typing.Callable) -> str:
     Parameters
     ----------
     func : typing.Callable
-        The function to apply; should take a `str` as lone input.
+        The function to apply; should take a `str` as lone input, the `Markdown` to
+        process.
 
     Returns
     -------
@@ -907,7 +908,7 @@ def postrender(func: typing.Callable) -> str:
     ```
     """
 
-    def decorator(f):
+    def decorator(f: typing.Callable):
         def wrapper(*args, **kwargs):
             return func(f(*args, **kwargs))
 
