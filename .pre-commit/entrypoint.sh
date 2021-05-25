@@ -27,9 +27,9 @@ for e in ${!hooks[@]}; do
       if ! $cmd $check $flags "$f" &>/dev/null; then
         $cmd $flags "$f" 2>&1 | sed 's/^/ /g'
         > .commitlock
-        echo -e "$(tput setab 1)$cmd$flags$(tput setab 9)"
+        echo -e "$(tput setab 1)$cmd$flags$(tput sgr0)"
       else
-        echo -e "$(tput setab 2)$cmd$flags$(tput setab 9)"
+        echo -e "$(tput setab 2)$cmd$flags$(tput sgr0)"
       fi
 
     done
