@@ -611,7 +611,7 @@ def render_classdef(filepath: str, name: str) -> str:
     if init in fn:
         fn.pop(fn.index(init))
         f = _funcdefs.pop(init)
-        params = f["params"]
+        params = f["params"].replace("self,", "").strip()
         docstr = f["funcdocs"]
         lineno = f["lineno"]
         endlineno = f["endlineno"]
@@ -626,7 +626,12 @@ def render_classdef(filepath: str, name: str) -> str:
     for f in fn:
         n = f.split(".")[-1]
         if not n.startswith("_") or _show_private:
-            _funcdefs[f].update({"hashtags": f"{ht}##"})
+            _funcdefs[f].update(
+                {
+                    "hashtags": f"{ht}##",
+                    "params": _funcdefs[f]["params"].replace("self,", "").strip(),
+                }
+            )
             fr.append(render_functiondef(filepath, f))
 
     # methods bullet list
