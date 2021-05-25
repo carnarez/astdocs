@@ -114,6 +114,7 @@ flags but grew out of hands...)
 - [`render()`](#astdocsrender)
 - [`render_recursively()`](#astdocsrender_recursively)
 - [`postrender()`](#astdocspostrender)
+- [`main()`](#astdocsmain)
 
 ## Functions
 
@@ -421,7 +422,7 @@ except NameError:
 ### `astdocs.postrender`
 
 ```python
-postrender(func: typing.Callable) -> str:
+postrender(func: typing.Callable):
 ```
 
 Apply a post-rendering function on the output of the decorated function.
@@ -432,7 +433,7 @@ This can be used to streamline the linting of the output, or immediately convert
 **Parameters:**
 
 - `func` \[`typing.Callable`\]: The function to apply; should take a `str` as lone
-  input.
+  input, the `Markdown` to process.
 
 **Returns:**
 
@@ -458,3 +459,11 @@ def render(filepath: str) -> str:  # simple wrapper function
 
 print(render(...))
 ```
+
+### `astdocs.main`
+
+```python
+main():
+```
+
+Process CLI calls.

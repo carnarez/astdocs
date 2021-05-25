@@ -917,7 +917,7 @@ def postrender(func: typing.Callable):
     return decorator
 
 
-def __cli__():
+def main():
     """Process CLI calls."""
     if len(sys.argv) != 2:
         sys.exit("Wrong number of arguments! Accepting *one* only.")
@@ -931,4 +931,4 @@ def __cli__():
 
 
 if __name__ == "__main__":
-    __cli__()
+    main()
