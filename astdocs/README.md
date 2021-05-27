@@ -93,12 +93,12 @@ flags but grew out of hands...)
 
 **Attributes:**
 
+- `TPL` \[`string.Template`\]: Template to render the overall page (only governs order
+  of objects in the output).
 - `TPL_CLASSDEF` \[`string.Template`\]: Template to render `class` objects.
 - `TPL_FUNCTIONDEF` \[`string.Template`\]: Template to render `def` objects (async or
   not).
 - `TPL_MODULE` \[`string.Template`\]: Template to render the module summary.
-- `TPL` \[`string.Template`\]: Template to render the overall page (only governs order
-  of objects in the output).
 
 **Functions:**
 
