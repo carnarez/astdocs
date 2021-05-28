@@ -484,6 +484,10 @@ def parse_functiondef(n: typing.Union[ast.AsyncFunctionDef, ast.FunctionDef]):
 
     # parse/format arguments and annotations
     params = [f'{a.arg}{format_annotation(a.annotation, ": ")}' for a in n.args.args]
+    if n.args.vararg is not None:
+        params += [f"*{n.args.vararg.arg}"]
+    if n.args.kwarg is not None:
+        params += [f"**{n.args.kwarg.arg}"]
     returns = format_annotation(n.returns, " -> ")
 
     # add line breaks if the function call is long (pre-render this latter first, no way
@@ -611,7 +615,7 @@ def render_classdef(filepath: str, name: str) -> str:
     if init in fn:
         fn.pop(fn.index(init))
         f = _funcdefs.pop(init)
-        params = f["params"].replace("self,", "").strip()
+        params = re.sub(r"self(?:,)?", "", f["params"]).strip()
         docstr = f["funcdocs"]
         lineno = f["lineno"]
         endlineno = f["endlineno"]
@@ -629,7 +633,7 @@ def render_classdef(filepath: str, name: str) -> str:
             _funcdefs[f].update(
                 {
                     "hashtags": f"{ht}##",
-                    "params": _funcdefs[f]["params"].replace("self,", "").strip(),
+                    "params": re.sub(r"self(?:,)?", "", _funcdefs[f]["params"]).strip(),
                 }
             )
             fr.append(render_functiondef(filepath, f))
