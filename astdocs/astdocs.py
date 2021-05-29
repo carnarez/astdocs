@@ -110,6 +110,8 @@ import string
 import sys
 import typing
 
+TPL = string.Template("$module\n\n$functions\n\n$classes")
+
 TPL_CLASSDEF = string.Template(
     "\n%%%START CLASSDEF $ancestry.$classname"
     "\n$hashtags `$ancestry.$classname`"
@@ -161,8 +163,6 @@ TPL_MODULE = string.Template(
     "\n$classnames"
     "\n%%%END MODULE $module"
 )
-
-TPL = string.Template("$module\n\n$functions\n\n$classes")
 
 # if requested, add markers indicating the start and end of an object definition
 _bound_objects = (
