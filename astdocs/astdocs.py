@@ -550,8 +550,10 @@ def parse_import(n: typing.Union[ast.Import, ast.ImportFrom]):
             local = i.name
 
         # save the object
-        absolute = f"{path}.{i.name}".lstrip(".")
-        objects[_module]["imports"][local] = f'{"."*level}{absolute}'
+        # support for heresy like "from .. import *"
+        absolute = "."*level + f"{path}.{i.name}".lstrip(".")
+        local = absolute if local == "*" else local
+        objects[_module]["imports"][local] = absolute
 
 
 def parse_tree(n: typing.Any):
@@ -775,12 +777,14 @@ def render(filepath: str, remove_from_path: str = "") -> str:
             filepath = filepath.replace(remove_from_path, "")
         m = re.sub(r"\.py$", "", filepath.replace("/", ".")).lstrip(".")
 
-        _module = m
-        objects[m] = {"classes": {}, "functions": {}, "imports": {}}
+        # define the name of the current module
+        _module = m.replace(".__init__", "")
+        _module = _module if len(_module) else os.getcwd().rsplit("/", 1)[-1]
+        objects[_module] = {"classes": {}, "functions": {}, "imports": {}}
 
         # traverse the ast
         n = ast.parse(f.read())
-        n.name = m.replace(".__init__", "")
+        n.name = _module
         parse_tree(n)
 
     # only the objects at the root of the module
