@@ -530,13 +530,18 @@ def parse_import(n: typing.Union[ast.Import, ast.ImportFrom]):
     n : typing.Union[ast.Import, ast.ImportFrom]
         The node to extract information from.
     """
+    path = ""
+    level = 0
+
     if hasattr(n, "module"):
         if n.module is None:
-            path = ".".join(n.ancestry.split(".")[:-1])
+            if n.level == 0:
+                path = ".".join(n.ancestry.split(".")[:-1])
         else:
             path = n.module
-    else:
-        path = ""
+
+        if n.level > 0:
+            level = n.level
 
     for i in n.names:
         if i.asname is not None:
@@ -546,7 +551,7 @@ def parse_import(n: typing.Union[ast.Import, ast.ImportFrom]):
 
         # save the object
         absolute = f"{path}.{i.name}".lstrip(".")
-        objects[_module]["imports"][local] = absolute
+        objects[_module]["imports"][local] = f'{"."*level}{absolute}'
 
 
 def parse_tree(n: typing.Any):
