@@ -29,7 +29,7 @@ def generate_toc(
 
     for m in objects:
         anchor = m.replace(".", "")  # github
-        md += f"\n- [`{m}`](#{anchor})"
+        md += f"\n- [`{m}`](#module-{anchor})"
         for t in ["functions", "classes"]:
             for o in objects[m][t]:
                 anchor = (m + o).replace(".", "")  # github

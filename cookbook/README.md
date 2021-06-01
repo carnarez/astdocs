@@ -37,16 +37,16 @@ will create virtual environment and install all necessary dependencies.
 
 # Snippets
 
-- [`linted_output`](#linted_output)
+- [`linted_output`](#module-linted_output)
   - [`linted_output.lint`](#linted_outputlint)
   - [`linted_output.render`](#linted_outputrender)
-- [`object_graph`](#object_graph)
+- [`object_graph`](#module-object_graph)
   - [`object_graph.is_local`](#object_graphis_local)
   - [`object_graph.add_node`](#object_graphadd_node)
   - [`object_graph.add_edge`](#object_graphadd_edge)
   - [`object_graph.graph`](#object_graphgraph)
-- [`to_html`](#to_html)
-- [`with_toc`](#with_toc)
+- [`to_html`](#module-to_html)
+- [`with_toc`](#module-with_toc)
   - [`with_toc.generate_toc`](#with_tocgenerate_toc)
 
 ## Module `linted_output`
@@ -113,7 +113,7 @@ Prepare an output to visualize the dependency graph of a module/package.
 
 Visualization is intended to be generated via [`D3.js`](https://d3js.org/). See the
 ~~code in this folder, or refer to the~~ example by the creator of the library himself
-[there](https://observablehq.com/@d3/force-directed-graph).
+[there](https://observablehq.com/@d3/disjoint-force-directed-graph).
 
 **Requirements:**
 
@@ -122,28 +122,12 @@ Visualization is intended to be generated via [`D3.js`](https://d3js.org/). See 
 **Notes:**
 
 One can abuse the example at the page linked above: replace the data (browse a bit, find
-the right cell, click on the small paperclip icon). If the nodes are flying all over
-when applying the forces on the graph data, try to modify the parameters of the
-simulation:
-
-```javascript
-const simulation = d3.forceSimulation(nodes)
-    .force("link", d3.forceLink(links).id(d => d.id)
-        .distance(10)  // distance between linked nodes
-    )
-    .force("charge", d3.forceManyBody()
-        .strength(-5)  // strength of the +attractive/-repulsive force (default: -30)
-        .distanceMax(100)  // max distance to apply the forces (default: none)
-    )
-    .force("center", d3.forceCenter(width / 2, height / 2));
-```
-
-See the meaning of those parameters [here](https://github.com/d3/d3-force).
+the right cell, click on the small paperclip icon).
 
 **Known problems:**
 
-This small toy thing breaks on `from ... import *` statements (cannot guess which
-objects are imported; but this is bad `Python` habits anyhow).
+This small toy thing breaks on `from .. import *` statements (cannot guess which objects
+are imported; but this is bad `Python` habits anyhow).
 
 **Functions:**
 
@@ -157,14 +141,14 @@ objects are imported; but this is bad `Python` habits anyhow).
 #### `object_graph.is_local`
 
 ```python
-is_local(o: str, objects: typing.List[str]) -> bool:
+is_local(p: str, objects: typing.List[str]) -> bool:
 ```
 
 Check whether an object is local, or external, looking at its path.
 
 **Parameters:**
 
-- `o` \[`str`\]: String representation of the object path.
+- `p` \[`str`\]: String representation of the object path.
 - `objects` \[`typing.List[str]`\]: List of local objects to check for.
 
 **Returns:**
@@ -221,8 +205,8 @@ Generate graph, *e.g.*, nodes and edges.
 
 **Parameters:**
 
-- `objects` \[`typing.Dict[str, typing.Dict[str, typing.Dict[str, str]]]`\]: Dictionary of
-  objects encountered in all modules parsed by `astdocs`.
+- `objects` \[`typing.Dict[str, typing.Dict[str, typing.Dict[str, str]]]`\]: Dictionary
+  of objects encountered in all modules parsed by `astdocs`.
 
 **Returns:**
 
@@ -282,8 +266,8 @@ Filter objects and generate the table of content.
 
 **Parameters:**
 
-- `objects` \[`typing.Dict[str, typing.Dict[str, typing.Dict[str, str]]]`\]: Dictionary of
-  objects encountered in all modules parsed by `astdocs`.
+- `objects` \[`typing.Dict[str, typing.Dict[str, typing.Dict[str, str]]]`\]: Dictionary
+  of objects encountered in all modules parsed by `astdocs`.
 
 **Returns:**
 

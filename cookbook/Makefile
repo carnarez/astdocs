@@ -1,13 +1,13 @@
 SHELL=/bin/bash
 
-toc:
+.toc: .venv
 	@sed -n '/A few/,/# Snippets/p' README.md > tmp1
-	@python3 with_toc.py | sed 's/^#/##/g' > tmp2
+	@.venv/bin/python with_toc.py | sed 's/^#/##/g' > tmp2
 	@cat tmp? > README.md
 	@rm tmp?
 
 .venv:
-	@python -m venv .venv
+	@python3 -m venv .venv
 	@.venv/bin/pip install -U pip
 	@.venv/bin/pip install --no-cache-dir git+https://github.com/carnarez/astdocs@master
 

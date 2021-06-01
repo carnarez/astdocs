@@ -2,7 +2,7 @@
 
 Visualization is intended to be generated via [`D3.js`](https://d3js.org/). See the
 ~~code in this folder, or refer to the~~ example by the creator of the library himself
-[there](https://observablehq.com/@d3/force-directed-graph).
+[there](https://observablehq.com/@d3/disjoint-force-directed-graph).
 
 Requirements
 ------------
@@ -11,27 +11,11 @@ Requirements
 Notes
 -----
 One can abuse the example at the page linked above: replace the data (browse a bit, find
-the right cell, click on the small paperclip icon). If the nodes are flying all over
-when applying the forces on the graph data, try to modify the parameters of the
-simulation:
-
-```javascript
-const simulation = d3.forceSimulation(nodes)
-    .force("link", d3.forceLink(links).id(d => d.id)
-        .distance(10)  // distance between linked nodes
-    )
-    .force("charge", d3.forceManyBody()
-        .strength(-5)  // strength of the +attractive/-repulsive force (default: -30)
-        .distanceMax(100)  // max distance to apply the forces (default: none)
-    )
-    .force("center", d3.forceCenter(width / 2, height / 2));
-```
-
-See the meaning of those parameters [here](https://github.com/d3/d3-force).
+the right cell, click on the small paperclip icon).
 
 Known problems
 --------------
-This small toy thing breaks on `from ... import *` statements (cannot guess which
+This small toy thing breaks on `from .. import *` statements (cannot guess which
 objects are imported; but this is bad `Python` habits anyhow).
 """
 
@@ -47,12 +31,12 @@ _nodes = []
 _edges = []
 
 
-def is_local(o: str, objects: typing.List[str]) -> bool:
+def is_local(p: str, objects: typing.List[str]) -> bool:
     """Check whether an object is local, or external, looking at its path.
 
     Parameters
     ----------
-    o : str
+    p : str
         String representation of the object path.
     objects : typing.List[str]
         List of local objects to check for.
@@ -62,7 +46,20 @@ def is_local(o: str, objects: typing.List[str]) -> bool:
     : bool
         Whether the object is local or external to the `Python` parsed package(s).
     """
-    return any([o.startswith(f"{m}.") for m in objects]) or o in objects
+    if p in objects:
+        return True
+
+    if not p.endswith("."):
+        p += "."
+
+    for o in objects:
+        if p.startswith(f"{o}."):
+            return True
+        for m in o.split("."):
+            if p.startswith(f"{m}."):
+                return True
+
+    return False
 
 
 def add_node(nodes: typing.List[typing.Dict[str, str]], o: str, g: int):
@@ -82,11 +79,13 @@ def add_node(nodes: typing.List[typing.Dict[str, str]], o: str, g: int):
     nodes : typing.List[typing.Dict[str, str]]
         List of defined nodes, updated (or not).
     """
-    h = hashlib.md5(f"{o}".encode()).hexdigest()  # why not
+    if len(o.strip(".")):
 
-    if h not in _nodes:
-        nodes.append({"id": o, "group": g})
-        _nodes.append(h)
+        h = hashlib.md5(f"{o}".encode()).hexdigest()  # why not
+
+        if h not in _nodes:
+            nodes.append({"id": o, "group": g})
+            _nodes.append(h)
 
     return nodes
 
@@ -108,11 +107,13 @@ def add_edge(edges: typing.List[typing.Dict[str, str]], so: str, to: str):
     edges : typing.List[typing.Dict[str, str]]
         List of defined edges, updated (or not).
     """
-    h = hashlib.md5((f"{so}->{to}").encode()).hexdigest()
+    if len(so.strip(".")) and len(to.strip(".")) and so != to:
 
-    if h not in _edges and to != so:
-        edges.append({"source": so, "target": to})
-        _edges.append(h)
+        h = hashlib.md5((f"{so}->{to}").encode()).hexdigest()
+
+        if h not in _edges and to != so:
+            edges.append({"source": so, "target": to})
+            _edges.append(h)
 
     return edges
 
@@ -147,38 +148,19 @@ def graph(
     for g, m in enumerate(objects):
         for t in ["classes", "functions", "imports"]:
             for lp, ap in objects[m][t].items():
-                lp = f"{m}.{lp}"
+                group = g + 1 if is_local(ap, modules) else 0
 
                 # actual object (absolute path thereto)
-                nodes = add_node(nodes, ap, g + 1 if is_local(ap, modules) else 0)
+                nodes = add_node(nodes, ap, group)
 
-                # module (local) representation of the object
-                nodes = add_node(nodes, lp, g + 1 if is_local(lp, modules) else 0)
-
-                # actual object -> its module representation
-                edges = add_edge(edges, ap, lp)
-
-                # module -> object representation if directly linked
-                if lp.count(".") == 1:
-                    edges = add_edge(edges, m, lp)
-
+                # ancestry
                 if ap.count("."):
                     x = ap.split(".")
                     for i in range(len(x) - 1):
                         pp = ".".join(x[: i + 1])
                         cp = ".".join(x[: i + 2])
-
-                        # parent object
-                        nodes = add_node(
-                            nodes, pp, g + 1 if is_local(pp, modules) else 0
-                        )
-
-                        # child object
-                        nodes = add_node(
-                            nodes, cp, g + 1 if is_local(cp, modules) else 0
-                        )
-
-                        # actual object -> its module representation
+                        nodes = add_node(nodes, pp, group)
+                        nodes = add_node(nodes, cp, group)
                         edges = add_edge(edges, pp, cp)
 
     return {"nodes": nodes, "links": edges}
