@@ -15,7 +15,7 @@ hooks=([md]=mdformat [py]=black,flake8,isort,pydocstyle)
 
 
 for e in ${!hooks[@]}; do
-  git diff --name-only --diff-filter=ACM | grep ".$e$" | while read f; do
+  git diff --name-only --diff-filter=ACM | sort | uniq | grep ".$e$" | while read f; do
     for h in $(sed 's/,/ /g' <<< ${hooks[$e]}); do
       echo -e "\n$(tput bold)$h:$(tput sgr0)"
 
