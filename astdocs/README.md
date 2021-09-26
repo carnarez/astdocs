@@ -2,7 +2,7 @@
 
 Extract and format documentation from `Python` code.
 
-> **According to **my** standards.**
+> **According to *my* standards.**
 
 In a few more words, parse the underlying Abstract Syntax Tree (AST) description. (See
 the [documentation](https://docs.python.org/3/library/ast.html) of the standard library
