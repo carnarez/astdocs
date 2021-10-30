@@ -4,7 +4,7 @@ black:
     check: --check
 flake8:
     cmd: flake8
-    flags: --max-doc-length=88 --max-line-length=88
+    flags: --extend-ignore=E203 --max-doc-length=88 --max-line-length=88
     check:
 isort:
     cmd: isort
