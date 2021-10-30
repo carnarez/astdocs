@@ -110,9 +110,9 @@ import string
 import sys
 import typing
 
-TPL = string.Template("$module\n\n$functions\n\n$classes")
+TPL: string.Template = string.Template("$module\n\n$functions\n\n$classes")
 
-TPL_CLASSDEF = string.Template(
+TPL_CLASSDEF: string.Template = string.Template(
     "\n%%%START CLASSDEF $ancestry.$classname"
     "\n$hashtags `$ancestry.$classname`"
     "\n"
@@ -136,7 +136,7 @@ TPL_CLASSDEF = string.Template(
     "\n%%%END CLASSDEF $ancestry.$classname"
 )
 
-TPL_FUNCTIONDEF = string.Template(
+TPL_FUNCTIONDEF: string.Template = string.Template(
     "\n%%%START FUNCTIONDEF $ancestry.$funcname"
     "\n$hashtags `$ancestry.$funcname`"
     "\n"
@@ -152,7 +152,7 @@ TPL_FUNCTIONDEF = string.Template(
     "\n%%%END FUNCTIONDEF $ancestry.$funcname"
 )
 
-TPL_MODULE = string.Template(
+TPL_MODULE: string.Template = string.Template(
     "\n%%%START MODULE $module"
     "\n# Module `$module`"
     "\n"
@@ -165,7 +165,7 @@ TPL_MODULE = string.Template(
 )
 
 # if requested, add markers indicating the start and end of an object definition
-_bound_objects = (
+_bound_objects: bool = (
     True
     if os.environ.get("ASTDOCS_BOUND_OBJECTS", "off") in ("1", "on", "true", "yes")
     else False
@@ -182,17 +182,17 @@ if not _bound_objects:
     )
 
 # set the string length limit (black default)
-_fold_args_after = int(os.environ.get("ASTDOCS_FOLD_ARGS_AFTER", "88"))
+_fold_args_after: int = int(os.environ.get("ASTDOCS_FOLD_ARGS_AFTER", "88"))
 
 # if requested, show private objects in the output
-_show_private = (
+_show_private: bool = (
     True
     if os.environ.get("ASTDOCS_SHOW_PRIVATE", "off") in ("1", "on", "true", "yes")
     else False
 )
 
 # if requested, split things up with %%% markers
-_split_by = os.environ.get("ASTDOCS_SPLIT_BY", "")
+_split_by: str = os.environ.get("ASTDOCS_SPLIT_BY", "")
 if "c" in _split_by:
     TPL_CLASSDEF.template = (
         f"%%%BEGIN CLASSDEF $ancestry.$classname{TPL_CLASSDEF.template}"
@@ -205,7 +205,7 @@ if "m" in _split_by:
     TPL_MODULE.template = f"%%%BEGIN MODULE $module{TPL_MODULE.template}"
 
 # if requested, add the line numbers to the source
-_with_linenos = (
+_with_linenos: bool = (
     True
     if os.environ.get("ASTDOCS_WITH_LINENOS", "off") in ("1", "on", "true", "yes")
     else False
@@ -222,7 +222,7 @@ _classdefs = {}
 _funcdefs = {}
 _module = ""
 
-objects = {}
+objects: typing.Any = {}
 
 
 def format_annotation(
@@ -431,7 +431,7 @@ def format_docstring(
     return s.strip()
 
 
-def parse_classdef(n: ast.ClassDef):
+def parse_classdef(n: ast.ClassDef) -> None:
     """Parse a `class` statement.
 
     Parameters
@@ -465,7 +465,7 @@ def parse_classdef(n: ast.ClassDef):
     objects[_module]["classes"][local] = absolute
 
 
-def parse_functiondef(n: typing.Union[ast.AsyncFunctionDef, ast.FunctionDef]):
+def parse_functiondef(n: typing.Union[ast.AsyncFunctionDef, ast.FunctionDef]) -> None:
     """Parse a `def` statement.
 
     Parameters
@@ -518,7 +518,7 @@ def parse_functiondef(n: typing.Union[ast.AsyncFunctionDef, ast.FunctionDef]):
     objects[_module]["functions"][local] = absolute
 
 
-def parse_import(n: typing.Union[ast.Import, ast.ImportFrom]):
+def parse_import(n: typing.Union[ast.Import, ast.ImportFrom]) -> None:
     """Parse `import ... [as ...]` and `from ... import ... [as ...]` statements.
 
     The content built by this function is currently *not* used. This latter is kept in
@@ -551,12 +551,12 @@ def parse_import(n: typing.Union[ast.Import, ast.ImportFrom]):
 
         # save the object
         # support for heresy like "from .. import *"
-        absolute = "."*level + f"{path}.{i.name}".lstrip(".")
+        absolute = "." * level + f"{path}.{i.name}".lstrip(".")
         local = absolute if local == "*" else local
         objects[_module]["imports"][local] = absolute
 
 
-def parse_tree(n: typing.Any):
+def parse_tree(n: typing.Any) -> None:
     """Recursively traverse the nodes of the abstract syntax tree.
 
     The present function calls the formatting function corresponding to the node name
@@ -886,7 +886,7 @@ def render_recursively(path: str, remove_from_path: str = "") -> str:
     return s
 
 
-def postrender(func: typing.Callable):
+def postrender(func: typing.Callable) -> typing.Callable:
     """Apply a post-rendering function on the output of the decorated function.
 
     This can be used to streamline the linting of the output, or immediately convert to
@@ -926,8 +926,8 @@ def postrender(func: typing.Callable):
     ```
     """
 
-    def decorator(f: typing.Callable):
-        def wrapper(*args, **kwargs):
+    def decorator(f: typing.Callable) -> typing.Callable:
+        def wrapper(*args, **kwargs) -> typing.Callable:
             return func(f(*args, **kwargs))
 
         return wrapper
@@ -935,7 +935,7 @@ def postrender(func: typing.Callable):
     return decorator
 
 
-def main():
+def main() -> None:
     """Process CLI calls."""
     if len(sys.argv) != 2:
         sys.exit("Wrong number of arguments! Accepting *one* only.")
