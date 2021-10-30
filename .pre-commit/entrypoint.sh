@@ -4,7 +4,7 @@ export TERM=xterm-256color
 # they will be run in the order provided
 
 declare -A hooks
-hooks=([md]=mdformat [py]=black,flake8,isort,pydocstyle)
+hooks=([md]=mdformat [py]=black,flake8,isort,mypy,pydocstyle)
 
 
 # fetch the list of modified files from git itself
