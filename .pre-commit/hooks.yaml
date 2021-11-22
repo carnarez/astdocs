@@ -16,7 +16,7 @@ mdformat:
     check: --check
 mypy:
     cmd: mypy
-    flags: --cache-dir=/dev/null --no-color-output
+    flags: --cache-dir=/tmp/mypy_cache --install-types --no-color-output --non-interactive
     check:
 pydocstyle:
     cmd: pydocstyle
