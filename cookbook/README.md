@@ -68,8 +68,9 @@ The `Python` linter chosen for this example is
 
 **Functions:**
 
-- [`lint()`](#linted_outputlint)
-- [`render()`](#linted_outputrender)
+- [`lint()`](#linted_outputlint): Lint the `Markdown`.
+- [`render()`](#linted_outputrender): Fetch/parse/render docstrings (simple wrapper
+  function to allow decorators).
 
 ### Functions
 
@@ -131,10 +132,11 @@ are imported; but this is bad `Python` habits anyhow).
 
 **Functions:**
 
-- [`is_local()`](#object_graphis_local)
-- [`add_node()`](#object_graphadd_node)
-- [`add_edge()`](#object_graphadd_edge)
-- [`graph()`](#object_graphgraph)
+- [`is_local()`](#object_graphis_local): Check whether an object is local, or external,
+  looking at its path.
+- [`add_node()`](#object_graphadd_node): Add a node to the pool if not yet present.
+- [`add_edge()`](#object_graphadd_edge): Add an edge to the pool if not yet present.
+- [`graph()`](#object_graphgraph): Generate graph, *e.g.*, nodes and edges.
 
 ### Functions
 
@@ -252,7 +254,8 @@ Generate a table of contents from listed objects.
 
 **Functions:**
 
-- [`generate_toc()`](#with_tocgenerate_toc)
+- [`generate_toc()`](#with_tocgenerate_toc): Filter objects and generate the table of
+  content.
 
 ### Functions
 
