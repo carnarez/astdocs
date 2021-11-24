@@ -225,10 +225,7 @@ _module = ""
 objects: typing.Any = {}
 
 
-def format_annotation(
-    a: typing.Union[ast.Attribute, ast.Constant, ast.List, ast.Name, ast.Subscript],
-    char: str = "",
-) -> str:
+def format_annotation(a: typing.Union[typing.Any], char: str = "") -> str:
     """Format an annotation (object type or decorator).
 
     Dive as deep as necessary within the children nodes until reaching the name of the
@@ -239,7 +236,7 @@ def format_annotation(
 
     Parameters
     ----------
-    a : typing.Union[ast.Attribute, ast.Constant, ast.List, ast.Name, ast.Subscript]
+    a : typing.Union[typing.Any]
         The starting node to extract annotation information from.
     char : str
         The additional character to place at the beginning of the annotation; `"@"` for
@@ -257,7 +254,7 @@ def format_annotation(
     s = ""
 
     if a is not None:
-        path = []
+        path: typing.List[str] = []
 
         # dig deeper (hence the insert(0) instead of append) until finding the name
         # (coined as "id") of the object; the content of the "attr" keys found on the
@@ -449,8 +446,8 @@ def parse_classdef(n: ast.ClassDef) -> None:
     dc = [f'`{format_annotation(d, "@")}`' for d in n.decorator_list]
 
     # save the interesting details (more to come during rendering)
-    _classdefs[f"{n.ancestry}.{n.name}"] = {
-        "ancestry": n.ancestry,
+    _classdefs[f"{n.ancestry}.{n.name}"] = {  # type: ignore
+        "ancestry": n.ancestry,  # type: ignore
         "classname": n.name,
         "classdocs": format_docstring(n),
         "decoration": "**Decoration:** via " + ", ".join(dc) + "." if dc else "",
@@ -460,7 +457,7 @@ def parse_classdef(n: ast.ClassDef) -> None:
     }
 
     # save the object
-    absolute = f"{n.ancestry}.{n.name}"
+    absolute = f"{n.ancestry}.{n.name}"  # type: ignore
     local = absolute.replace(f"{_module}", "", 1).lstrip(".")
     objects[_module]["classes"][local] = absolute
 
@@ -500,8 +497,8 @@ def parse_functiondef(n: typing.Union[ast.AsyncFunctionDef, ast.FunctionDef]) ->
         suffix = ""
 
     # save the interesting details
-    _funcdefs[f"{n.ancestry}.{n.name}"] = {
-        "ancestry": n.ancestry,
+    _funcdefs[f"{n.ancestry}.{n.name}"] = {  # type: ignore
+        "ancestry": n.ancestry,  # type: ignore
         "params": ", ".join(params) + suffix,
         "decoration": ("**Decoration** via " + ", ".join(dc) + ".") if dc else "",
         "endlineno": n.end_lineno,
@@ -513,7 +510,7 @@ def parse_functiondef(n: typing.Union[ast.AsyncFunctionDef, ast.FunctionDef]) ->
     }
 
     # save the object
-    absolute = f"{n.ancestry}.{n.name}"
+    absolute = f"{n.ancestry}.{n.name}"  # type: ignore
     local = absolute.replace(f"{_module}", "", 1).lstrip(".")
     objects[_module]["functions"][local] = absolute
 
@@ -534,14 +531,14 @@ def parse_import(n: typing.Union[ast.Import, ast.ImportFrom]) -> None:
     level = 0
 
     if hasattr(n, "module"):
-        if n.module is None:
-            if n.level == 0:
-                path = ".".join(n.ancestry.split(".")[:-1])
+        if n.module is None:  # type: ignore
+            if n.level == 0:  # type: ignore
+                path = ".".join(n.ancestry.split(".")[:-1])  # type: ignore
         else:
-            path = n.module
+            path = n.module  # type: ignore
 
-        if n.level > 0:
-            level = n.level
+        if n.level > 0:  # type: ignore
+            level = n.level  # type: ignore
 
     for i in n.names:
         if i.asname is not None:
@@ -621,11 +618,11 @@ def render_classdef(filepath: str, name: str) -> str:
     init = f"{name}.__init__"
     if init in fn:
         fn.pop(fn.index(init))
-        f = _funcdefs.pop(init)
-        params = re.sub(r"self(?:,)?", "", f["params"]).strip()
-        docstr = f["funcdocs"]
-        lineno = f["lineno"]
-        endlineno = f["endlineno"]
+        _ = _funcdefs.pop(init)
+        params = re.sub(r"self(?:,)?", "", _["params"]).strip()
+        docstr = _["funcdocs"]
+        lineno = _["lineno"]
+        endlineno = _["endlineno"]
         if _with_linenos:
             docstr += f"\n\n%%%SOURCE {filepath}:{lineno}:{endlineno}"
     else:
@@ -652,7 +649,8 @@ def render_classdef(filepath: str, name: str) -> str:
         n = f.split(".")[-1]
         if not n.startswith("_") or _show_private:
             link = f.replace(".", "").lower()  # github syntax
-            fn_.append(f"* [`{n}()`](#{link})")
+            desc = _funcdefs[f]["funcdocs"].split("\n")[0]
+            fn_.append(f"* [`{n}()`](#{link}): {desc}")
     fn = fn_
 
     # update the description of the object
@@ -716,7 +714,8 @@ def render_module(name: str, docstring: str = "") -> str:
             n = f.split(".")[-1]
             if not n.startswith("_") or _show_private:
                 link = f.replace(".", "").lower()  # github syntax
-                fn.append(f"* [`{n}()`](#{link})")
+                desc = _funcdefs[f]["funcdocs"].split("\n")[0]
+                fn.append(f"* [`{n}()`](#{link}): {desc}")
 
     # classes bullet list
     cn = []
@@ -725,7 +724,8 @@ def render_module(name: str, docstring: str = "") -> str:
             n = c.split(".")[-1]
             if not n.startswith("_") or _show_private:
                 link = c.replace(".", "").lower()  # github syntax
-                cn.append(f"* [`{n}`](#{link})")
+                desc = _classdefs[c]["classdocs"].split("\n")[0]
+                cn.append(f"* [`{n}`](#{link}): {desc}")
 
     sub = {
         "classnames": "**Classes:**\n\n" + "\n".join(cn) if cn else "",
@@ -770,7 +770,7 @@ def render(filepath: str, remove_from_path: str = "") -> str:
     _classdefs = {}
     _funcdefs = {}
 
-    with open(filepath) as f:
+    with open(filepath) as _:
 
         # module ancestry
         if remove_from_path:
@@ -783,21 +783,21 @@ def render(filepath: str, remove_from_path: str = "") -> str:
         objects[_module] = {"classes": {}, "functions": {}, "imports": {}}
 
         # traverse the ast
-        n = ast.parse(f.read())
-        n.name = _module
+        n = ast.parse(_.read())
+        n.name = _module  # type: ignore
         parse_tree(n)
 
     # only the objects at the root of the module
     fr = []
     for f in _funcdefs:
-        if f.count(".") == n.name.count(".") + 1:
+        if f.count(".") == n.name.count(".") + 1:  # type: ignore
             name = f.split(".")[-1]
             if not name.startswith("_") or _show_private:
                 fr.append(render_functiondef(filepath, f))
 
     cr = []
     for c in _classdefs:
-        if c.count(".") == n.name.count(".") + 1:
+        if c.count(".") == n.name.count(".") + 1:  # type: ignore
             name = c.split(".")[-1]
             if not name.startswith("_") or _show_private:
                 cr.append(render_classdef(filepath, c))
@@ -816,7 +816,7 @@ def render(filepath: str, remove_from_path: str = "") -> str:
                 "\n\n".join(fr) if fr else "",
             ]
         ),
-        "module": render_module(n.name, format_docstring(n)),
+        "module": render_module(n.name, format_docstring(n)),  # type: ignore
     }
 
     s = TPL.substitute(sub).strip()

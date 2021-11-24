@@ -102,29 +102,35 @@ flags but grew out of hands...)
 
 **Functions:**
 
-- [`format_annotation()`](#astdocsformat_annotation)
-- [`format_docstring()`](#astdocsformat_docstring)
-- [`parse_classdef()`](#astdocsparse_classdef)
-- [`parse_functiondef()`](#astdocsparse_functiondef)
-- [`parse_import()`](#astdocsparse_import)
-- [`parse_tree()`](#astdocsparse_tree)
-- [`render_classdef()`](#astdocsrender_classdef)
-- [`render_functiondef()`](#astdocsrender_functiondef)
-- [`render_module()`](#astdocsrender_module)
-- [`render()`](#astdocsrender)
-- [`render_recursively()`](#astdocsrender_recursively)
-- [`postrender()`](#astdocspostrender)
-- [`main()`](#astdocsmain)
+- [`format_annotation()`](#astdocsformat_annotation): Format an annotation (object type
+  or decorator).
+- [`format_docstring()`](#astdocsformat_docstring): Format the object docstring.
+- [`parse_classdef()`](#astdocsparse_classdef): Parse a `class` statement.
+- [`parse_functiondef()`](#astdocsparse_functiondef): Parse a `def` statement.
+- [`parse_import()`](#astdocsparse_import): Parse `import ... [as ...]` and
+  `from ... import ... [as ...]` statements.
+- [`parse_tree()`](#astdocsparse_tree): Recursively traverse the nodes of the abstract
+  syntax tree.
+- [`render_classdef()`](#astdocsrender_classdef): Render a `class` object, according to
+  the defined `TPL_CLASSDEF` template.
+- [`render_functiondef()`](#astdocsrender_functiondef): Render a `def` object (function
+  or method).
+- [`render_module()`](#astdocsrender_module): Render a module summary as a `Markdown`
+  file.
+- [`render()`](#astdocsrender): Run the whole pipeline (useful wrapper function when
+  this gets used as a module).
+- [`render_recursively()`](#astdocsrender_recursively): Run pipeline on each `Python`
+  module found in a folder and its subfolders.
+- [`postrender()`](#astdocspostrender): Apply a post-rendering function on the output of
+  the decorated function.
+- [`main()`](#astdocsmain): Process CLI calls.
 
 ## Functions
 
 ### `astdocs.format_annotation`
 
 ```python
-format_annotation(
-    a: typing.Union[ast.Attribute, ast.Constant, ast.List, ast.Name, ast.Subscript], 
-    char: str,
-) -> str:
+format_annotation(a: typing.Uniontyping.Any, char: str) -> str:
 ```
 
 Format an annotation (object type or decorator).
@@ -137,9 +143,8 @@ See the code itself for some line-by-line documentation.
 
 **Parameters:**
 
-- `a`
-  \[`typing.Union[ast.Attribute, ast.Constant, ast.List, ast.Name, ast.Subscript]`\]:
-  The starting node to extract annotation information from.
+- `a` \[`typing.Union[typing.Any]`\]: The starting node to extract annotation
+  information from.
 - `char` \[`str`\]: The additional character to place at the beginning of the
   annotation; `"@"` for a decorator, `" -> "` for a return type, *etc.* (defaults to
   empty string).
