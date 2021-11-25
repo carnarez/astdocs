@@ -225,7 +225,7 @@ _module = ""
 objects: typing.Any = {}
 
 
-def format_annotation(a: typing.Union[typing.Any], char: str = "") -> str:
+def format_annotation(a: typing.Any, char: str = "") -> str:
     """Format an annotation (object type or decorator).
 
     Dive as deep as necessary within the children nodes until reaching the name of the
@@ -236,7 +236,7 @@ def format_annotation(a: typing.Union[typing.Any], char: str = "") -> str:
 
     Parameters
     ----------
-    a : typing.Union[typing.Any]
+    a : typing.Any
         The starting node to extract annotation information from.
     char : str
         The additional character to place at the beginning of the annotation; `"@"` for
@@ -565,7 +565,7 @@ def parse_tree(n: typing.Any) -> None:
 
     Parameters
     ----------
-    n
+    n : typing.Any
         Any type of node to extract information from.
     """
     if hasattr(n, "name"):
@@ -575,6 +575,8 @@ def parse_tree(n: typing.Any) -> None:
 
     for c in n.body:
 
+        # adding an "ancestry" attribute here, triggering some mypy complains and
+        # some "type: ignore" here and there
         if hasattr(n, "ancestry"):
             c.ancestry = f"{n.ancestry}.{name}"
         else:

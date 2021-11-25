@@ -130,7 +130,7 @@ flags but grew out of hands...)
 ### `astdocs.format_annotation`
 
 ```python
-format_annotation(a: typing.Uniontyping.Any, char: str) -> str:
+format_annotation(a: typing.Any, char: str) -> str:
 ```
 
 Format an annotation (object type or decorator).
@@ -143,8 +143,7 @@ See the code itself for some line-by-line documentation.
 
 **Parameters:**
 
-- `a` \[`typing.Union[typing.Any]`\]: The starting node to extract annotation
-  information from.
+- `a` \[`typing.Any`\]: The starting node to extract annotation information from.
 - `char` \[`str`\]: The additional character to place at the beginning of the
   annotation; `"@"` for a decorator, `" -> "` for a return type, *etc.* (defaults to
   empty string).
@@ -302,7 +301,7 @@ method for instance).
 
 **Parameters:**
 
-- \[`n`\]: Any type of node to extract information from.
+- `n` \[`typing.Any`\]: Any type of node to extract information from.
 
 ### `astdocs.render_classdef`
 
