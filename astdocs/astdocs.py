@@ -428,7 +428,7 @@ def format_docstring(
     return s.strip()
 
 
-def parse_classdef(n: ast.ClassDef) -> None:
+def parse_classdef(n: ast.ClassDef):
     """Parse a `class` statement.
 
     Parameters
@@ -462,7 +462,7 @@ def parse_classdef(n: ast.ClassDef) -> None:
     objects[_module]["classes"][local] = absolute
 
 
-def parse_functiondef(n: typing.Union[ast.AsyncFunctionDef, ast.FunctionDef]) -> None:
+def parse_functiondef(n: typing.Union[ast.AsyncFunctionDef, ast.FunctionDef]):
     """Parse a `def` statement.
 
     Parameters
@@ -515,7 +515,7 @@ def parse_functiondef(n: typing.Union[ast.AsyncFunctionDef, ast.FunctionDef]) ->
     objects[_module]["functions"][local] = absolute
 
 
-def parse_import(n: typing.Union[ast.Import, ast.ImportFrom]) -> None:
+def parse_import(n: typing.Union[ast.Import, ast.ImportFrom]):
     """Parse `import ... [as ...]` and `from ... import ... [as ...]` statements.
 
     The content built by this function is currently *not* used. This latter is kept in
@@ -553,7 +553,7 @@ def parse_import(n: typing.Union[ast.Import, ast.ImportFrom]) -> None:
         objects[_module]["imports"][local] = absolute
 
 
-def parse_tree(n: typing.Any) -> None:
+def parse_tree(n: typing.Any):
     """Recursively traverse the nodes of the abstract syntax tree.
 
     The present function calls the formatting function corresponding to the node name
@@ -937,7 +937,7 @@ def postrender(func: typing.Callable) -> typing.Callable:
     return decorator
 
 
-def main() -> None:
+def main():
     """Process CLI calls."""
     if len(sys.argv) != 2:
         sys.exit("Wrong number of arguments! Accepting *one* only.")

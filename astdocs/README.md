@@ -245,7 +245,7 @@ print(astdocs.render(...))
 ### `astdocs.parse_classdef`
 
 ```python
-parse_classdef(n: ast.ClassDef) -> None:
+parse_classdef(n: ast.ClassDef):
 ```
 
 Parse a `class` statement.
@@ -257,7 +257,7 @@ Parse a `class` statement.
 ### `astdocs.parse_functiondef`
 
 ```python
-parse_functiondef(n: typing.Union[ast.AsyncFunctionDef, ast.FunctionDef]) -> None:
+parse_functiondef(n: typing.Union[ast.AsyncFunctionDef, ast.FunctionDef]):
 ```
 
 Parse a `def` statement.
@@ -270,7 +270,7 @@ Parse a `def` statement.
 ### `astdocs.parse_import`
 
 ```python
-parse_import(n: typing.Union[ast.Import, ast.ImportFrom]) -> None:
+parse_import(n: typing.Union[ast.Import, ast.ImportFrom]):
 ```
 
 Parse `import ... [as ...]` and `from ... import ... [as ...]` statements.
@@ -287,7 +287,7 @@ post-processing or some later smart implementations.
 ### `astdocs.parse_tree`
 
 ```python
-parse_tree(n: typing.Any) -> None:
+parse_tree(n: typing.Any):
 ```
 
 Recursively traverse the nodes of the abstract syntax tree.
@@ -467,7 +467,7 @@ print(render(...))
 ### `astdocs.main`
 
 ```python
-main() -> None:
+main():
 ```
 
 Process CLI calls.
