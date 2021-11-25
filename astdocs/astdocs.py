@@ -1,4 +1,4 @@
-r"""Extract and format documentation from `Python` code.
+r"""Extract and format `Markdown` documentation from `Python` code.
 
 > **According to **my** standards.**
 

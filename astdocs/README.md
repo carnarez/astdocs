@@ -1,6 +1,6 @@
 # Module `astdocs`
 
-Extract and format documentation from `Python` code.
+Extract and format `Markdown` documentation from `Python` code.
 
 > **According to **my** standards.**
 
