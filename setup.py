@@ -9,8 +9,8 @@ setuptools.setup(
     ),
     entry_points={"console_scripts": ["astdocs=astdocs.astdocs:main"]},
     name="astdocs",
-    package_data={"astdocs": ["*.pyi", "py.typed"]},
     packages=["astdocs"],
+    package_data={"astdocs": ["*.pyi", "py.typed"]},
     url="https://github.com/carnarez/astdocs",
     version="0.0.1",
 )
