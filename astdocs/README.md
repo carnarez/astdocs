@@ -91,7 +91,7 @@ md = astdocs.render_recursively(".")
 and that might make some checkers/linters unhappy. (This whole thing started with two
 flags but grew out of hands...)
 
-**Attributes:**
+**Attributes**
 
 - `TPL` \[`string.Template`\]: Template to render the overall page (only governs order
   of objects in the output).
@@ -100,7 +100,7 @@ flags but grew out of hands...)
   not).
 - `TPL_MODULE` \[`string.Template`\]: Template to render the module summary.
 
-**Functions:**
+**Functions**
 
 - [`format_annotation()`](#astdocsformat_annotation): Format an annotation (object type
   or decorator).
@@ -141,18 +141,18 @@ Recursively repeat for complicated object.
 
 See the code itself for some line-by-line documentation.
 
-**Parameters:**
+**Parameters**
 
 - `a` \[`typing.Any`\]: The starting node to extract annotation information from.
 - `char` \[`str`\]: The additional character to place at the beginning of the
   annotation; `"@"` for a decorator, `" -> "` for a return type, *etc.* (defaults to
   empty string).
 
-**Returns:**
+**Returns**
 
 - \[`str`\]: The formatted annotation.
 
-**Known problems:**
+**Known problems**
 
 - Does not support `lambda` functions.
 
@@ -172,17 +172,17 @@ Expect some stiff `NumPy`-ish formatting (see
 try to **type** all your input parameters/returned objects. And use a linter on the
 output?
 
-**Parameters:**
+**Parameters**
 
 - `n`
   \[`typing.Union[ast.AsyncFunctionDef, ast.ClassDef, ast.FunctionDef, ast.Module]`\]:
   Source node to extract/parse docstring from.
 
-**Returns:**
+**Returns**
 
 - \[`str`\]: The formatted docstring.
 
-**Example:**
+**Example**
 
 Below the raw docstring example of what this very function is expecting as an input
 (very inceptional):
@@ -216,7 +216,7 @@ And indeed **some of it could be inferred** from the function call itself, or th
 `return` statement. BUT this whole thing is to force *myself* to structure *my*
 docstrings correctly.
 
-**Notes:**
+**Notes**
 
 If the regular expression solution used here (which works for *my* needs) does not
 fulfill your standards, it is pretty easy to clobber it:
@@ -237,7 +237,7 @@ astdocs.format_docstring = format_docstring
 print(astdocs.render(...))
 ```
 
-**Known problems:**
+**Known problems**
 
 - Overall naive and *very* opinionated (again, for *my* use).
 - Does not support list in parameter/return entries.
@@ -250,7 +250,7 @@ parse_classdef(n: ast.ClassDef):
 
 Parse a `class` statement.
 
-**Parameters:**
+**Parameters**
 
 - `n` \[`ast.ClassDef`\]: The node to extract information from.
 
@@ -262,7 +262,7 @@ parse_functiondef(n: typing.Union[ast.AsyncFunctionDef, ast.FunctionDef]):
 
 Parse a `def` statement.
 
-**Parameters:**
+**Parameters**
 
 - `n` \[`typing.Union[ast.AsyncFunctionDef, ast.FunctionDef]`\]: The node to extract
   information from.
@@ -279,7 +279,7 @@ The content built by this function is currently *not* used. This latter is kept 
 all the objects (and aliases) accessible within a module is required for a
 post-processing or some later smart implementations.
 
-**Parameters:**
+**Parameters**
 
 - `n` \[`typing.Union[ast.Import, ast.ImportFrom]`\]: The node to extract information
   from.
@@ -299,7 +299,7 @@ Add an `.ancestry` attribute on each traversed children object containing the co
 path to that object. This path is used to identify ownership of objects (function *vs.*
 method for instance).
 
-**Parameters:**
+**Parameters**
 
 - `n` \[`typing.Any`\]: Any type of node to extract information from.
 
@@ -311,13 +311,13 @@ render_classdef(filepath: str, name: str) -> str:
 
 Render a `class` object, according to the defined `TPL_CLASSDEF` template.
 
-**Parameters:**
+**Parameters**
 
 - `filepath` \[`str`\]: Path to the module (file) defining the object.
 - `name` \[`str`\]: The name (full path including all ancestors) of the object to
   render.
 
-**Returns:**
+**Returns**
 
 - \[`str`\]: `Markdown`-formatted description of the class object.
 
@@ -331,13 +331,13 @@ Render a `def` object (function or method).
 
 Follow the defined `TPL_FUNCTIONDEF` template.
 
-**Parameters:**
+**Parameters**
 
 - `filepath` \[`str`\]: Path to the module (file) defining the object.
 - `name` \[`str`\]: The name (full path including all ancestors) of the object to
   render.
 
-**Returns:**
+**Returns**
 
 - \[`str`\]: `Markdown`-formatted description of the function/method object.
 
@@ -351,13 +351,13 @@ Render a module summary as a `Markdown` file.
 
 Follow the defined `TPL_MODULE` template.
 
-**Parameters:**
+**Parameters**
 
 - `name` \[`str`\]: Name of the module being parsed.
 - `docstring` \[`str`\]: The docstring of the module itself, if present (defaults to an
   empty string).
 
-**Returns:**
+**Returns**
 
 - \[`str`\]: `Markdown`-formatted description of the whole module.
 
@@ -369,14 +369,14 @@ render(filepath: str, remove_from_path: str) -> str:
 
 Run the whole pipeline (useful wrapper function when this gets used as a module).
 
-**Parameters:**
+**Parameters**
 
 - `filepath` \[`str`\]: The path to the module to process.
 - `remove_from_path` \[`str`\]: Part of the path to be removed. If one is rendering the
   content of a file buried deep down in a complicated folder tree *but* does not want
   this to appear in the ancestry of the module.
 
-**Returns:**
+**Returns**
 
 - \[`str`\]: `Markdown`-formatted content.
 
@@ -388,16 +388,16 @@ render_recursively(path: str, remove_from_path: str) -> str:
 
 Run pipeline on each `Python` module found in a folder and its subfolders.
 
-**Parameters:**
+**Parameters**
 
 - `path` \[`str`\]: The path to the folder to process.
 - `remove_from_path` \[`str`\]: Part of the path to be removed.
 
-**Returns:**
+**Returns**
 
 - \[`str`\]: `Markdown`-formatted content for all `Python` modules within the path.
 
-**Example:**
+**Example**
 
 ```python
 import astdocs
@@ -434,16 +434,16 @@ Apply a post-rendering function on the output of the decorated function.
 This can be used to streamline the linting of the output, or immediately convert to
 `HTML` for instance.
 
-**Parameters:**
+**Parameters**
 
 - `func` \[`typing.Callable`\]: The function to apply; should take a `str` as lone
   input, the `Markdown` to process.
 
-**Returns:**
+**Returns**
 
 - \[`str`\]: `Markdown`-formatted content.
 
-**Example:**
+**Example**
 
 ```python
 import astdocs

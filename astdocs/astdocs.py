@@ -38,8 +38,8 @@ The behaviour of this little stunt can be modified via environment variables:
   [recommended](https://www.youtube.com/watch?v=wf-BqAjZb8M&t=260s&ab_channel=PyCon2015)
   default.
 * `ASTDOCS_SHOW_PRIVATE` taking the `1`, `on`, `true` or `yes` values (anything else
-   will be ignored) to show `Python` private objects (which names start with an
-   underscore).
+  will be ignored) to show `Python` private objects (which names start with an
+  underscore).
 * `ASTDOCS_SPLIT_BY` taking the `m`, `mc`, `mfc` or an empty value (default, all
   rendered content in one output): split each **m**odule, **f**unction and/or **c**lass
   (by adding `%%%BEGIN ...` markers). Classes will always keep their methods. In case
@@ -403,10 +403,10 @@ def format_docstring(
     s = re.sub(r" {1,}\n", r"\n", s)
 
     # rework any word preceded by one or more hashtag
-    s = re.sub(r"\n[#{1,}] (\w+)", r"\n**\1:**\n", s)
+    s = re.sub(r"\n[#{1,}] (\w+)", r"\n**\1**\n", s)
 
     # rework any word followed by a line with 3 or more dashes
-    s = re.sub(r"\n([A-Za-z ]+)\n-{3,}", r"\n**\1:**\n", s)
+    s = re.sub(r"\n([A-Za-z ]+)\n-{3,}", r"\n**\1**\n", s)
 
     # rework list of arguments/descriptions (no types)
     s = re.sub(r"\n([A-Za-z0-9_ ]+)\n {2,}(.*)", r"\n* [`\1`]: \2", s)
@@ -450,7 +450,7 @@ def parse_classdef(n: ast.ClassDef):
         "ancestry": n.ancestry,  # type: ignore
         "classname": n.name,
         "classdocs": format_docstring(n),
-        "decoration": "**Decoration:** via " + ", ".join(dc) + "." if dc else "",
+        "decoration": "**Decoration** via " + ", ".join(dc) + "." if dc else "",
         "endlineno": n.end_lineno,
         "hashtags": ht,
         "lineno": n.lineno,
@@ -661,7 +661,7 @@ def render_classdef(filepath: str, name: str) -> str:
             "params": params,
             "constdocs": docstr,
             "funcdefs": (ht + "# Methods\n\n" + "\n\n".join(fr)) if fr else "",
-            "funcnames": ("**Methods:**\n\n" + "\n".join(fn)) if fn else "",
+            "funcnames": ("**Methods**\n\n" + "\n".join(fn)) if fn else "",
             "path": filepath,
         }
     )
@@ -730,9 +730,9 @@ def render_module(name: str, docstring: str = "") -> str:
                 cn.append(f"* [`{n}`](#{link}): {desc}")
 
     sub = {
-        "classnames": "**Classes:**\n\n" + "\n".join(cn) if cn else "",
+        "classnames": "**Classes**\n\n" + "\n".join(cn) if cn else "",
         "docstring": docstring,
-        "funcnames": "**Functions:**\n\n" + "\n".join(fn) if fn else "",
+        "funcnames": "**Functions**\n\n" + "\n".join(fn) if fn else "",
         "module": name,
     }
 
