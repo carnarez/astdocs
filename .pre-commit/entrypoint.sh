@@ -22,13 +22,13 @@ for e in "${!hooks[@]}"; do
     if [ -f .git/index.lock ]; then
         s=$(git diff --cached --diff-filter=ACM --name-only | grep -e "\.$e$" | tr "\n" " ")
         u=$(git diff --diff-filter=ACM --name-only | grep -e "\.$e$" | tr "\n" " ")
-        files="$s $u"
+        files=$(echo "$s $u" | xargs -n1 | sort -u | xargs)
     else
         files=$(git commit --short | grep -E "^[ACM]" | grep -e "\.$e$" | awk '{printf" %s",$2}')
     fi
 
     # check and apply hook action
-    if ([ ! -z "$files" ] && [ "$files" != " " ]); then
+    if [ -n "$files" ] && [ "$files" != " " ]; then
       echo -e "\n$(tput bold)$h:$(tput sgr0)"
 
       obj=$(grep -v "^\s*#" /usr/share/pre-commit/hooks.y*ml | grep --after-context=3 "^$h:")
