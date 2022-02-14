@@ -22,7 +22,6 @@ objects are imported; but this is bad `Python` habits anyhow).
 import hashlib
 import json
 import sys
-import typing
 
 import astdocs
 
@@ -31,14 +30,14 @@ _nodes = []
 _edges = []
 
 
-def is_local(p: str, objects: typing.List[str]) -> bool:
+def is_local(p: str, objects: list[str]) -> bool:
     """Check whether an object is local, or external, looking at its path.
 
     Parameters
     ----------
     p : str
         String representation of the object path.
-    objects : typing.List[str]
+    objects : list[str]
         List of local objects to check for.
 
     Returns
@@ -62,12 +61,12 @@ def is_local(p: str, objects: typing.List[str]) -> bool:
     return False
 
 
-def add_node(nodes: typing.List[typing.Dict[str, str]], o: str, g: int):
+def add_node(nodes: list[dict[str, int | str]], o: str, g: int):
     """Add a node to the pool if not yet present.
 
     Parameters
     ----------
-    nodes : typing.List[typing.Dict[str, str]]
+    nodes : list[dict[str, str]]
         List of defined nodes.
     o : str
         String representation of the object path.
@@ -76,7 +75,7 @@ def add_node(nodes: typing.List[typing.Dict[str, str]], o: str, g: int):
 
     Returns
     -------
-    nodes : typing.List[typing.Dict[str, str]]
+    nodes : list[dict[str, str]]
         List of defined nodes, updated (or not).
     """
     if len(o.strip(".")):
@@ -90,12 +89,12 @@ def add_node(nodes: typing.List[typing.Dict[str, str]], o: str, g: int):
     return nodes
 
 
-def add_edge(edges: typing.List[typing.Dict[str, str]], so: str, to: str):
+def add_edge(edges: list[dict[str, str]], so: str, to: str):
     """Add an edge to the pool if not yet present.
 
     Parameters
     ----------
-    edges : typing.List[typing.Dict[str, str]]
+    edges : list[dict[str, str]]
         List of defined edges.
     so : str
         String representation of the *source* object path.
@@ -104,7 +103,7 @@ def add_edge(edges: typing.List[typing.Dict[str, str]], so: str, to: str):
 
     Returns
     -------
-    edges : typing.List[typing.Dict[str, str]]
+    edges : list[dict[str, str]]
         List of defined edges, updated (or not).
     """
     if len(so.strip(".")) and len(to.strip(".")) and so != to:
@@ -119,18 +118,18 @@ def add_edge(edges: typing.List[typing.Dict[str, str]], so: str, to: str):
 
 
 def graph(
-    objects: typing.Dict[str, typing.Dict[str, typing.Dict[str, str]]],
-) -> typing.Dict[str, typing.List[typing.Dict[str, str]]]:
+    objects: dict[str, dict[str, dict[str, str]]],
+) -> dict[str, list[dict[str, int | str]]]:
     """Generate graph, *e.g.*, nodes and edges.
 
     Parameters
     ----------
-    objects : typing.Dict[str, typing.Dict[str, typing.Dict[str, str]]]
+    objects : dict[str, dict[str, dict[str, str]]]
         Dictionary of objects encountered in all modules parsed by `astdocs`.
 
     Returns
     -------
-    : typing.Dict[str, typing.List[typing.Dict[str, str]]]
+    : dict[str, list[dict[str, str]]]
         `JSON`-formatted content organised for `D3.js`.
 
     Notes
@@ -142,8 +141,8 @@ def graph(
     """
     modules = list(objects.keys())
 
-    edges = []
-    nodes = []
+    edges: list[dict[str, str]] = []
+    nodes: list[dict[str, int | str]] = []
 
     for g, m in enumerate(objects):
         for t in ["classes", "functions", "imports"]:

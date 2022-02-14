@@ -5,19 +5,15 @@ Requirements
 * `astdocs`
 """
 
-import typing
-
 import astdocs
 
 
-def generate_toc(
-    objects: typing.Dict[str, typing.Dict[str, typing.Dict[str, str]]]
-) -> str:
+def generate_toc(objects: dict[str, dict[str, dict[str, str]]]) -> str:
     """Filter objects and generate the table of content.
 
     Parameters
     ----------
-    objects : typing.Dict[str, typing.Dict[str, typing.Dict[str, str]]]
+    objects : dict[str, dict[str, dict[str, str]]]
         Dictionary of objects encountered in all modules parsed by `astdocs`.
 
     Returns

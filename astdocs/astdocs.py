@@ -11,8 +11,7 @@ fancy syntax.
 My only requirement was to use the `Python` standard library **exclusively** (even the
 [templating](https://docs.python.org/3/library/string.html#template-strings)) as it is
 quite [overly] complete these days, and keep it as *lean* as possible. Support for
-corner cases is scarse... for one, no class-in- nor function-in-function (which I
-consider private, in the `Python` sense).
+corner cases is scarse...
 
 The simplest way to check the output of this script is to run it on itself:
 
@@ -54,8 +53,7 @@ The behaviour of this little stunt can be modified via environment variables:
 $ ASTDOCS_WITH_LINENOS=on python astdocs.py astdocs.py
 ```
 
-or to split marked sections into separate files (in `Bash` below; see also the `Python`
-example in the docstring of the `astdocs.render_recursively()` function):
+or to split marked sections into separate files:
 
 ```shell
 $ ASTDOCS_SPLIT_BY=mc python astdocs.py module.py | csplit -qz - '/^%%%BEGIN/' '{*}'
@@ -69,9 +67,12 @@ $ for f in xx??; do
 > done
 ```
 
+(See also the `Python` example in the docstring of the `astdocs.render_recursively()`
+function.)
+
 Each of these environment variables translates into a private attribute with the same
-name: the `ASTDOCS_FOLD_ARGS_AFTER` value is stored in the `_fold_args_after` variable
-for instance.
+name: the `ASTDOCS_FOLD_ARGS_AFTER` value is stored in the `__FOLD_ARGS_AFTER__`
+variable for instance.
 
 Handling options completely programmatically breaks the `Python` idiomatic ways (code in
 the middle of `import` statements):
@@ -165,12 +166,13 @@ TPL_MODULE: string.Template = string.Template(
 )
 
 # if requested, add markers indicating the start and end of an object definition
-_bound_objects: bool = (
+__BOUND_OBJECTS__: bool = (
     True
     if os.environ.get("ASTDOCS_BOUND_OBJECTS", "off") in ("1", "on", "true", "yes")
     else False
 )
-if not _bound_objects:
+
+if not __BOUND_OBJECTS__:
     TPL_CLASSDEF.template = re.sub(
         r"\n%%%[A-Z]+ CLASSDEF \$ancestry\.\$classname", "", TPL_CLASSDEF.template
     )
@@ -182,35 +184,39 @@ if not _bound_objects:
     )
 
 # set the string length limit (black default)
-_fold_args_after: int = int(os.environ.get("ASTDOCS_FOLD_ARGS_AFTER", "88"))
+__FOLD_ARGS_AFTER__: int = int(os.environ.get("ASTDOCS_FOLD_ARGS_AFTER", "88"))
 
 # if requested, show private objects in the output
-_show_private: bool = (
+__SHOW_PRIVATE__: bool = (
     True
     if os.environ.get("ASTDOCS_SHOW_PRIVATE", "off") in ("1", "on", "true", "yes")
     else False
 )
 
 # if requested, split things up with %%% markers
-_split_by: str = os.environ.get("ASTDOCS_SPLIT_BY", "")
-if "c" in _split_by:
+__SPLIT_BY__: str = os.environ.get("ASTDOCS_SPLIT_BY", "")
+
+if "c" in __SPLIT_BY__:
     TPL_CLASSDEF.template = (
         f"%%%BEGIN CLASSDEF $ancestry.$classname{TPL_CLASSDEF.template}"
     )
-if "f" in _split_by:
+
+if "f" in __SPLIT_BY__:
     TPL_FUNCTIONDEF.template = (
         f"%%%BEGIN FUNCTIONDEF $ancestry.$funcname{TPL_FUNCTIONDEF.template}"
     )
-if "m" in _split_by:
+
+if "m" in __SPLIT_BY__:
     TPL_MODULE.template = f"%%%BEGIN MODULE $module{TPL_MODULE.template}"
 
 # if requested, add the line numbers to the source
-_with_linenos: bool = (
+__WITH_LINENOS__: bool = (
     True
     if os.environ.get("ASTDOCS_WITH_LINENOS", "off") in ("1", "on", "true", "yes")
     else False
 )
-if not _with_linenos:
+
+if not __WITH_LINENOS__:
     TPL_CLASSDEF.template = TPL_CLASSDEF.template.replace(
         "\n\n%%%SOURCE $path:$lineno:$endlineno", ""
     )
@@ -254,7 +260,7 @@ def format_annotation(a: typing.Any, char: str = "") -> str:
     s = ""
 
     if a is not None:
-        path: typing.List[str] = []
+        path: list[str] = []
 
         # dig deeper (hence the insert(0) instead of append) until finding the name
         # (coined as "id") of the object; the content of the "attr" keys found on the
@@ -309,7 +315,7 @@ def format_annotation(a: typing.Any, char: str = "") -> str:
 
 
 def format_docstring(
-    n: typing.Union[ast.AsyncFunctionDef, ast.ClassDef, ast.FunctionDef, ast.Module]
+    n: ast.AsyncFunctionDef | ast.ClassDef | ast.FunctionDef | ast.Module,
 ) -> str:
     r"""Format the object docstring.
 
@@ -321,7 +327,7 @@ def format_docstring(
 
     Parameters
     ----------
-    n : typing.Union[ast.AsyncFunctionDef, ast.ClassDef, ast.FunctionDef, ast.Module]
+    n : ast.AsyncFunctionDef | ast.ClassDef | ast.FunctionDef | ast.Module
         Source node to extract/parse docstring from.
 
     Returns
@@ -337,7 +343,7 @@ def format_docstring(
     ```text
     Parameters
     ----------
-    n : typing.Union[ast.AsyncFunctionDef, ast.ClassDef, ast.FunctionDef, ast.Module]
+    n : ast.AsyncFunctionDef | ast.ClassDef | ast.FunctionDef | ast.Module
         Source node to extract/parse docstring from.
 
     Returns
@@ -437,7 +443,7 @@ def parse_classdef(n: ast.ClassDef):
         The node to extract information from.
     """
     # determine the title level
-    if "c" in _split_by:
+    if "c" in __SPLIT_BY__:
         ht = "#"
     else:
         ht = "###"
@@ -462,16 +468,16 @@ def parse_classdef(n: ast.ClassDef):
     objects[_module]["classes"][local] = absolute
 
 
-def parse_functiondef(n: typing.Union[ast.AsyncFunctionDef, ast.FunctionDef]):
+def parse_functiondef(n: ast.AsyncFunctionDef | ast.FunctionDef):
     """Parse a `def` statement.
 
     Parameters
     ----------
-    n : typing.Union[ast.AsyncFunctionDef, ast.FunctionDef]
+    n : ast.AsyncFunctionDef | ast.FunctionDef
         The node to extract information from.
     """
     # determine the title level
-    if "f" in _split_by:
+    if "f" in __SPLIT_BY__:
         ht = "#"
     else:
         ht = "###"
@@ -490,7 +496,7 @@ def parse_functiondef(n: typing.Union[ast.AsyncFunctionDef, ast.FunctionDef]):
     # add line breaks if the function call is long (pre-render this latter first, no way
     # around it)
     rendered = f'{n.name}({", ".join(params)}){returns}'
-    if len(rendered) > _fold_args_after:
+    if len(rendered) > __FOLD_ARGS_AFTER__:
         params = [f"\n    {p}" for p in params]
         suffix = ",\n"
     else:
@@ -515,7 +521,7 @@ def parse_functiondef(n: typing.Union[ast.AsyncFunctionDef, ast.FunctionDef]):
     objects[_module]["functions"][local] = absolute
 
 
-def parse_import(n: typing.Union[ast.Import, ast.ImportFrom]):
+def parse_import(n: ast.Import | ast.ImportFrom):
     """Parse `import ... [as ...]` and `from ... import ... [as ...]` statements.
 
     The content built by this function is currently *not* used. This latter is kept in
@@ -524,7 +530,7 @@ def parse_import(n: typing.Union[ast.Import, ast.ImportFrom]):
 
     Parameters
     ----------
-    n : typing.Union[ast.Import, ast.ImportFrom]
+    n : ast.Import | ast.ImportFrom
         The node to extract information from.
     """
     path = ""
@@ -625,7 +631,7 @@ def render_classdef(filepath: str, name: str) -> str:
         docstr = _["funcdocs"]
         lineno = _["lineno"]
         endlineno = _["endlineno"]
-        if _with_linenos:
+        if __WITH_LINENOS__:
             docstr += f"\n\n%%%SOURCE {filepath}:{lineno}:{endlineno}"
     else:
         params = ""
@@ -635,7 +641,7 @@ def render_classdef(filepath: str, name: str) -> str:
     fr = []
     for f in fn:
         n = f.split(".")[-1]
-        if not n.startswith("_") or _show_private:
+        if not n.startswith("_") or __SHOW_PRIVATE__:
             _funcdefs[f].update(
                 {
                     "hashtags": f"{ht}##",
@@ -649,7 +655,7 @@ def render_classdef(filepath: str, name: str) -> str:
     fn_ = []
     for i, f in enumerate(fn):
         n = f.split(".")[-1]
-        if not n.startswith("_") or _show_private:
+        if not n.startswith("_") or __SHOW_PRIVATE__:
             link = f.replace(".", "").lower()  # github syntax
             desc = _funcdefs[f]["funcdocs"].split("\n")[0]
             fn_.append(f"* [`{n}()`](#{link}): {desc}")
@@ -714,7 +720,7 @@ def render_module(name: str, docstring: str = "") -> str:
     for f in _funcdefs:
         if f.count(".") == name.count(".") + 1:
             n = f.split(".")[-1]
-            if not n.startswith("_") or _show_private:
+            if not n.startswith("_") or __SHOW_PRIVATE__:
                 link = f.replace(".", "").lower()  # github syntax
                 desc = _funcdefs[f]["funcdocs"].split("\n")[0]
                 fn.append(f"* [`{n}()`](#{link}): {desc}")
@@ -724,7 +730,7 @@ def render_module(name: str, docstring: str = "") -> str:
     for c in _classdefs:
         if c.count(".") == name.count(".") + 1:
             n = c.split(".")[-1]
-            if not n.startswith("_") or _show_private:
+            if not n.startswith("_") or __SHOW_PRIVATE__:
                 link = c.replace(".", "").lower()  # github syntax
                 desc = _classdefs[c]["classdocs"].split("\n")[0]
                 cn.append(f"* [`{n}`](#{link}): {desc}")
@@ -737,9 +743,9 @@ def render_module(name: str, docstring: str = "") -> str:
     }
 
     # clean up the unwanted
-    if "c" in _split_by:
+    if "c" in __SPLIT_BY__:
         sub["classnames"] = ""
-    if "f" in _split_by:
+    if "f" in __SPLIT_BY__:
         sub["funcnames"] = ""
 
     return TPL_MODULE.substitute(sub).strip()
@@ -794,27 +800,27 @@ def render(filepath: str, remove_from_path: str = "") -> str:
     for f in _funcdefs:
         if f.count(".") == n.name.count(".") + 1:  # type: ignore
             name = f.split(".")[-1]
-            if not name.startswith("_") or _show_private:
+            if not name.startswith("_") or __SHOW_PRIVATE__:
                 fr.append(render_functiondef(filepath, f))
 
     cr = []
     for c in _classdefs:
         if c.count(".") == n.name.count(".") + 1:  # type: ignore
             name = c.split(".")[-1]
-            if not name.startswith("_") or _show_private:
+            if not name.startswith("_") or __SHOW_PRIVATE__:
                 cr.append(render_classdef(filepath, c))
 
     # render each section
     sub = {
         "classes": "\n\n".join(
             [
-                "## Classes" if "c" not in _split_by and cr else "",
+                "## Classes" if "c" not in __SPLIT_BY__ and cr else "",
                 "\n\n".join(cr) if cr else "",
             ]
         ),
         "functions": "\n\n".join(
             [
-                "## Functions" if "f" not in _split_by and fr else "",
+                "## Functions" if "f" not in __SPLIT_BY__ and fr else "",
                 "\n\n".join(fr) if fr else "",
             ]
         ),
@@ -877,7 +883,7 @@ def render_recursively(path: str, remove_from_path: str = "") -> str:
     # render each module
     for filepath in sorted(glob.glob(f"{path}/**/*.py", recursive=True)):
         name = filepath.split("/")[-1]
-        if not name.startswith("_") or _show_private or name == "__init__.py":
+        if not name.startswith("_") or __SHOW_PRIVATE__ or name == "__init__.py":
             mr.append(render(filepath, remove_from_path))
 
     s = "\n\n".join(mr)
@@ -937,7 +943,7 @@ def postrender(func: typing.Callable) -> typing.Callable:
     return decorator
 
 
-def main():
+def cli():
     """Process CLI calls."""
     if len(sys.argv) != 2:
         sys.exit("Wrong number of arguments! Accepting *one* only.")
@@ -951,4 +957,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    cli()
