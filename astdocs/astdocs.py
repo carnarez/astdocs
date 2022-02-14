@@ -101,6 +101,32 @@ TPL_FUNCTIONDEF : string.Template
     Template to render `def` objects (async or not).
 TPL_MODULE : string.Template
     Template to render the module summary.
+objects : dict[str, typing.Any]
+    Nested dictionary of all relevant objects encountered while parsing the source code.
+    The content of this can be used by external script to generate a dependency graph or
+    simply a Table of Contents:
+
+    ```python
+    import astdocs
+
+    def toc(objects: dict[str, dict[str, dict[str, str]]]) -> str:
+        md = ""
+
+        for m in objects:  # each module
+            anchor = m.replace(".", "")  # github
+            md += f"\n- [`{m}`](#module-{anchor})"
+            for t in ["functions", "classes"]:  # relevant object types
+                for o in objects[m][t]:
+                    anchor = (m + o).replace(".", "")  # github
+                    md += f"\n    - [`{m}.{o}`](#{anchor})"
+
+        return md
+
+    md = astdocs.render_recursively(".")
+    toc = toc(astdocs.objects)
+
+    print(f"{toc}\n\n{md}")
+    ```
 """
 
 import ast
@@ -228,7 +254,7 @@ _classdefs = {}
 _funcdefs = {}
 _module = ""
 
-objects: typing.Any = {}
+objects: dict[str, typing.Any] = {}
 
 
 def format_annotation(a: typing.Any, char: str = "") -> str:
@@ -913,6 +939,7 @@ def postrender(func: typing.Callable) -> typing.Callable:
 
     Example
     -------
+    A generic example:
 
     ```python
     import astdocs
@@ -928,6 +955,22 @@ def postrender(func: typing.Callable) -> typing.Callable:
     @astdocs.postrender(extend_that)
     @astdocs.postrender(apply_this)
     def render(filepath: str) -> str:  # simple wrapper function
+        return astdocs.render(filepath)
+
+    print(render(...))
+    ```
+
+    or a more concrete one:
+
+    ```python
+    import astdocs
+    import mdformat
+
+    def lint(md: str) -> str:
+        return mdformat.text(md)
+
+    @astdocs.postrender(lint)
+    def render(filepath: str) -> str:
         return astdocs.render(filepath)
 
     print(render(...))
