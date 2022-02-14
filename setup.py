@@ -7,10 +7,10 @@ setuptools.setup(
     description=(
         "Opinionated way to pull and format NumPy-ish docstrings from Python modules."
     ),
-    entry_points={"console_scripts": ["astdocs=astdocs.astdocs:main"]},
+    entry_points={"console_scripts": ["astdocs=astdocs.astdocs:cli"]},
     name="astdocs",
     packages=["astdocs"],
-    package_data={"astdocs": ["*.pyi", "py.typed"]},
+    package_data={"astdocs": ["py.typed"]},
     url="https://github.com/carnarez/astdocs",
     version="0.0.1",
 )

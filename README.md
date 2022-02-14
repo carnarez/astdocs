@@ -1,4 +1,4 @@
-***My* very opinionated way to pull and format `NumPy`-ish docstrings from `Python`
+**_My_ very opinionated way to pull and format `NumPy`-ish docstrings from `Python`
 modules.** Get it via a simple:
 
 ```shell
@@ -15,3 +15,6 @@ $ wget https://raw.githubusercontent.com/carnarez/astdocs/master/astdocs/astdocs
 for the script itself, whatever you find more appropriate. Accepts a single argument, a
 **file** (*e.g.*, `Python` module) or a **directory** (in which it will recursively fish
 for all `*.py` files).
+
+Due to its [cleaner type hints](https://www.python.org/dev/peps/pep-0604/) `Python`
+v3.10 is required.
