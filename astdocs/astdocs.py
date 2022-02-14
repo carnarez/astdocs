@@ -315,12 +315,22 @@ def format_annotation(a: typing.Any, char: str = "") -> str:
         if hasattr(o, "elts"):
             path.insert(0, f'[{", ".join([format_annotation(a_) for a_ in o.elts])}]')
 
+        # but the deepest object might be something else, and we need to recursively
+        # track it once again (it is the case for the new-ish "or" operator)
+        if hasattr(o, "right"):
+            path.insert(0, f"{format_annotation(o.right)}")
+            if hasattr(o, "left"):
+                path.insert(0, format_annotation(o.left))
+
         # some functions/methods simply return nothing
         if o is None:
             path.insert(0, "None")
 
-        # add to the string
-        s += f'{char}{".".join(path)}'
+        # add to the string; beware of the new-ish "or" operator
+        if hasattr(o, "right"):
+            s += f'{char}{" | ".join(path)}'
+        else:
+            s += f'{char}{".".join(path)}'
 
     # the annotation itself might be complex and completed by other annotations (think
     # the complicated type description enforced by mypy for instance)
@@ -330,11 +340,7 @@ def format_annotation(a: typing.Any, char: str = "") -> str:
         else:
             s += format_annotation(a.slice.value)
 
-        # a bit frustrating, but the List need to be fixed with an ad-hoc substitute or
-        # no surrounding square brackets show up
-        s = re.sub(r"List([^\[,][A-Za-z0-9\._\[\], ]+)", r"List[\1]", s)
-
-    # another complicate case: decorator with arguments
+    # another complicated case: decorator with arguments
     if hasattr(a, "func"):
         s += format_annotation(a.func)
         s += f'({", ".join([format_annotation(a_) for a_ in a.args])})'
@@ -447,13 +453,13 @@ def format_docstring(
 
     # rework list of arguments/types/descriptions
     s = re.sub(
-        r"\n([A-Za-z0-9_ ]+) : ([A-Za-z0-9_\[\],\. ]+)\n {2,}(.*)",
+        r"\n([A-Za-z0-9_ ]+) : ([A-Za-z0-9_\[\],\.| ]+)\n {2,}(.*)",
         r"\n* `\1` [`\2`]: \3",
         s,
     )
 
     # rework list of types/descriptions (return values)
-    s = re.sub(r"\n: ([A-Za-z0-9_\[\],\. ]+)\n {2,}(.*)", r"\n* [`\1`]: \2", s)
+    s = re.sub(r"\n: ([A-Za-z0-9_\[\],\.| ]+)\n {2,}(.*)", r"\n* [`\1`]: \2", s)
 
     # put the code blocks back in
     for i, b in enumerate(blocks):

@@ -188,7 +188,9 @@ See the code itself for some line-by-line documentation.
 ### `astdocs.format_docstring`
 
 ```python
-format_docstring(n: ) -> str:
+format_docstring(
+    n: ast.AsyncFunctionDef | ast.ClassDef | ast.FunctionDef | ast.Module,
+) -> str:
 ```
 
 Format the object docstring.
@@ -201,8 +203,8 @@ output?
 
 **Parameters**
 
-n : ast.AsyncFunctionDef | ast.ClassDef | ast.FunctionDef | ast.Module Source node to
-extract/parse docstring from.
+- `n` \[`ast.AsyncFunctionDef | ast.ClassDef | ast.FunctionDef | ast.Module`\]: Source
+  node to extract/parse docstring from.
 
 **Returns**
 
@@ -283,19 +285,20 @@ Parse a `class` statement.
 ### `astdocs.parse_functiondef`
 
 ```python
-parse_functiondef(n: ):
+parse_functiondef(n: ast.AsyncFunctionDef | ast.FunctionDef):
 ```
 
 Parse a `def` statement.
 
 **Parameters**
 
-n : ast.AsyncFunctionDef | ast.FunctionDef The node to extract information from.
+- `n` \[`ast.AsyncFunctionDef | ast.FunctionDef`\]: The node to extract information
+  from.
 
 ### `astdocs.parse_import`
 
 ```python
-parse_import(n: ):
+parse_import(n: ast.Import | ast.ImportFrom):
 ```
 
 Parse `import ... [as ...]` and `from ... import ... [as ...]` statements.
@@ -306,7 +309,7 @@ post-processing or some later smart implementations.
 
 **Parameters**
 
-n : ast.Import | ast.ImportFrom The node to extract information from.
+- `n` \[`ast.Import | ast.ImportFrom`\]: The node to extract information from.
 
 ### `astdocs.parse_tree`
 
