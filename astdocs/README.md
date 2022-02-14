@@ -13,8 +13,7 @@ fancy syntax.
 My only requirement was to use the `Python` standard library **exclusively** (even the
 [templating](https://docs.python.org/3/library/string.html#template-strings)) as it is
 quite \[overly\] complete these days, and keep it as *lean* as possible. Support for
-corner cases is scarse... for one, no class-in- nor function-in-function (which I
-consider private, in the `Python` sense).
+corner cases is scarse...
 
 The simplest way to check the output of this script is to run it on itself:
 
@@ -55,8 +54,7 @@ The behaviour of this little stunt can be modified via environment variables:
 $ ASTDOCS_WITH_LINENOS=on python astdocs.py astdocs.py
 ```
 
-or to split marked sections into separate files (in `Bash` below; see also the `Python`
-example in the docstring of the `astdocs.render_recursively()` function):
+or to split marked sections into separate files:
 
 ```shell
 $ ASTDOCS_SPLIT_BY=mc python astdocs.py module.py | csplit -qz - '/^%%%BEGIN/' '{*}'
@@ -70,9 +68,12 @@ $ for f in xx??; do
 > done
 ```
 
+(See also the `Python` example in the docstring of the `astdocs.render_recursively()`
+function.)
+
 Each of these environment variables translates into a private attribute with the same
-name: the `ASTDOCS_FOLD_ARGS_AFTER` value is stored in the `_fold_args_after` variable
-for instance.
+name: the `ASTDOCS_FOLD_ARGS_AFTER` value is stored in the `__FOLD_ARGS_AFTER__`
+variable for instance.
 
 Handling options completely programmatically breaks the `Python` idiomatic ways (code in
 the middle of `import` statements):
@@ -91,6 +92,32 @@ md = astdocs.render_recursively(".")
 and that might make some checkers/linters unhappy. (This whole thing started with two
 flags but grew out of hands...)
 
+All encountered objects are stored as they are parsed. The content of the corresponding
+attribute can be used by external scripts to generate a dependency graph, or simply a
+Table of Contents:
+
+```python
+import astdocs
+
+def toc(objects: dict[str, dict[str, dict[str, str]]]) -> str:
+    md = ""
+
+    for m in objects:  # each module
+        anchor = m.replace(".", "")  # github
+        md += f"\n- [`{m}`](#module-{anchor})"
+        for t in ["functions", "classes"]:  # relevant object types
+            for o in objects[m][t]:
+                anchor = (m + o).replace(".", "")  # github
+                md += f"\n    - [`{m}.{o}`](#{anchor})"
+
+    return md
+
+md = astdocs.render_recursively(".")
+toc = toc(astdocs.objects)
+
+print(f"{toc}\n\n{md}")
+```
+
 **Attributes**
 
 - `TPL` \[`string.Template`\]: Template to render the overall page (only governs order
@@ -99,6 +126,8 @@ flags but grew out of hands...)
 - `TPL_FUNCTIONDEF` \[`string.Template`\]: Template to render `def` objects (async or
   not).
 - `TPL_MODULE` \[`string.Template`\]: Template to render the module summary.
+- `objects` \[`dict[str, typing.Any]`\]: Nested dictionary of all relevant objects
+  encountered while parsing the source code.
 
 **Functions**
 
@@ -123,7 +152,7 @@ flags but grew out of hands...)
   module found in a folder and its subfolders.
 - [`postrender()`](#astdocspostrender): Apply a post-rendering function on the output of
   the decorated function.
-- [`main()`](#astdocsmain): Process CLI calls.
+- [`cli()`](#astdocscli): Process CLI calls.
 
 ## Functions
 
@@ -159,9 +188,7 @@ See the code itself for some line-by-line documentation.
 ### `astdocs.format_docstring`
 
 ```python
-format_docstring(
-    n: typing.Union[ast.AsyncFunctionDef, ast.ClassDef, ast.FunctionDef, ast.Module],
-) -> str:
+format_docstring(n: ) -> str:
 ```
 
 Format the object docstring.
@@ -174,9 +201,8 @@ output?
 
 **Parameters**
 
-- `n`
-  \[`typing.Union[ast.AsyncFunctionDef, ast.ClassDef, ast.FunctionDef, ast.Module]`\]:
-  Source node to extract/parse docstring from.
+n : ast.AsyncFunctionDef | ast.ClassDef | ast.FunctionDef | ast.Module Source node to
+extract/parse docstring from.
 
 **Returns**
 
@@ -190,7 +216,7 @@ Below the raw docstring example of what this very function is expecting as an in
 ```text
 Parameters
 ----------
-n : typing.Union[ast.AsyncFunctionDef, ast.ClassDef, ast.FunctionDef, ast.Module]
+n : ast.AsyncFunctionDef | ast.ClassDef | ast.FunctionDef | ast.Module
     Source node to extract/parse docstring from.
 
 Returns
@@ -257,20 +283,19 @@ Parse a `class` statement.
 ### `astdocs.parse_functiondef`
 
 ```python
-parse_functiondef(n: typing.Union[ast.AsyncFunctionDef, ast.FunctionDef]):
+parse_functiondef(n: ):
 ```
 
 Parse a `def` statement.
 
 **Parameters**
 
-- `n` \[`typing.Union[ast.AsyncFunctionDef, ast.FunctionDef]`\]: The node to extract
-  information from.
+n : ast.AsyncFunctionDef | ast.FunctionDef The node to extract information from.
 
 ### `astdocs.parse_import`
 
 ```python
-parse_import(n: typing.Union[ast.Import, ast.ImportFrom]):
+parse_import(n: ):
 ```
 
 Parse `import ... [as ...]` and `from ... import ... [as ...]` statements.
@@ -281,8 +306,7 @@ post-processing or some later smart implementations.
 
 **Parameters**
 
-- `n` \[`typing.Union[ast.Import, ast.ImportFrom]`\]: The node to extract information
-  from.
+n : ast.Import | ast.ImportFrom The node to extract information from.
 
 ### `astdocs.parse_tree`
 
@@ -445,6 +469,8 @@ This can be used to streamline the linting of the output, or immediately convert
 
 **Example**
 
+Some general usage:
+
 ```python
 import astdocs
 
@@ -464,10 +490,26 @@ def render(filepath: str) -> str:  # simple wrapper function
 print(render(...))
 ```
 
-### `astdocs.main`
+or a more concrete snippet:
 
 ```python
-main():
+import astdocs
+import mdformat
+
+def lint(md: str) -> str:
+    return mdformat.text(md)
+
+@astdocs.postrender(lint)
+def render(filepath: str) -> str:
+    return astdocs.render(filepath)
+
+print(render(...))
+```
+
+### `astdocs.cli`
+
+```python
+cli():
 ```
 
 Process CLI calls.

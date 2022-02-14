@@ -91,6 +91,32 @@ md = astdocs.render_recursively(".")
 and that might make some checkers/linters unhappy. (This whole thing started with two
 flags but grew out of hands...)
 
+All encountered objects are stored as they are parsed. The content of the corresponding
+attribute can be used by external scripts to generate a dependency graph, or simply a
+Table of Contents:
+
+```python
+import astdocs
+
+def toc(objects: dict[str, dict[str, dict[str, str]]]) -> str:
+    md = ""
+
+    for m in objects:  # each module
+        anchor = m.replace(".", "")  # github
+        md += f"\n- [`{m}`](#module-{anchor})"
+        for t in ["functions", "classes"]:  # relevant object types
+            for o in objects[m][t]:
+                anchor = (m + o).replace(".", "")  # github
+                md += f"\n    - [`{m}.{o}`](#{anchor})"
+
+    return md
+
+md = astdocs.render_recursively(".")
+toc = toc(astdocs.objects)
+
+print(f"{toc}\n\n{md}")
+```
+
 Attributes
 ----------
 TPL : string.Template
@@ -103,30 +129,6 @@ TPL_MODULE : string.Template
     Template to render the module summary.
 objects : dict[str, typing.Any]
     Nested dictionary of all relevant objects encountered while parsing the source code.
-    The content of this can be used by external script to generate a dependency graph or
-    simply a Table of Contents:
-
-    ```python
-    import astdocs
-
-    def toc(objects: dict[str, dict[str, dict[str, str]]]) -> str:
-        md = ""
-
-        for m in objects:  # each module
-            anchor = m.replace(".", "")  # github
-            md += f"\n- [`{m}`](#module-{anchor})"
-            for t in ["functions", "classes"]:  # relevant object types
-                for o in objects[m][t]:
-                    anchor = (m + o).replace(".", "")  # github
-                    md += f"\n    - [`{m}.{o}`](#{anchor})"
-
-        return md
-
-    md = astdocs.render_recursively(".")
-    toc = toc(astdocs.objects)
-
-    print(f"{toc}\n\n{md}")
-    ```
 """
 
 import ast
@@ -939,7 +941,7 @@ def postrender(func: typing.Callable) -> typing.Callable:
 
     Example
     -------
-    A generic example:
+    Some general usage:
 
     ```python
     import astdocs
@@ -960,7 +962,7 @@ def postrender(func: typing.Callable) -> typing.Callable:
     print(render(...))
     ```
 
-    or a more concrete one:
+    or a more concrete snippet:
 
     ```python
     import astdocs
