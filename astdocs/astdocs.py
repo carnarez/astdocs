@@ -335,8 +335,10 @@ def format_annotation(a: typing.Any, char: str = "") -> str:
     # the annotation itself might be complex and completed by other annotations (think
     # the complicated type description enforced by mypy for instance)
     if hasattr(a, "slice"):
-        if hasattr(a.slice.value, "elts"):
+        try:
             s += f'[{", ".join([format_annotation(a_) for a_ in a.slice.value.elts])}]'
+        except AttributeError:
+            pass  # a.slice.value or a.slice.value.elts attributes do not exist
         else:
             s += format_annotation(a.slice.value)
 
