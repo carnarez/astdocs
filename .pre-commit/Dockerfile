@@ -1,4 +1,4 @@
-FROM python:slim
+FROM python:3.10-slim
 
 ARG username
 
@@ -8,8 +8,9 @@ RUN mkdir -p /home/$username \
 COPY requirements.txt /tmp/requirements.txt
 
 RUN apt-get update \
- && apt-get install --no-install-recommends --no-install-suggests --yes git \
- && pip install -U pip \
+ && DEBIAN_FRONTEND=noninteractive \
+    apt-get install --no-install-recommends --yes git \
+ && pip install --upgrade pip \
  && pip install --no-cache-dir -r /tmp/requirements.txt
 
 COPY hooks.yaml /usr/share/pre-commit/hooks.yaml
