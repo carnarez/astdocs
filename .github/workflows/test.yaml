@@ -25,4 +25,4 @@ jobs:
 
       - name: Run pytest
         run: |
-          python -m pytest --color=yes --cov=naiad --cov-report term-missing --verbose
+          python -m pytest --color=yes --cov=astdocs --cov-report term-missing --verbose

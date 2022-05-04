@@ -1,10 +1,4 @@
-"""All tests related to the `astdocs.render_*()` functions.
-
-Applies to the following objects:
-* class (`render_classdef()`),
-* function (`render_functiondef()`),
-* module (`render_module()`).
-"""
+"""All tests related to the `astdocs.render_*()` functions."""
 
 import ast
 

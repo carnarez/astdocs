@@ -68,7 +68,7 @@ def test_simple_module_docstring():
 def test_complex_docstring():
     '''Test extraction of more complex docstring (from module to make it easier).
 
-    ````
+    `````
     """Empty module.
 
     ## Cleaned up title
@@ -99,7 +99,7 @@ def test_complex_docstring():
         All kinds of exceptions
 
     """
-    ````
+    `````
 
     Notes
     -----

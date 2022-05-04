@@ -26,4 +26,4 @@ test: build
 
 clean:
 	@rm -fr $$(find . -name __pycache__)
-	#@docker rmi --force astdocs:latest
+	@docker rmi --force astdocs:latest

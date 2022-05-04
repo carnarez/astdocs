@@ -1,10 +1,4 @@
-"""All tests related to the `astdocs.parse_*()` functions.
-
-Expected/supported objects are:
-* `ClassDef` (`parse_classdef()`),
-* `FunctionDef` or `AsyncFunctionDef` (`parse_functiondef()`),
-* `Import` or `ImportFrom` (`parse_import()`).
-"""
+"""All tests related to the `astdocs.parse_*()` functions."""
 
 import ast
 
