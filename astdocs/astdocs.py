@@ -426,32 +426,33 @@ def format_docstring(
     print(astdocs.render(...))
     ```
 
-    Known problems
-    --------------
-    * Overall naive and *very* opinionated (again, for *my* use).
-    * Does not support list in parameter/return entries.
+    Known problem
+    -------------
+    Overall naive, stiff and *very* opinionated (again, for *my* use).
     """
     s = ast.get_docstring(n) or ""
 
     # extract code blocks, replace them by a placeholder
     blocks = []
-    patterns = [r"(\`\`\`\`[^\`\`\`\`]*\`\`\`\`)", r"(\`\`\`[^\`\`\`]*\`\`\`)"]
+    patterns = [r"([`]{4}.*?[`]{4})", r"([`]{3}.*?[`]{3})"]
+    i = 0
     for p in patterns:
-        for i, m in enumerate(re.finditer(p, s)):
+        for m in re.finditer(p, s, flags=re.DOTALL):
             blocks.append(m.group(1))
             s = s.replace(m.group(1), f"%%%BLOCK{i}", 1)
+            i += 1
 
     # remove trailing spaces
     s = re.sub(r" {1,}\n", r"\n", s)
 
     # rework any word preceded by one or more hashtag
-    s = re.sub(r"\n[#{1,}] (\w+)", r"\n**\1**\n", s)
+    s = re.sub(r"\n#+\s*(.*)", r"\n**\1**", s)
 
     # rework any word followed by a line with 3 or more dashes
     s = re.sub(r"\n([A-Za-z ]+)\n-{3,}", r"\n**\1**\n", s)
 
     # rework list of arguments/descriptions (no types)
-    s = re.sub(r"\n([A-Za-z0-9_ ]+)\n {2,}(.*)", r"\n* [`\1`]: \2", s)
+    s = re.sub(r"\n([A-Za-z0-9_ ]+)\n {2,}(.*)", r"\n* `\1`: \2", s)
 
     # rework list of arguments/types/descriptions
     s = re.sub(

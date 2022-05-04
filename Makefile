@@ -16,13 +16,14 @@ env: build
 
 test: build
 	@docker run $(FLAGS) --env COLUMNS=$(COLUMNS) astdocs \
-		python -m pytest --capture=no \
-		                 --color=yes \
-						 --cov=astdocs \
-						 --cov-report term-missing \
-						 --override-ini="cache_dir=/tmp/pytest" \
-						 --verbose
+	    python -m pytest --capture=no \
+	                     --color=yes \
+	                     --cov=astdocs \
+	                     --cov-report term-missing \
+	                     --override-ini="cache_dir=/tmp/pytest" \
+	                     --verbose \
+	                     --verbose
 
 clean:
 	@rm -fr $$(find . -name __pycache__)
-	@docker rmi --force astdocs:latest
+	#@docker rmi --force astdocs:latest
