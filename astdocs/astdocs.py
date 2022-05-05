@@ -435,7 +435,7 @@ def format_docstring(
 
     # extract code blocks, replace them by a placeholder
     blocks = []
-    patterns = [r"([`]{4}.*?[`]{4})", r"([`]{3}.*?[`]{3})"]
+    patterns = [f"([`]{{{i}}}.*?[`]{{{i}}})" for i in range(7, 2, -1)]
     i = 0
     for p in patterns:
         for m in re.finditer(p, s, flags=re.DOTALL):

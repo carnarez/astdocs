@@ -46,7 +46,7 @@ def test_complex_decorator():
     assert [format_annotation(d, "@") for d in n.decorator_list] == ["@decorator()"]
 
 
-def test_function_simple_input_output():
+def test_simple_parameters():
     """Test for simple input/output arguments.
 
     ```python
@@ -67,7 +67,7 @@ def test_function_simple_input_output():
     assert format_annotation(n.returns) == "str"
 
 
-def test_function_complex_input_output():
+def test_complex_parameters():
     """Test for simple input/output arguments.
 
     ```python
