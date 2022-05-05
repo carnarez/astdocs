@@ -284,6 +284,7 @@ def format_annotation(a: typing.Any, char: str = "") -> str:
     Known problems
     --------------
     * Does not support `lambda` functions.
+    * Does not support content within `dict`/`list`/`set`/`tuple` objects.
     """
     s = ""
 
