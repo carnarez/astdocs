@@ -133,6 +133,7 @@ objects : dict[str, typing.Any]
 
 import ast
 import glob
+import itertools
 import os
 import re
 import string
@@ -170,7 +171,7 @@ TPL_FUNCTIONDEF: string.Template = string.Template(
     "\n$hashtags `$ancestry.$funcname`"
     "\n"
     "\n```python"
-    "\n$funcname($params)$returns:"
+    "\n$funcname($params)$output:"
     "\n```"
     "\n"
     "\n$funcdocs"
@@ -259,7 +260,7 @@ _module = ""
 objects: dict[str, typing.Any] = {}
 
 
-def format_annotation(a: typing.Any, char: str = "") -> str:
+def format_annotation(a: typing.Any) -> str:
     """Format an annotation (object type or decorator).
 
     Dive as deep as necessary within the children nodes until reaching the name of the
@@ -272,9 +273,6 @@ def format_annotation(a: typing.Any, char: str = "") -> str:
     ----------
     a : typing.Any
         The starting node to extract annotation information from.
-    char : str
-        The additional character to place at the beginning of the annotation; `"@"` for
-        a decorator, `" -> "` for a return type, *etc.* (defaults to empty string).
 
     Returns
     -------
@@ -283,72 +281,60 @@ def format_annotation(a: typing.Any, char: str = "") -> str:
 
     Known problems
     --------------
-    * Does not support `lambda` functions.
-    * Does not support content within `dict`/`list`/`set`/`tuple` objects.
+    * The implementation supports only nodes I encountered.
+    * Does not support `lambda` constructs.
     """
-    s = ""
+    # dig deeper: module.object
+    if type(a) == ast.Attribute:
+        return f"{format_annotation(a.value)}.{a.attr}"
 
-    if a is not None:
-        path: list[str] = []
+    # dig deeper: | operator
+    if type(a) == ast.BinOp:
+        s = format_annotation(a.left)
+        s += " | "
+        s += format_annotation(a.right)
+        return s
 
-        # dig deeper (hence the insert(0) instead of append) until finding the name
-        # (coined as "id") of the object; the content of the "attr" keys found on the
-        # way are the sub-modules
-        o = a
-        while not hasattr(o, "id"):
-            if hasattr(o, "attr"):
-                path.insert(0, o.attr)
-            try:
-                o = o.value
-            except AttributeError:
-                break
+    # dig deeper: @decorator(including=parameter)
+    if type(a) == ast.Call:
+        s = format_annotation(a.func)
+        s += "("
+        s += ", ".join([f"{a_.arg}={format_annotation(a_.value)}" for a_ in a.keywords])
+        s += ")"
+        return s
 
-        # we dug deep enough and unravelled it
-        if hasattr(o, "id"):
-            path.insert(0, o.id)
+    # we dug deep enough and unravelled a value
+    if type(a) == ast.Constant:
+        return a.value
 
-        # if the final object is a string, that also works
-        if type(o) == str:
-            path.insert(0, o)
+    # dig deeper: complex object, tuple[dict[int, float], bool, str] for instance
+    if type(a) == ast.List:
+        s = "["
+        s += ", ".join([format_annotation(a_) for a_ in a.elts])
+        s += "]"
+        return s
 
-        # but the deepest object might be something else, and we need to recursively
-        # track it once again (it is the case for list, tuple or dict for instance)
-        if hasattr(o, "elts"):
-            path.insert(0, f'[{", ".join([format_annotation(a_) for a_ in o.elts])}]')
+    # we dug deep enough and unravelled a canonical object
+    if type(a) == ast.Name:
+        return a.id
 
-        # but the deepest object might be something else, and we need to recursively
-        # track it once again (it is the case for the new-ish "or" operator)
-        if hasattr(o, "right"):
-            path.insert(0, f"{format_annotation(o.right)}")
-            if hasattr(o, "left"):
-                path.insert(0, format_annotation(o.left))
+    # dig deeper: complex object, tuple[dict[int, float], bool, str] for instance
+    if type(a) == ast.Subscript:
+        _ = format_annotation(a.slice)
+        s = format_annotation(a.value)
+        s += "["
+        s += _[1:-1] if _.startswith("(") and _.endswith(")") else _
+        s += "]"
+        return s
 
-        # some functions/methods simply return nothing
-        if o is None:
-            path.insert(0, "None")
+    # dig deeper: content within a tuple
+    if type(a) == ast.Tuple:
+        s = "("
+        s += ", ".join([format_annotation(a_) for a_ in a.elts])
+        s += ")"
+        return s
 
-        # add to the string; beware of the new-ish "or" operator
-        if hasattr(o, "right"):
-            s += f'{char}{" | ".join(path)}'
-        else:
-            s += f'{char}{".".join(path)}'
-
-    # the annotation itself might be complex and completed by other annotations (think
-    # the complicated type description enforced by mypy for instance)
-    if hasattr(a, "slice"):
-        try:
-            s += f'[{", ".join([format_annotation(a_) for a_ in a.slice.value.elts])}]'
-        except AttributeError:
-            pass  # a.slice.value or a.slice.value.elts attributes do not exist
-        else:
-            s += format_annotation(a.slice.value)
-
-    # another complicated case: decorator with arguments
-    if hasattr(a, "func"):
-        s += format_annotation(a.func)
-        s += f'({", ".join([format_annotation(a_) for a_ in a.args])})'
-
-    return s
+    return ""
 
 
 def format_docstring(
@@ -487,7 +473,7 @@ def parse_classdef(n: ast.ClassDef):
         ht = "###"
 
     # parse decorator objects
-    dc = [f'`{format_annotation(d, "@")}`' for d in n.decorator_list]
+    dc = [f"`@{format_annotation(d)}`" for d in n.decorator_list]
 
     # save the interesting details (more to come during rendering)
     _classdefs[f"{n.ancestry}.{n.name}"] = {  # type: ignore
@@ -521,19 +507,49 @@ def parse_functiondef(n: ast.AsyncFunctionDef | ast.FunctionDef):
         ht = "###"
 
     # parse decorator objects
-    dc = [f'`{format_annotation(d, "@")}`' for d in n.decorator_list]
+    dc = [f"`@{format_annotation(d)}`" for d in n.decorator_list]
 
-    # parse/format arguments and annotations
-    params = [f'{a.arg}{format_annotation(a.annotation, ": ")}' for a in n.args.args]
+    # parse/format arguments and annotations; with default values if present
+    def _parse_format_argument(ann: typing.Any, val: typing.Any = None):
+        s = ann.arg
+
+        if hasattr(ann, "annotation"):
+            s += ": "
+            s += format_annotation(ann.annotation)
+
+        if val is not None:
+            s += f" = {format_annotation(val)}"
+
+        return s
+
+    params = []
+
+    # args
+    for ann, val in itertools.zip_longest(
+        [n.args.args[::-1], n.args.defaults[::-1]][::-1]
+    ):
+        params.append(_parse_format_argument(ann, val))
+
+    # *args
     if n.args.vararg is not None:
-        params += [f"*{n.args.vararg.arg}"]
+        params.append(f"*{n.args.vararg.arg}")
+
+    # kwargs
+    for ann, val in itertools.zip_longest(
+        [n.args.kwonlyargs[::-1], n.args.kw_defaults[::-1]][::-1]
+    ):
+        params.append(_parse_format_argument(ann, val))
+
+    # **kwargs
     if n.args.kwarg is not None:
-        params += [f"**{n.args.kwarg.arg}"]
-    returns = format_annotation(n.returns, " -> ")
+        params.append(f"**{n.args.kwarg.arg}")
+
+    # output
+    output = format_annotation(n.returns)
 
     # add line breaks if the function call is long (pre-render this latter first, no way
     # around it)
-    rendered = f'{n.name}({", ".join(params)}){returns}'
+    rendered = f'{n.name}({", ".join(params)}) -> {output}'
     if len(rendered) > __FOLD_ARGS_AFTER__:
         params = [f"\n    {p}" for p in params]
         suffix = ",\n"
@@ -550,7 +566,7 @@ def parse_functiondef(n: ast.AsyncFunctionDef | ast.FunctionDef):
         "funcname": n.name,
         "hashtags": ht,
         "lineno": n.lineno,
-        "returns": returns,
+        "output": output,
     }
 
     # save the object
