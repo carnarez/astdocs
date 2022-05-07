@@ -14,8 +14,8 @@ def test_simple_class_docstring():
     ```
     '''
     s = "Test simple docstring."
-
     n = ast.parse(f'class Classy:\n    """{s}"""').body[0]
+
     assert format_docstring(n) == s
 
 
@@ -43,9 +43,11 @@ def test_simple_function_docstring():
 
     # parse node from string: returns a module, first (sole) element being the function
     n = ast.parse(f'def func():\n    """{s}"""').body[0]
+
     assert format_docstring(n) == s
 
     n = ast.parse(f'async def func():\n    """{s}"""').body[0]
+
     assert format_docstring(n) == s
 
 
@@ -60,8 +62,8 @@ def test_simple_module_docstring():
     ```
     '''
     s = "Test simple docstring."
-
     n = ast.parse(f'"""{s}"""\n\ndef func():\n    pass')
+
     assert format_docstring(n) == s
 
 
@@ -112,72 +114,69 @@ def test_complex_docstring():
     * Type + description parsing.
     * Trailing spaces trimming.
     '''
-    # even more cumbersome...
-    docstring = "\n".join(
-        [
-            '"""Empty module.',
-            "",
-            "## Cleaned up title",
-            "",
-            "```python",
-            "import astdocs",
-            "```",
-            "",
-            "````text",
-            "Let's test this too:",
-            "```markdown",
-            "# Title",
-            "```",
-            "````",
-            "",
-            "Attributes",
-            "----------",
-            "n : ast.ClassDef | ast.FunctionDef | ast.Module",
-            "    An `ast` node.",
-            "m : int",
-            "    Number of things.",
-            "self",
-            "    This module.",
-            "",
-            "Raises",
-            "------",
-            ": Exception",
-            "    All kinds of exceptions.",
-            "",
-            "",
-            '"""',
-        ]
-    )
+    # source
+    docstring = '''
+"""Empty module.
 
-    # oof
-    formatted = "\n".join(
-        [
-            "Empty module.",
-            "",
-            "**Cleaned up title**",
-            "",
-            "```python",
-            "import astdocs",
-            "```",
-            "",
-            "````text",
-            "Let's test this too:",
-            "```markdown",
-            "# Title",
-            "```",
-            "````",
-            "",
-            "**Attributes**",
-            "",
-            "* `n` [`ast.ClassDef | ast.FunctionDef | ast.Module`]: An `ast` node.",
-            "* `m` [`int`]: Number of things.",
-            "* `self`: This module.",
-            "",
-            "**Raises**",
-            "",
-            "* [`Exception`]: All kinds of exceptions.",
-        ]
-    )
+## Cleaned up title
+
+```python
+import astdocs
+```
+
+````text
+Let's test this too:
+```markdown
+# Title
+```
+````
+
+Attributes
+----------
+n : ast.ClassDef | ast.FunctionDef | ast.Module
+    An `ast` node.
+m : int
+    Number of things.
+self
+    This module.
+
+Raises
+------
+: Exception
+    All kinds of exceptions.
+
+
+"""
+    '''.lstrip()
+
+    # arget
+    formatted = """
+Empty module.
+
+**Cleaned up title**
+
+```python
+import astdocs
+```
+
+````text
+Let's test this too:
+```markdown
+# Title
+```
+````
+
+**Attributes**
+
+* `n` [`ast.ClassDef | ast.FunctionDef | ast.Module`]: An `ast` node.
+* `m` [`int`]: Number of things.
+* `self`: This module.
+
+**Raises**
+
+* [`Exception`]: All kinds of exceptions.
+    """.strip()
 
     n = ast.parse(docstring)
+
     assert format_docstring(n) == formatted

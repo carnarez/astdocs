@@ -17,17 +17,17 @@ format_annotation : typing.Callable
     Format an annotation (object type or decorator).
 format_docstring : typing.Callable
     Format the object docstring.
-parse_classdef : typing.Callable
+parse_class : typing.Callable
     Parse a `class` statement.
-parse_functiondef : typing.Callable
+parse_function : typing.Callable
     Parse a `def` statement.
 parse_import : typing.Callable
     Parse `import ... [as ...]` and `from ... import ... [as ...]` statements.
-parse_tree : typing.Callable
+parse : typing.Callable
     Recursively traverse the nodes of the abstract syntax tree.
-render_classdef : typing.Callable
+render_class : typing.Callable
     Render a `class` object, according to the defined `TPL_CLASSDEF` template.
-render_functiondef : typing.Callable
+render_function : typing.Callable
     Render a `def` object (function or method).
 render_module : typing.Callable
     Render a module summary as a `Markdown` file.
@@ -40,20 +40,25 @@ postrender : typing.Callable
 """
 
 from .astdocs import (
-    format_annotation,
     format_docstring,
-    parse_classdef,
-    parse_functiondef,
+    parse_annotation,
+    parse_class,
+    parse_function,
     parse_import,
-    parse_tree,
-    render_classdef,
-    render_functiondef,
+    parse,
+    render_class,
+    render_function,
     render_module,
     render,
     render_recursively,
     postrender,
 )
 
-from .astdocs import TPL, TPL_CLASSDEF, TPL_FUNCTIONDEF, TPL_MODULE
-
-from .astdocs import _classdefs, _funcdefs, _module, objects
+from .astdocs import (
+    TPL,
+    TPL_CLASSDEF,
+    TPL_FUNCTIONDEF,
+    TPL_MODULE,
+    config,
+    objects,
+)
