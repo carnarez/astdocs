@@ -21,6 +21,7 @@ test: build
 	                     --cov=astdocs \
 	                     --cov-report term-missing \
 	                     --override-ini="cache_dir=/tmp/pytest" \
+	                     --verbose \
 	                     --verbose
 
 clean:

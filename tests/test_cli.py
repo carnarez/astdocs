@@ -9,12 +9,12 @@ import astdocs.astdocs
 
 
 def test_runs():
-    """Test faulty run."""
+    """Test successful run (this test checks nothing more than a script run)."""
     assert subprocess.run(
         ["python", "astdocs/astdocs.py", "astdocs/astdocs.py"], capture_output=True
     )
     assert subprocess.run(
-        ["python", "astdocs/astdocs.py", "astdocs"], capture_output=True
+        ["python", "astdocs/astdocs.py", "astdocs/"], capture_output=True
     )
 
 
@@ -42,7 +42,7 @@ def test_environment():
 
 
 def test_default_environment():
-    """Test for environment variables."""
+    """Test for environment variables (reset them for the tests)."""
     os.environ["ASTDOCS_BOUND_OBJECTS"] = "off"
     os.environ["ASTDOCS_FOLD_ARGS_AFTER"] = "88"
     os.environ["ASTDOCS_SHOW_PRIVATE"] = "false"

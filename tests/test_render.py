@@ -1,6 +1,7 @@
 """All tests related to the `astdocs.render_*()` functions."""
 
 import ast
+import importlib
 
 import astdocs
 import astdocs.astdocs
@@ -14,7 +15,11 @@ def test_empty():
 
 
 def test_remove_from_path():
-    """Test with the `remove_from_path` argument (just to get 100% coverage)."""
+    """Test with the `remove_from_path` argument (just to get 100% coverage).
+
+    This test checks literally *nothing* more than the `remove_from_path` flag of the
+    `render()` function. Return is ignored.
+    """
     assert astdocs.render(filepath=f"./tests/{__name__}.py", remove_from_path="./")
 
 
@@ -296,6 +301,14 @@ def test_private_visible_objects():
     r = """
 # Module `test`
 
+**Functions**
+
+* [`_hidden()`](#test_hidden): Am hiding.
+
+**Classes**
+
+* [`_Hidden`](#test_hidden): Am hiding.
+
 ## Functions
 
 ### `test._hidden`
@@ -356,8 +369,6 @@ def test_it_all():
             pass
     ```
     '''
-    astdocs.astdocs._update_templates(astdocs.config)
-
     # source
     s = '''
 from typing import Any
@@ -460,5 +471,140 @@ method(j: str) -> str:
     """.strip()
 
     rendered = astdocs.render(code=s, module=MODULE)
+
+    assert rendered == r
+
+
+def _add_header(md: str) -> str:
+    """Add an extra header to the `Markdown` output.
+
+    Parameters
+    ----------
+    md : str
+        `Markdown` to process.
+
+    Returns
+    -------
+    : str
+        Processed `Markdown`.
+    """
+    return f"Header\n\n{md}"
+
+
+@astdocs.postrender(_add_header)
+def _render(code, module) -> str:
+    """Wrap `astdocs` rendering function.
+
+    Parameters
+    ----------
+    code : str
+        Code to process; useful when used as a module.
+    module : str
+        Name of the current module. Defaults to empty string.
+
+    Returns
+    -------
+    : str
+        Processed input.
+    """
+    return astdocs.render(code=code, module=module)
+
+
+def test_postrender_decorator():
+    """Test the output of the `@postrender` decorator.
+
+    ```python
+    def _func():
+        pass
+    ```
+    """
+    assert _render("def _func():\n    pass", MODULE) == "Header\n\n# Module `test`"
+
+
+def test_alternate_config():
+    """Test for different configuration options.
+
+    ```python
+    def func():
+        pass
+
+    class Classy:
+        def __init__(self, n):
+            pass
+    ```
+    """
+    importlib.reload(astdocs)
+    importlib.reload(astdocs.astdocs)
+
+    config = astdocs.config.copy()
+    config.update({"bound_objects": True, "split_by": "cfm", "with_linenos": True})
+
+    # source
+    s = """
+def func(a):
+    pass
+
+class Classy:
+
+    def __init__(self):
+        pass
+
+    def method(self, b):
+        pass
+    """.strip()
+
+    # target
+    r = """
+%%%BEGIN MODULE test
+%%%START MODULE test
+# Module `test`
+
+%%%END MODULE test
+
+%%%BEGIN FUNCTIONDEF test.func
+%%%START FUNCTIONDEF test.func
+### `test.func`
+
+```python
+func(a):
+```
+
+%%%SOURCE test.py:1:2
+%%%END FUNCTIONDEF test.func
+
+%%%BEGIN CLASSDEF test.Classy
+%%%START CLASSDEF test.Classy
+### `test.Classy`
+
+**Methods**
+
+* [`method()`](#testclassymethod)
+
+%%%SOURCE test.py:4:10
+
+#### Constructor
+
+```python
+Classy()
+```
+
+%%%SOURCE test.py:6:7
+
+#### Methods
+
+%%%BEGIN FUNCTIONDEF test.Classy.method
+%%%START FUNCTIONDEF test.Classy.method
+##### `test.Classy.method`
+
+```python
+method(b):
+```
+
+%%%SOURCE test.py:9:10
+%%%END FUNCTIONDEF test.Classy.method
+%%%END CLASSDEF test.Classy
+    """.strip()
+
+    rendered = astdocs.render(code=s, module=MODULE, config=config)
 
     assert rendered == r

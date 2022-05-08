@@ -639,7 +639,7 @@ def parse_function(
         """
         s = ann.arg
 
-        if hasattr(ann, "annotation"):
+        if ann.annotation is not None:
             s += ": "
             s += parse_annotation(ann.annotation)
 
@@ -865,7 +865,7 @@ def render_class(
     if n in fs:
         fs.remove(n)
         details = functions.pop(n)
-        params = re.sub(r"self:\s,\s", "", details["params"]).strip()
+        params = re.sub(r"self[\s,]*", "", details["params"], 1).strip()
         docstring = details["funcdocs"]
         beglineno = details["lineno"]
         endlineno = details["endlineno"]
@@ -883,7 +883,9 @@ def render_class(
             functions[f].update(
                 {
                     "hashtags": f"{ht}##",
-                    "params": re.sub(r"self:\s,\s", "", functions[f]["params"]).strip(),
+                    "params": re.sub(
+                        r"self[\s,]*", "", functions[f]["params"], 1
+                    ).strip(),
                 }
             )
             fsr.append(render_function(filepath, f, functions))
@@ -981,7 +983,8 @@ def render_module(
             if not n.startswith("_") or config["show_private"]:
                 link = f.replace(".", "").lower()  # github syntax
                 desc = functions[f]["funcdocs"].split("\n")[0]
-                fs.append(f"* [`{n}()`](#{link}): {desc}")
+                desc = f": {desc}" if len(desc) else ""
+                fs.append(f"* [`{n}()`](#{link}){desc}")
 
     # classes bullet list
     cs = []
@@ -991,7 +994,8 @@ def render_module(
             if not n.startswith("_") or config["show_private"]:
                 link = c.replace(".", "").lower()  # github syntax
                 desc = classes[c]["classdocs"].split("\n")[0]
-                cs.append(f"* [`{n}`](#{link}): {desc}")
+                desc = f": {desc}" if len(desc) else ""
+                cs.append(f"* [`{n}`](#{link}){desc}")
 
     sub = {
         "classnames": "**Classes**\n\n" + "\n".join(cs) if cs else "",
@@ -1056,6 +1060,7 @@ def render(
             n = ast.parse(fp.read())
 
     elif len(code) and len(module):
+        filepath = f"{module}.py"
         n = ast.parse(code)
 
     else:
@@ -1073,7 +1078,7 @@ def render(
         if f.count(".") == module.count(".") + 1:
             name = f.split(".")[-1]
             if not name.startswith("_") or config["show_private"]:
-                fs.append(render_function(filepath, f, functions))
+                fs.append(render_function(filepath, f, functions, config))
 
     # render the classes at the root of the module
     cs = []
@@ -1081,7 +1086,7 @@ def render(
         if c.count(".") == module.count(".") + 1:
             name = c.split(".")[-1]
             if not name.startswith("_") or config["show_private"]:
-                cs.append(render_class(filepath, c, classes, functions))
+                cs.append(render_class(filepath, c, classes, functions, config))
 
     # render each section according to provided options
     sub = {
@@ -1097,7 +1102,9 @@ def render(
                 "\n\n".join(fs) if fs else "",
             ]
         ),
-        "module": render_module(module, format_docstring(n), classes, functions),
+        "module": render_module(
+            module, format_docstring(n), classes, functions, config
+        ),
     }
 
     s = TPL.substitute(sub).strip()
@@ -1251,7 +1258,7 @@ def cli():
     try:
         md = render(filepath=sys.argv[1], config=config)
     except IsADirectoryError:
-        md = render_recursively(config)
+        md = render_recursively(sys.argv[1], config=config)
 
     print(md)
 
