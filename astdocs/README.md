@@ -71,26 +71,12 @@ $ for f in xx??; do
 (See also the `Python` example in the docstring of the `astdocs.render_recursively()`
 function.)
 
-Each of these environment variables translates into a private attribute with the same
-name: the `ASTDOCS_FOLD_ARGS_AFTER` value is stored in the `config["fold_args_after"]`
-variable for instance.
+Each of these environment variables translates into a configuration option stored in the
+`config` dictionnary of the present module. The key name is lowercased and stripped from
+the `ASTDOCS_` prefix.
 
-Handling options completely programmatically breaks the `Python` idiomatic ways (code in
-the middle of `import` statements):
-
-```python
-import os
-
-os.environ["ASTDOCS_FOLD_ARGS_AFTER"] = 88
-os.environ["ASTDOCS_WITH_LINENOS"] = "off"
-
-import astdocs
-
-md = astdocs.render_recursively(".")
-```
-
-and that might make some checkers/linters unhappy. (This whole thing started with two
-flags but grew out of hands...)
+When handling rendering programmatically one can use helper \[private\] functions (if
+necessary). See code and/or tests for details.
 
 All encountered objects are stored as they are parsed. The content of the corresponding
 attribute can be used by external scripts to generate a dependency graph, or simply a
