@@ -71,26 +71,12 @@ $ for f in xx??; do
 (See also the `Python` example in the docstring of the `astdocs.render_recursively()`
 function.)
 
-Each of these environment variables translates into a private attribute with the same
-name: the `ASTDOCS_FOLD_ARGS_AFTER` value is stored in the `__FOLD_ARGS_AFTER__`
-variable for instance.
+Each of these environment variables translates into a configuration option stored in the
+`config` dictionnary of the present module. The key name is lowercased and stripped from
+the `ASTDOCS_` prefix.
 
-Handling options completely programmatically breaks the `Python` idiomatic ways (code in
-the middle of `import` statements):
-
-```python
-import os
-
-os.environ["ASTDOCS_FOLD_ARGS_AFTER"] = 88
-os.environ["ASTDOCS_WITH_LINENOS"] = "off"
-
-import astdocs
-
-md = astdocs.render_recursively(".")
-```
-
-and that might make some checkers/linters unhappy. (This whole thing started with two
-flags but grew out of hands...)
+When handling rendering programmatically one can use helper \[private\] functions (if
+necessary). See code and/or tests for details.
 
 All encountered objects are stored as they are parsed. The content of the corresponding
 attribute can be used by external scripts to generate a dependency graph, or simply a
@@ -131,19 +117,19 @@ print(f"{toc}\n\n{md}")
 
 **Functions**
 
-- [`format_annotation()`](#astdocsformat_annotation): Format an annotation (object type
-  or decorator).
 - [`format_docstring()`](#astdocsformat_docstring): Format the object docstring.
-- [`parse_classdef()`](#astdocsparse_classdef): Parse a `class` statement.
-- [`parse_functiondef()`](#astdocsparse_functiondef): Parse a `def` statement.
+- [`parse_annotation()`](#astdocsparse_annotation): Format an annotation (object type or
+  decorator).
+- [`parse_class()`](#astdocsparse_class): Parse a `class` statement.
+- [`parse_function()`](#astdocsparse_function): Parse a `def` statement.
 - [`parse_import()`](#astdocsparse_import): Parse `import ... [as ...]` and
   `from ... import ... [as ...]` statements.
-- [`parse_tree()`](#astdocsparse_tree): Recursively traverse the nodes of the abstract
-  syntax tree.
-- [`render_classdef()`](#astdocsrender_classdef): Render a `class` object, according to
-  the defined `TPL_CLASSDEF` template.
-- [`render_functiondef()`](#astdocsrender_functiondef): Render a `def` object (function
-  or method).
+- [`parse()`](#astdocsparse): Recursively traverse the nodes of the abstract syntax
+  tree.
+- [`render_class()`](#astdocsrender_class): Render a `class` object, according to the
+  defined `TPL_CLASSDEF` template.
+- [`render_function()`](#astdocsrender_function): Render a `def` object (function or
+  method).
 - [`render_module()`](#astdocsrender_module): Render a module summary as a `Markdown`
   file.
 - [`render()`](#astdocsrender): Run the whole pipeline (useful wrapper function when
@@ -156,40 +142,11 @@ print(f"{toc}\n\n{md}")
 
 ## Functions
 
-### `astdocs.format_annotation`
-
-```python
-format_annotation(a: typing.Any, char: str) -> str:
-```
-
-Format an annotation (object type or decorator).
-
-Dive as deep as necessary within the children nodes until reaching the name of the
-module/attribute objects are annotated after; save the import path on the way.
-Recursively repeat for complicated object.
-
-See the code itself for some line-by-line documentation.
-
-**Parameters**
-
-- `a` \[`typing.Any`\]: The starting node to extract annotation information from.
-- `char` \[`str`\]: The additional character to place at the beginning of the
-  annotation; `"@"` for a decorator, `" -> "` for a return type, *etc.* (defaults to
-  empty string).
-
-**Returns**
-
-- \[`str`\]: The formatted annotation.
-
-**Known problems**
-
-- Does not support `lambda` functions.
-
 ### `astdocs.format_docstring`
 
 ```python
 format_docstring(
-    n: ast.AsyncFunctionDef | ast.ClassDef | ast.FunctionDef | ast.Module,
+    node: ast.AsyncFunctionDef | ast.ClassDef | ast.FunctionDef | ast.Module,
 ) -> str:
 ```
 
@@ -203,8 +160,8 @@ output?
 
 **Parameters**
 
-- `n` \[`ast.AsyncFunctionDef | ast.ClassDef | ast.FunctionDef | ast.Module`\]: Source
-  node to extract/parse docstring from.
+- `node` \[`ast.AsyncFunctionDef | ast.ClassDef | ast.FunctionDef | ast.Module`\]:
+  Source node to extract/parse docstring from.
 
 **Returns**
 
@@ -218,7 +175,7 @@ Below the raw docstring example of what this very function is expecting as an in
 ```text
 Parameters
 ----------
-n : ast.AsyncFunctionDef | ast.ClassDef | ast.FunctionDef | ast.Module
+node : ast.AsyncFunctionDef | ast.ClassDef | ast.FunctionDef | ast.Module
     Source node to extract/parse docstring from.
 
 Returns
@@ -257,64 +214,155 @@ def my_docstring_parser(docstring: str) -> str:
     # process docstring
     return string
 
-def format_docstring(n: ast.*) -> str:  # simple wrapper function
-    return my_docstring_parser(ast.get_docstring(n))
+def format_docstring(node: ast.*) -> str:  # simple wrapper function
+    return my_docstring_parser(ast.get_docstring(node))
 
 astdocs.format_docstring = format_docstring
 
 print(astdocs.render(...))
 ```
 
-**Known problems**
+**Known problem**
 
-- Overall naive and *very* opinionated (again, for *my* use).
-- Does not support list in parameter/return entries.
+Overall naive, stiff and *very* opinionated (again, for *my* use).
 
-### `astdocs.parse_classdef`
+### `astdocs.parse_annotation`
 
 ```python
-parse_classdef(n: ast.ClassDef):
+parse_annotation(a: typing.Any) -> str:
+```
+
+Format an annotation (object type or decorator).
+
+Dive as deep as necessary within the children nodes until reaching the name of the
+module/attribute objects are annotated after; save the import path on the way.
+Recursively repeat for complicated object.
+
+See the code itself for some line-by-line documentation.
+
+**Parameters**
+
+- `a` \[`typing.Any`\]: The starting node to extract annotation information from.
+
+**Returns**
+
+- \[`str`\]: The formatted annotation.
+
+**Known problems**
+
+- The implementation only supports nodes I encountered in my projects.
+- Does not support `lambda` constructs.
+
+### `astdocs.parse_class`
+
+```python
+parse_class(
+    node: ast.ClassDef,
+    module: str,
+    ancestry: str,
+    classes: dict[str, dict[str, str]],
+    config: dict[str, typing.Any] = config,
+) -> dict[str, dict[str, str]]:
 ```
 
 Parse a `class` statement.
 
 **Parameters**
 
-- `n` \[`ast.ClassDef`\]: The node to extract information from.
+- `node` \[`ast.ClassDef`\]: The node to extract information from.
+- `module` \[`str`\]: Name of the current module.
+- `ancestry` \[`str`\]: Complete path to the object, used to identify ownership of
+  children objects (functions and methods for instance).
+- `classes` \[`dict[str, dict[str, str]]`\]: Dictionnaries of all encountered class
+  definitions.
+- `config` \[`dict[str, typing.Any]`\]: Configuration options used to render attributes.
 
-### `astdocs.parse_functiondef`
+**Returns**
+
+- `classes` \[`dict[str, dict[str, str]]`\]: Dictionnaries of all encountered class
+  definitions.
+
+### `astdocs.parse_function`
 
 ```python
-parse_functiondef(n: ast.AsyncFunctionDef | ast.FunctionDef):
+parse_function(
+    node: ast.AsyncFunctionDef | ast.FunctionDef,
+    module: str,
+    ancestry: str,
+    functions: dict[str, dict[str, str]],
+    config: dict[str, typing.Any] = config,
+) -> dict[str, dict[str, str]]:
 ```
 
 Parse a `def` statement.
 
 **Parameters**
 
-- `n` \[`ast.AsyncFunctionDef | ast.FunctionDef`\]: The node to extract information
+- `node` \[`ast.AsyncFunctionDef | ast.FunctionDef`\]: The node to extract information
   from.
+- `module` \[`str`\]: Name of the current module.
+- `ancestry` \[`str`\]: Complete path to the object, used to identify ownership of
+  children objects (functions and methods for instance).
+- `functions` \[`dict[str, dict[str, str]]`\]: Dictionnaries of all encountered function
+  definitions.
+- `config` \[`dict[str, typing.Any]`\]: Configuration options used to render attributes.
+
+**Returns**
+
+- `functions` \[`dict[str, dict[str, str]]`\]: Dictionnaries of all encountered function
+  definitions.
+
+**Notes**
+
+If `*args` and some `kwargs` arguments are present, `args.vararg` will not be `None` and
+the `node.args.kwonlyargs`/`node.args.kw_defaults` attributes need to be parse.
+Otherwise all should be available in the `args`/`defaults` attributes.
 
 ### `astdocs.parse_import`
 
 ```python
-parse_import(n: ast.Import | ast.ImportFrom):
+parse_import(
+    node: ast.Import | ast.ImportFrom,
+    module: str,
+    ancestry: str,
+    imports: dict[str, str],
+    config: dict[str, typing.Any] = config,
+) -> dict[str, str]:
 ```
 
 Parse `import ... [as ...]` and `from ... import ... [as ...]` statements.
 
-The content built by this function is currently *not* used. This latter is kept in case
-all the objects (and aliases) accessible within a module is required for a
-post-processing or some later smart implementations.
+The content built by this function is currently *not* rendered. This latter is kept in
+case all the objects (and aliases) accessible within a module is required for a
+post-processing or some later \[smart and exciting\] implementations.
 
 **Parameters**
 
-- `n` \[`ast.Import | ast.ImportFrom`\]: The node to extract information from.
+- `node` \[`ast.Import | ast.ImportFrom`\]: The node to extract information from.
+- `module` \[`str`\]: Name of the current module.
+- `ancestry` \[`str`\]: Complete path to the object, used to identify ownership of
+  children objects (functions and methods for instance).
+- `imports` \[`dict[str, str]`\]: Dictionnaries of parsed imports. Defaults to an empty
+  dictionnary `{}`.
+- `config` \[`dict[str, typing.Any]`\]: Configuration options used to render attributes.
 
-### `astdocs.parse_tree`
+**Returns**
+
+- `imports` \[`dict[str, str]`\]: Dictionnaries of all encountered imports. Untouched
+  for now, always empty dictionnary `{}`.
+
+### `astdocs.parse`
 
 ```python
-parse_tree(n: typing.Any):
+parse(
+    node: typing.Any,
+    module: str,
+    ancestry: str = "",
+    classes: dict[str, dict[str, str]] = {},
+    functions: dict[str, dict[str, str]] = {},
+    imports: dict[str, str] = {},
+    config: dict[str, typing.Any] = config,
+) -> tuple[dict[str, dict[str, str]], dict[str, dict[str, str]], dict[str, str]]:
 ```
 
 Recursively traverse the nodes of the abstract syntax tree.
@@ -322,18 +370,38 @@ Recursively traverse the nodes of the abstract syntax tree.
 The present function calls the formatting function corresponding to the node name (if
 supported) to parse/format it.
 
-Add an `.ancestry` attribute on each traversed children object containing the complete
-path to that object. This path is used to identify ownership of objects (function *vs.*
-method for instance).
-
 **Parameters**
 
-- `n` \[`typing.Any`\]: Any type of node to extract information from.
+- `node` \[`typing.Any`\]: Any type of node to extract information from.
+- `module` \[`str`\]: Name of the current module.
+- `ancestry` \[`str`\]: Complete path to the object, used to identify ownership of
+  children objects (functions and methods for instance).
+- `classes` \[`dict[str, dict[str, str]]`\]: Dictionnaries of parsed class definitions.
+  Defaults to an empty dictionnary `{}`.
+- `functions` \[`dict[str, dict[str, str]]`\]: Dictionnaries of parsed function
+  definitions. Defaults to an empty dictionnary `{}`.
+- `imports` \[`dict[str, str]`\]: Dictionnaries of parsed imports. Defaults to an empty
+  dictionnary `{}`.
+- `config` \[`dict[str, typing.Any]`\]: Configuration options used to render attributes.
 
-### `astdocs.render_classdef`
+**Returns**
+
+- `classes` \[`dict[str, dict[str, str]]`\]: Dictionnaries of all encountered class
+  definitions.
+- `functions` \[`dict[str, dict[str, str]]`\]: Dictionnaries of all encountered function
+  definitions.
+- `imports` \[`dict[str, str]`\]: Dictionnaries of all encountered imports.
+
+### `astdocs.render_class`
 
 ```python
-render_classdef(filepath: str, name: str) -> str:
+render_class(
+    filepath: str,
+    name: str,
+    classes: dict[str, dict[str, str]],
+    functions: dict[str, dict[str, str]],
+    config: dict[str, typing.Any] = config,
+) -> str:
 ```
 
 Render a `class` object, according to the defined `TPL_CLASSDEF` template.
@@ -343,15 +411,25 @@ Render a `class` object, according to the defined `TPL_CLASSDEF` template.
 - `filepath` \[`str`\]: Path to the module (file) defining the object.
 - `name` \[`str`\]: The name (full path including all ancestors) of the object to
   render.
+- `classes` \[`dict[str, dict[str, str]]`\]: Dictionnaries of all encountered class
+  definitions.
+- `functions` \[`dict[str, dict[str, str]]`\]: Dictionnaries of all encountered function
+  definitions.
+- `config` \[`dict[str, typing.Any]`\]: Configuration options used to render attributes.
 
 **Returns**
 
 - \[`str`\]: `Markdown`-formatted description of the class object.
 
-### `astdocs.render_functiondef`
+### `astdocs.render_function`
 
 ```python
-render_functiondef(filepath: str, name: str) -> str:
+render_function(
+    filepath: str,
+    name: str,
+    functions: dict[str, dict[str, str]],
+    config: dict[str, typing.Any] = config,
+) -> str:
 ```
 
 Render a `def` object (function or method).
@@ -363,6 +441,9 @@ Follow the defined `TPL_FUNCTIONDEF` template.
 - `filepath` \[`str`\]: Path to the module (file) defining the object.
 - `name` \[`str`\]: The name (full path including all ancestors) of the object to
   render.
+- `functions` \[`dict[str, dict[str, str]]`\]: Dictionnaries of all encountered function
+  definitions.
+- `config` \[`dict[str, typing.Any]`\]: Configuration options used to render attributes.
 
 **Returns**
 
@@ -371,7 +452,13 @@ Follow the defined `TPL_FUNCTIONDEF` template.
 ### `astdocs.render_module`
 
 ```python
-render_module(name: str, docstring: str) -> str:
+render_module(
+    name: str,
+    docstring: str,
+    classes: dict[str, dict[str, str]],
+    functions: dict[str, dict[str, str]],
+    config: dict[str, typing.Any] = config,
+) -> str:
 ```
 
 Render a module summary as a `Markdown` file.
@@ -383,6 +470,11 @@ Follow the defined `TPL_MODULE` template.
 - `name` \[`str`\]: Name of the module being parsed.
 - `docstring` \[`str`\]: The docstring of the module itself, if present (defaults to an
   empty string).
+- `classes` \[`dict[str, dict[str, str]]`\]: Dictionnaries of all encountered class
+  definitions.
+- `functions` \[`dict[str, dict[str, str]]`\]: Dictionnaries of all encountered function
+  definitions.
+- `config` \[`dict[str, typing.Any]`\]: Configuration options used to render attributes.
 
 **Returns**
 
@@ -391,17 +483,27 @@ Follow the defined `TPL_MODULE` template.
 ### `astdocs.render`
 
 ```python
-render(filepath: str, remove_from_path: str) -> str:
+render(
+    filepath: str = "",
+    remove_from_path: str = "",
+    code: str = "",
+    module: str = "",
+    config: dict[str, typing.Any] = config,
+) -> str:
 ```
 
 Run the whole pipeline (useful wrapper function when this gets used as a module).
 
 **Parameters**
 
-- `filepath` \[`str`\]: The path to the module to process.
+- `filepath` \[`str`\]: The path to the module to process. Defaults to empty string.
 - `remove_from_path` \[`str`\]: Part of the path to be removed. If one is rendering the
   content of a file buried deep down in a complicated folder tree *but* does not want
-  this to appear in the ancestry of the module.
+  this to appear in the ancestry of the module. Defaults to empty string.
+- `code` \[`str`\]: Code to process; useful when used as a module. If both `filepath`
+  and `code` are provided the latter will be ignored. Defaults to empty string.
+- `module` \[`str`\]: Name of the current module. Defaults to empty string.
+- `config` \[`dict[str, typing.Any]`\]: Configuration options used to render attributes.
 
 **Returns**
 
@@ -410,7 +512,11 @@ Run the whole pipeline (useful wrapper function when this gets used as a module)
 ### `astdocs.render_recursively`
 
 ```python
-render_recursively(path: str, remove_from_path: str) -> str:
+render_recursively(
+    path: str,
+    remove_from_path: str = "",
+    config: dict[str, typing.Any] = config,
+) -> str:
 ```
 
 Run pipeline on each `Python` module found in a folder and its subfolders.
@@ -419,6 +525,7 @@ Run pipeline on each `Python` module found in a folder and its subfolders.
 
 - `path` \[`str`\]: The path to the folder to process.
 - `remove_from_path` \[`str`\]: Part of the path to be removed.
+- `config` \[`dict[str, typing.Any]`\]: Configuration options used to render attributes.
 
 **Returns**
 
