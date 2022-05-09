@@ -1169,7 +1169,7 @@ def render_recursively(
 
 
 def postrender(func: typing.Callable) -> typing.Callable:
-    """Apply a post-rendering function on the output of the decorated function.
+    r"""Apply a post-rendering function on the output of the decorated function.
 
     This can be used to streamline the linting of the output, or immediately convert to
     `HTML` for instance.
@@ -1208,7 +1208,7 @@ def postrender(func: typing.Callable) -> typing.Callable:
     print(render(...))
     ```
 
-    or a more concrete snippet:
+    or more concrete snippets:
 
     ```python
     import astdocs
@@ -1220,6 +1220,30 @@ def postrender(func: typing.Callable) -> typing.Callable:
     @astdocs.postrender(lint)
     def render(filepath: str) -> str:
         return astdocs.render(filepath)
+
+    print(render(...))
+    ```
+
+    ```python
+    import astdocs
+    import re
+
+    def extract_snippet(md: str) -> str:
+        for m in re.finditer("^%%%SOURCE (.*):([0-9]+):([0-9]+)\n", md):
+            # pattern, path, start, end
+            r, p, s, e = m.group(0), m.group(1), m.group(2), m.group(3) + 1
+            with open(p) as f:
+                snippet = "\n".join(f.readlines()[s:e])
+            md = md.replace(
+                r, f"<details><summary>Source</summary>\n\n{snippet}\n\n</details>"
+            )
+        return md
+
+    @astdocs.postrender(extract_snippet)
+    def render(filepath: str) -> str:
+        config = astdocs.config.copy()
+        config.update({"with_linenos": True})
+        return astdocs.render(filepath, config=config)
 
     print(render(...))
     ```

@@ -164,7 +164,7 @@ All tests related to the `astdocs.parse_*()` function.
 - [`test_simple_decorator()`](#test_parsetest_simple_decorator): Test for decoration
   parsing.
 - [`test_complex_decorator()`](#test_parsetest_complex_decorator): Test for more
-  complicated decoration (including arguments that are *not* parsed).
+  complicated decoration.
 - [`test_inheritance()`](#test_parsetest_inheritance): Test for multiple inheritance.
 - [`test_simple_parameters_typing()`](#test_parsetest_simple_parameters_typing): Test
   for simple input/output arguments.
@@ -210,7 +210,7 @@ def func():
 test_complex_decorator():
 ```
 
-Test for more complicated decoration (including arguments that are *not* parsed).
+Test for more complicated decoration.
 
 ```python
 @decorator(including=parameter, and_with=another)
@@ -392,8 +392,8 @@ All tests related to the `astdocs.render_*()` functions.
   private objects.
 - [`test_private_visible_objects()`](#test_rendertest_private_visible_objects): Test for
   visible private objects.
-- [`test_it_all()`](#test_rendertest_it_all): Test for class including `__init__` and
-  methods.
+- [`test_it_all()`](#test_rendertest_it_all): Test for a full example (concatention of
+  other snippets).
 - [`test_postrender_decorator()`](#test_rendertest_postrender_decorator): Test the
   output of the `@postrender` decorator.
 - [`test_alternate_config()`](#test_rendertest_alternate_config): Test for different
@@ -524,7 +524,7 @@ class _Hidden:
 test_it_all():
 ```
 
-Test for class including `__init__` and methods.
+Test for a full example (concatention of other snippets).
 
 ```python
 from typing import Any
