@@ -1,12 +1,13 @@
 # Module `test_cli`
 
-Tests relate to the `cli()` function.
+Tests related to the environment (configuration) and the `cli()` function.
 
 **Functions**
 
 - [`test_runs()`](#test_clitest_runs): Test successful run (this test checks nothing
   more than a script run).
-- [`test_faulty_run()`](#test_clitest_faulty_run): Test faulty run.
+- [`test_faulty_run()`](#test_clitest_faulty_run): Test faulty run (no file nor code
+  provided).
 - [`test_environment()`](#test_clitest_environment): Test for environment variables.
 - [`test_default_environment()`](#test_clitest_default_environment): Test for
   environment variables (reset them for the tests).
@@ -21,13 +22,20 @@ test_runs():
 
 Test successful run (this test checks nothing more than a script run).
 
+Equivalent to:
+
+```shell
+$ python astdocs/astdocs.py astdocs/astdocs.py  # running on itself
+$ python astdocs/astdocs.py astdocs  # run on folder
+```
+
 ### `test_cli.test_faulty_run`
 
 ```python
 test_faulty_run():
 ```
 
-Test faulty run.
+Test faulty run (no file nor code provided).
 
 ### `test_cli.test_environment`
 
@@ -37,6 +45,14 @@ test_environment():
 
 Test for environment variables.
 
+```text
+ASTDOCS_BOUND_OBJECTS=on
+ASTDOCS_FOLD_ARGS_AFTER=100
+ASTDOCS_SHOW_PRIVATE=true
+ASTDOCS_SPLIT_BY=cfm
+ASTDOCS_WITH_LINENOS=1
+```
+
 ### `test_cli.test_default_environment`
 
 ```python
@@ -44,6 +60,14 @@ test_default_environment():
 ```
 
 Test for environment variables (reset them for the tests).
+
+```text
+ASTDOCS_BOUND_OBJECTS=off
+ASTDOCS_FOLD_ARGS_AFTER=88
+ASTDOCS_SHOW_PRIVATE=false
+ASTDOCS_SPLIT_BY=
+ASTDOCS_WITH_LINENOS=0
+```
 
 # Module `test_format`
 
@@ -146,6 +170,8 @@ Raises
 
 **Notes**
 
+Each of the following is tested:
+
 - Docstring fetching.
 - Code blocks handling (with various number of backticks).
 - `Markdown` titles cleaning.
@@ -179,7 +205,7 @@ All tests related to the `astdocs.parse_*()` function.
 - [`test_class()`](#test_parsetest_class): Test for class including `__init__` and
   methods.
 - [`test_function()`](#test_parsetest_function): Test for a simple function.
-- [`test_import()`](#test_parsetest_import): Test for a simple function.
+- [`test_import()`](#test_parsetest_import): Test for complex imports.
 
 ## Functions
 
@@ -359,14 +385,14 @@ def func(a, b: bool | float | str = "", c: int = 0) -> str:
 test_import():
 ```
 
-Test for a simple function.
+Test for complex imports.
 
 ```python
 import module
 import module1, module2, module3
 import package.module
 import package.module.submodule as alias
-from .. import *
+from .. import *  # please do *not* do that...
 from .module import Object, function
 from module.submodule import AnotherObject as ThatObject
 from package.module.submodule import YetAnotherObject as short_alias
@@ -583,4 +609,10 @@ def func():
 class Classy:
     def __init__(self, n):
         pass
+```
+
+with
+
+```python
+config.update({"bound_objects": True, "split_by": "cfm", "with_linenos": True})
 ```
