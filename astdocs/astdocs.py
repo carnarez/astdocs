@@ -1126,8 +1126,9 @@ def render_recursively(
 
     ```python
     import astdocs
+    import re
 
-    output_folder = "docs"
+    outdir = "docs"
 
     for line in astdocs.render_recursively(...).split("\n"):
         if line.startswith("%%%BEGIN"):
@@ -1135,11 +1136,13 @@ def render_recursively(
                 output.close()
             except NameError:
                 pass
-            x = line.split()[2].split(".")
-            basename = f"{x[-1]}.md"
-            dirname = f"{output_folder}/" + "/".join(x[:-1])
-            os.makedirs(dirname, exist_ok=True)
-            output = open(f"{dirname}/{basename}", "w")
+            path = re.sub(
+                r"\.py$",
+                ".md",
+                "/".join([outdir.rstrip("/")] + line.split()[2].split(".")),
+            )
+            os.makedirs(path.split("/")[:-1], exist_ok=True)
+            output = open(path, "w")
         else:
             output.write(f"{line}\n")
     try:
@@ -1208,7 +1211,7 @@ def postrender(func: typing.Callable) -> typing.Callable:
     print(render(...))
     ```
 
-    or more concrete snippets:
+    or more concrete snippets, for instance lint the output immediately:
 
     ```python
     import astdocs
@@ -1224,18 +1227,21 @@ def postrender(func: typing.Callable) -> typing.Callable:
     print(render(...))
     ```
 
+    and replace the `%%%SOURCE ...` markers by `<details>` HTML tags including the code
+    of each object:
+
     ```python
     import astdocs
     import re
 
     def extract_snippet(md: str) -> str:
         for m in re.finditer("^%%%SOURCE (.*):([0-9]+):([0-9]+)\n", md):
-            # pattern, path, start, end
-            r, p, s, e = m.group(0), m.group(1), m.group(2), m.group(3) + 1
-            with open(p) as f:
-                snippet = "\n".join(f.readlines()[s:e])
+            ms = m.group(0)  # matched string
+            fp, cs, ce = m.groups()  # path to module, first and last line of snippet
+            with open(fp) as f:
+                snippet = "\n".join(f.readlines()[cs:ce + 1])
             md = md.replace(
-                r, f"<details><summary>Source</summary>\n\n{snippet}\n\n</details>"
+                ms, f"<details><summary>Source</summary>\n\n{snippet}\n\n</details>"
             )
         return md
 
