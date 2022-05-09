@@ -38,7 +38,7 @@ def test_simple_decorator():
 
 
 def test_complex_decorator():
-    """Test for more complicated decoration (including arguments that are *not* parsed).
+    """Test for more complicated decoration.
 
     ```python
     @decorator(including=parameter, and_with=another)

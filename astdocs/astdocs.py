@@ -1126,8 +1126,9 @@ def render_recursively(
 
     ```python
     import astdocs
+    import re
 
-    output_folder = "docs"
+    outdir = "docs"
 
     for line in astdocs.render_recursively(...).split("\n"):
         if line.startswith("%%%BEGIN"):
@@ -1135,11 +1136,13 @@ def render_recursively(
                 output.close()
             except NameError:
                 pass
-            x = line.split()[2].split(".")
-            basename = f"{x[-1]}.md"
-            dirname = f"{output_folder}/" + "/".join(x[:-1])
-            os.makedirs(dirname, exist_ok=True)
-            output = open(f"{dirname}/{basename}", "w")
+            path = re.sub(
+                r"\.py$",
+                ".md",
+                "/".join([outdir.rstrip("/")] + line.split()[2].split(".")),
+            )
+            os.makedirs(path.split("/")[:-1], exist_ok=True)
+            output = open(path, "w")
         else:
             output.write(f"{line}\n")
     try:
@@ -1169,7 +1172,7 @@ def render_recursively(
 
 
 def postrender(func: typing.Callable) -> typing.Callable:
-    """Apply a post-rendering function on the output of the decorated function.
+    r"""Apply a post-rendering function on the output of the decorated function.
 
     This can be used to streamline the linting of the output, or immediately convert to
     `HTML` for instance.
@@ -1208,7 +1211,7 @@ def postrender(func: typing.Callable) -> typing.Callable:
     print(render(...))
     ```
 
-    or a more concrete snippet:
+    or more concrete snippets, for instance lint the output immediately:
 
     ```python
     import astdocs
@@ -1220,6 +1223,33 @@ def postrender(func: typing.Callable) -> typing.Callable:
     @astdocs.postrender(lint)
     def render(filepath: str) -> str:
         return astdocs.render(filepath)
+
+    print(render(...))
+    ```
+
+    and replace the `%%%SOURCE ...` markers by `<details>` HTML tags including the code
+    of each object:
+
+    ```python
+    import astdocs
+    import re
+
+    def extract_snippet(md: str) -> str:
+        for m in re.finditer("^%%%SOURCE (.*):([0-9]+):([0-9]+)\n", md):
+            ms = m.group(0)  # matched string
+            fp, cs, ce = m.groups()  # path to module, first and last line of snippet
+            with open(fp) as f:
+                snippet = "\n".join(f.readlines()[cs:ce + 1])
+            md = md.replace(
+                ms, f"<details><summary>Source</summary>\n\n{snippet}\n\n</details>"
+            )
+        return md
+
+    @astdocs.postrender(extract_snippet)
+    def render(filepath: str) -> str:
+        config = astdocs.config.copy()
+        config.update({"with_linenos": True})
+        return astdocs.render(filepath, config=config)
 
     print(render(...))
     ```

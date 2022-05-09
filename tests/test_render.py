@@ -338,7 +338,7 @@ _Hidden()
 
 
 def test_it_all():
-    '''Test for class including `__init__` and methods.
+    '''Test for a full example (concatention of other snippets).
 
     ```python
     from typing import Any
