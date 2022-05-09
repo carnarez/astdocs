@@ -292,14 +292,14 @@ def test_function():
 
 
 def test_import():
-    """Test for a simple function.
+    """Test for complex imports.
 
     ```python
     import module
     import module1, module2, module3
     import package.module
     import package.module.submodule as alias
-    from .. import *
+    from .. import *  # please do *not* do that...
     from .module import Object, function
     from module.submodule import AnotherObject as ThatObject
     from package.module.submodule import YetAnotherObject as short_alias

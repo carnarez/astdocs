@@ -1,4 +1,4 @@
-"""Tests relate to the `cli()` function."""
+"""Tests related to the environment (configuration) and the `cli()` function."""
 
 import os
 import subprocess
@@ -9,7 +9,16 @@ import astdocs.astdocs
 
 
 def test_runs():
-    """Test successful run (this test checks nothing more than a script run)."""
+    """Test successful run (this test checks nothing more than a script run).
+
+    Equivalent to:
+
+    ```shell
+    $ python astdocs/astdocs.py astdocs/astdocs.py  # running on itself
+    $ python astdocs/astdocs.py astdocs  # run on folder
+    ```
+
+    """
     assert subprocess.run(
         ["python", "astdocs/astdocs.py", "astdocs/astdocs.py"], capture_output=True
     )
@@ -19,13 +28,22 @@ def test_runs():
 
 
 def test_faulty_run():
-    """Test faulty run."""
+    """Test faulty run (no file nor code provided)."""
     with pytest.raises(SystemExit):
         astdocs.astdocs.cli()
 
 
 def test_environment():
-    """Test for environment variables."""
+    """Test for environment variables.
+
+    ```text
+    ASTDOCS_BOUND_OBJECTS=on
+    ASTDOCS_FOLD_ARGS_AFTER=100
+    ASTDOCS_SHOW_PRIVATE=true
+    ASTDOCS_SPLIT_BY=cfm
+    ASTDOCS_WITH_LINENOS=1
+    ```
+    """
     os.environ["ASTDOCS_BOUND_OBJECTS"] = "on"
     os.environ["ASTDOCS_FOLD_ARGS_AFTER"] = "100"
     os.environ["ASTDOCS_SHOW_PRIVATE"] = "true"
@@ -42,7 +60,16 @@ def test_environment():
 
 
 def test_default_environment():
-    """Test for environment variables (reset them for the tests)."""
+    """Test for environment variables (reset them for the tests).
+
+    ```text
+    ASTDOCS_BOUND_OBJECTS=off
+    ASTDOCS_FOLD_ARGS_AFTER=88
+    ASTDOCS_SHOW_PRIVATE=false
+    ASTDOCS_SPLIT_BY=
+    ASTDOCS_WITH_LINENOS=0
+    ```
+    """
     os.environ["ASTDOCS_BOUND_OBJECTS"] = "off"
     os.environ["ASTDOCS_FOLD_ARGS_AFTER"] = "88"
     os.environ["ASTDOCS_SHOW_PRIVATE"] = "false"

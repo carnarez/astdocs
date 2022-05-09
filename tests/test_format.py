@@ -105,6 +105,7 @@ def test_complex_docstring():
 
     Notes
     -----
+    Each of the following is tested:
     * Docstring fetching.
     * Code blocks handling (with various number of backticks).
     * `Markdown` titles cleaning.

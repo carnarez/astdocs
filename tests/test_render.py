@@ -532,6 +532,12 @@ def test_alternate_config():
         def __init__(self, n):
             pass
     ```
+
+    with
+
+    ```python
+    config.update({"bound_objects": True, "split_by": "cfm", "with_linenos": True})
+    ```
     """
     importlib.reload(astdocs)
     importlib.reload(astdocs.astdocs)
