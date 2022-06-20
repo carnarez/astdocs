@@ -11,8 +11,12 @@ FLAGS=--rm \
 build:
 	@docker build --tag astdocs .
 
+clean:
+	@rm -fr $$(find . -name __pycache__)
+	@docker rmi --force astdocs:latest
+
 env: build
-	@docker run --entrypoint /bin/bash --interactive --name astdocs $(FLAGS) astdocs
+	@docker run $(FLAGS) --entrypoint /bin/bash --interactive --name astdocs astdocs
 
 test: build
 	@docker run $(FLAGS) --env COLUMNS=$(COLUMNS) astdocs \
@@ -23,7 +27,3 @@ test: build
 	                     --override-ini="cache_dir=/tmp/pytest" \
 	                     --verbose \
 	                     --verbose
-
-clean:
-	@rm -fr $$(find . -name __pycache__)
-	@docker rmi --force astdocs:latest
