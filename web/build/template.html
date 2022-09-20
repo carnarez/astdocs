@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+
+    <!-- metatags -->
+    <title>{{ title }}</title>
+    <meta name="title" content="{{ title }}">
+    <meta name="description" content="{{ description }}">
+    <meta property="article:author" content="{{ author }}">
+    <meta property="article:published_time" content="{{ date }}">
+    <meta property="article:tag" content="{{ tags }}">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="{{ url }}">
+    <meta property="og:title" content="{{ title }}">
+    <meta property="og:description" content="{{ description }}">
+    <meta property="og:image" content="{{ image }}">
+    <link rel="canonical" href="{{ canonical or url }}">
+    <link rel="icon" href="/favicon.png" type="image/png">
+
+    <!-- styling and color scheme -->
+    <link rel="stylesheet" href="/style.css">
+
+    <!-- theme toggler -->
+    <script>
+      function setTheme(name) {
+        localStorage.setItem("theme", name);
+        document.documentElement.className = name;
+      }
+
+      function toggleTheme() {
+        if (localStorage.getItem("theme") === "light") {
+          setTheme("dark");
+        } else if (localStorage.getItem("theme") === "dark") {
+          setTheme("dimmed");
+        } else {
+          setTheme("light");
+        }
+      }
+
+      if (
+        localStorage.getItem("theme") === "dark" ||
+        (
+          !("theme" in localStorage) &&
+          window.matchMedia("(prefers-color-scheme: dark)").matches
+        )
+      ) {
+        setTheme("dark");
+      } else if (localStorage.getItem("theme") === "dimmed") {
+        setTheme("dimmed");
+      } else {
+        setTheme("light");
+      }
+    </script>
+
+    <!-- progress indicator -->
+    <script>
+      window.addEventListener("scroll", () => {
+        const scrolled = 100 * window.scrollY / (document.body.offsetHeight - window.innerHeight);
+        document.getElementById("scroll-indicator").style.width = scrolled + "%";
+      });
+    </script>
+
+    <!-- external javascript libraries -->
+    {% if highlight %}
+    <script
+      defer
+      src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.3.1/highlight.min.js"
+      onload="hljs.highlightAll();"
+    ></script>
+    {% endif %}
+    {% if katex %}
+    <script
+      defer
+      src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.15.0/katex.min.js"
+    ></script>
+    <script
+      defer
+      src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.15.0/contrib/auto-render.min.js"
+      onload="renderMathInElement(
+        document.body,
+        {
+          delimiters: [
+            {
+              left: '$$',
+              right: '$$',
+              display: true
+            },
+            {
+              left: '$',
+              right: '$',
+              display: false
+            },
+          ]
+        }
+      );"
+    ></script>
+    {% endif %}
+
+  </head>
+
+  <body>
+
+    <!-- show scrolling progress -->
+    <nav id="scroll-indicator"></nav>
+
+    <main>
+ 
+      <!-- header is always present but nothing defined within -->
+      <header>
+      </header>
+
+      <!-- theme-toggler and additional buttons, if defined -->
+      <nav>
+        <a class="theme-toggle" href="" onclick="toggleTheme();"></a>
+      </nav>
+
+      <!-- rendered markdown starts here -->
+      {{ content }}
+ 
+      <!-- footer is always present but nothing defined within -->
+      <footer>
+      </footer>
+
+    </main>
+
+  </body>
+
+</html>
