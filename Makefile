@@ -22,14 +22,15 @@ test:
 	@rm -fr $$(find . -name __pycache__)
 
 html:
-	@mkdir -p web/content/{astdocs,tests}
-	@cp astdocs/README.md web/content/astdocs
-	@cp tests/README.md web/content/tests
+	@mkdir -p web/content/api/tests
+	@cp astdocs/README.md web/content/api
+	@cp tests/README.md web/content/api/tests
+	@cd web/content; tree | sed 's/README/index/g;s/.md$$/.html/g'
 	@docker build --tag astdocs/html web
+	@rm -fr web/content/api
 	@docker run --interactive \
 	            --name astdocs-web \
 	            --publish 8000:80 \
 	            --rm \
 	            --tty \
 	            astdocs/html
-	@rm -fr web/content/{astdocs,tests}
