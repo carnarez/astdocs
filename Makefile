@@ -8,18 +8,10 @@ FLAGS=--rm \
       --volume "$(PWD)/tests":/usr/src/tests \
       --workdir /usr/src
 
-build:
-	@docker build --tag astdocs .
-
-clean:
-	@rm -fr $$(find . -name __pycache__)
-	@docker rmi --force astdocs:latest
-
-env: build
-	@docker run $(FLAGS) --entrypoint /bin/bash --interactive --name astdocs astdocs
-
-test: build
-	@docker run $(FLAGS) --env COLUMNS=$(COLUMNS) astdocs \
+.PHONY: tests
+tests:
+	@docker build --tag astdocs/tests tests
+	@docker run $(FLAGS) --env COLUMNS=$(COLUMNS) astdocs/tests \
 	    python -m pytest --capture=no \
 	                     --color=yes \
 	                     --cov=astdocs \
@@ -27,3 +19,4 @@ test: build
 	                     --override-ini="cache_dir=/tmp/pytest" \
 	                     --verbose \
 	                     --verbose
+	@rm -fr $$(find . -name __pycache__)
