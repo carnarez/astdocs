@@ -1,4 +1,4 @@
-name: Render and bundle documentation
+name: Render and bundle docs
 
 on:
   push:
@@ -88,13 +88,15 @@ jobs:
                             --use-short-doctype \
                             $f
             done
-            # bundle js
+            # bundle javascript
             find . -name "*.js" | while read f; do
               terser --compress --mangle --output $f $f
             done
           )
 
-      - name: Deploy https://carnarez.github.io/astdocs/ test
+      - name: Deploy to https://carnarez.github.io/astdocs/
         run: |
-          cd web
-          ghp-import --branch www --force --no-jekyll --push www
+          (
+            cd web
+            ghp-import --branch www --force --no-jekyll --push www
+          )
