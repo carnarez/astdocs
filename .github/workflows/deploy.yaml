@@ -69,13 +69,13 @@ jobs:
             # bundle css
             find www -name "*.css" | while read f; do
               postcss $f --replace --use autoprefixer
-              cleancss --output www/$f $f
+              cleancss --output $f $f
             done
             # bundle html
             find www -name "*.html" | while read f; do
               html-minifier --collapse-boolean-attributes \
                             --collapse-whitespace \
-                            --output www/$f \
+                            --output $f \
                             --minify-css true \
                             --minify-js true \
                             --remove-attribute-quotes \
@@ -90,7 +90,7 @@ jobs:
             done
             # bundle js
             find . -name "*.js" | while read f; do
-              terser --compress --mangle --output www/$f $f
+              terser --compress --mangle --output $f $f
             done
           )
 

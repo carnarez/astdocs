@@ -14,7 +14,7 @@ serve:
 	            --tty \
 	            astdocs/web
 
-tests:
+test:
 	@docker build --tag astdocs/tests tests
 	@docker run --env COLUMNS=$(COLUMNS) \
 	            --rm \
