@@ -19,3 +19,8 @@ for all `*.py` files). Due to its
 required. This little DIY is fully
 [tested](https://github.com/carnarez/astdocs/actions/workflows/test.yaml) (100%
 coverage).
+
+See an example -documentation of this very script- of the `Markdown` output generated
+via this little stunt and rendered by the GitHub engine [here](/astdocs/README.md). It
+is also accessible as [GitHub Pages](https://pages.github.com/)
+[there](https://astdocs.github.io/) for me to test this [not so] new service.

@@ -46,30 +46,18 @@ try:
 except IndexError:
     tmpl = jenv.from_string(open("template.html").read())
 
-# relative path
-path: str = "/".join(sys.argv[1].lstrip("./").split("/")[:-1])
-
 # raw markdown content
+path: str = "/".join(sys.argv[1].lstrip("./").split("/")[:-1])
 with open(sys.argv[1]) as f:
     text: str = f.read().strip()
-
-# preprocess: generate metadata if undefined (skipping front matter here)
-meta: dict[str, typing.Any] = {}
-if "title" not in meta:
-    meta["title"] = sys.argv[1].split("/")[-2].replace(".md", "").capitalize()
-    meta["title"] = "Home" if meta["title"] == "." else meta["title"]
-if "url" not in meta:
-    cname = os.environ.get("CNAME", "http://localhost:8000").rstrip("/")
-    title = re.sub("[^A-Za-z0-9 ]+", "", meta["title"]).replace(" ", "-").lower()
-    meta["url"] = f"{cname}/{title}"
 
 # process: convert the markdown
 html: str = markdown(text, extensions=exts)
 
-# check for the presence of code and/or equations and/or mermaid blocks
+# check for the presence of code and/or equations
 pre = True if '<pre class="highlight">' in html else False
 eqs = True if re.search(r"\$.*\$", html, flags=re.DOTALL) else False  # false positives
 
 # render template/output to stdout and log to stderr
-sys.stdout.write(tmpl.render(path=path, content=html, highlight=pre, katex=eqs, **meta))
+sys.stdout.write(tmpl.render(path=path, content=html, highlight=pre, katex=eqs))
 sys.stderr.write(f'{sys.argv[1].lstrip("./")}\n')
