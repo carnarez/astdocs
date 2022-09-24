@@ -3,7 +3,7 @@ name: Render and bundle documentation
 on:
   push:
     branches:
-      - github-pages
+      - master
 
 jobs:
   Deploy:
@@ -94,7 +94,7 @@ jobs:
             done
           )
 
-      - name: Deploy https://astdocs.github.io/
+      - name: Deploy https://carnarez.github.io/astdocs/ test
         run: |
           cd web
           ghp-import --branch www --force --no-jekyll --push www
