@@ -4,14 +4,13 @@ FROM python:slim as render
 
 WORKDIR /usr/src
 
+COPY front-matter.txt .
 COPY index.md .
-COPY render.py .
-COPY requirements.txt .
 COPY template.html .
 
 RUN apt-get update \
  && DEBIAN_FRONTEND=noninteractive \
-    apt-get install --no-install-recommends --yes git \
+    apt-get install --no-install-recommends --yes git wget \
  && pip install -U pip \
  && pip install --no-cache-dir git+https://github.com/carnarez/markdown-astdocs@master \
                                git+https://github.com/carnarez/markdown-img@master \
@@ -20,9 +19,12 @@ RUN apt-get update \
                                jinja2 \
                                markdown \
                                pymdown-extensions \
+                               pyyaml \
+ && wget --quiet https://raw.githubusercontent.com/carnarez/markdown-tests/master/build/render.py \
  && find . -name "*.md" | while read f; do \
       mkdir -p /var/www/`dirname $f`; \
-      python render.py $f > /var/www/`echo $f | sed 's/README/index/g;s/.md$/.html/g'`; \
+      echo "\n\n\n" | cat front-matter.txt - $f > /tmp/file.md; \
+      python render.py /tmp/file.md > /var/www/$(echo $f | sed 's/README/index/g;s/.md$/.html/g'); \
     done
 
 
@@ -36,10 +38,10 @@ COPY --from=render /var/www .
 
 RUN npm config set update-notifier false \
  && npm install --global --no-audit --no-fund autoprefixer clean-css-cli html-minifier postcss-cli | grep -v ^$ \
- && wget -q https://raw.githubusercontent.com/carnarez/markdown-tests/master/static/style.css \
- && wget -q https://raw.githubusercontent.com/carnarez/markdown-tests/master/static/style-highlight.css \
- && wget -q https://raw.githubusercontent.com/carnarez/markdown-tests/master/static/style-markdown.css \
- && wget -q https://raw.githubusercontent.com/carnarez/markdown-tests/master/static/style-mermaid.css \
+ && wget --quiet https://raw.githubusercontent.com/carnarez/markdown-tests/master/static/style.css \
+ && wget --quiet https://raw.githubusercontent.com/carnarez/markdown-tests/master/static/style-highlight.css \
+ && wget --quiet https://raw.githubusercontent.com/carnarez/markdown-tests/master/static/style-markdown.css \
+ && wget --quiet https://raw.githubusercontent.com/carnarez/markdown-tests/master/static/style-mermaid.css \
  && find . -name "*.css" | while read f; do \
       postcss $f --replace --use autoprefixer; \
       cleancss --output $f $f; \

@@ -56,15 +56,17 @@ jobs:
           (
             cd web
             # the following folder will contain all rendered/bundled content
-            mkdir www
+            mkdir tmp www
             # download the stylesheets
             wget --directory-prefix=www https://raw.githubusercontent.com/carnarez/markdown-tests/master/static/style.css
             wget --directory-prefix=www https://raw.githubusercontent.com/carnarez/markdown-tests/master/static/style-highlight.css
             wget --directory-prefix=www https://raw.githubusercontent.com/carnarez/markdown-tests/master/static/style-markdown.css
             wget --directory-prefix=www https://raw.githubusercontent.com/carnarez/markdown-tests/master/static/style-mermaid.css
             # convert markdown to html
+            wget https://raw.githubusercontent.com/carnarez/markdown-tests/master/build/render.py
             find . -name "*.md" | while read f; do
-              python render.py $f > www/$(sed 's/.md$/.html/g' <<< $f)
+              echo "\n\n\n" | cat front-matter.txt - $f > tmp/$f; \
+              python render.py tmp/$f | cat front-matter.txt - > www/$(sed 's/.md$/.html/g' <<< $f)
             done
             # bundle css
             find www -name "*.css" | while read f; do
