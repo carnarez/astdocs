@@ -67,7 +67,7 @@ jobs:
             wget https://raw.githubusercontent.com/carnarez/markdown-tests/master/build/render.py
             find . -name "*.md" | while read f; do
               cat front-matter.txt $f > tmp/$f; \
-              python render.py tmp/$f | cat front-matter.txt - > www/$(sed 's/.md$/.html/g' <<< $f)
+              python render.py tmp/$f > www/$(sed 's/.md$/.html/g' <<< $f)
             done
             # bundle css
             find www -name "*.css" | while read f; do
