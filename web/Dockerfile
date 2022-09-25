@@ -5,6 +5,7 @@ FROM python:slim as render
 WORKDIR /usr/src
 
 COPY front-matter.txt .
+COPY render.py .
 COPY index.md .
 COPY template.html .
 
@@ -20,10 +21,10 @@ RUN apt-get update \
                                markdown \
                                pymdown-extensions \
                                pyyaml \
- && wget --quiet https://raw.githubusercontent.com/carnarez/markdown-tests/master/build/render.py \
+#&& wget --quiet https://raw.githubusercontent.com/carnarez/markdown-tests/master/build/render.py \
  && find . -name "*.md" | while read f; do \
       mkdir -p /var/www/`dirname $f`; \
-      echo "\n\n\n" | cat front-matter.txt - $f > /tmp/file.md; \
+      echo "\n" | cat front-matter.txt - $f > /tmp/file.md; \
       python render.py /tmp/file.md > /var/www/$(echo $f | sed 's/README/index/g;s/.md$/.html/g'); \
     done
 
