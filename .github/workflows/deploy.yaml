@@ -65,8 +65,8 @@ jobs:
             # convert markdown to html
             wget https://raw.githubusercontent.com/carnarez/markdown-tests/master/build/render.py
             find . -name "*.md" | while read f; do
-              echo "\n\n\n" | cat front-matter.txt - $f > tmp/$f; \
-              python render.py tmp/$f | cat front-matter.txt - > www/$(sed 's/.md$/.html/g' <<< $f)
+              echo "\n\n\n" | cat front-matter.txt - $f > tmp/file.md; \
+              python render.py tmp/file.md | cat front-matter.txt - > www/$(sed 's/.md$/.html/g' <<< $f)
             done
             # bundle css
             find www -name "*.css" | while read f; do
