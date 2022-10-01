@@ -17,11 +17,14 @@ for the script itself, whatever you find more
 argument, a **file** (*e.g.*, `Python` module) or a **directory** (in which it will
 recursively fish for all `*.py` files). Due to its
 [cleaner type hints](https://www.python.org/dev/peps/pep-0604/) `Python` v3.10 is
-required. This little DIY is fully
+required.
+
+This little stunt is fully
 [tested](https://github.com/carnarez/astdocs/actions/workflows/test.yaml) (100%
 coverage).
 
 See an example -documentation of this very script- of the `Markdown` output generated
-via this little stunt and rendered by the GitHub engine [here](/astdocs/README.md). It
+via this little DIY and rendered by the GitHub engine [here](/astdocs/README.md). It
 is also accessible [there](https://carnarez.github.io/astdocs/) for me to test the
-[not so] new [GitHub Pages](https://pages.github.com/) service.
+[not so] new [GitHub Pages](https://pages.github.com/) service and some rendering
+processing.
