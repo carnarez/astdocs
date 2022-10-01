@@ -23,5 +23,5 @@ coverage).
 
 See an example -documentation of this very script- of the `Markdown` output generated
 via this little stunt and rendered by the GitHub engine [here](/astdocs/README.md). It
-is also accessible as [GitHub Pages](https://pages.github.com/)
-[there](https://carnarez.github.io/astdocs/) for me to test this [not so] new service.
+is also accessible [there](https://carnarez.github.io/astdocs/) for me to test the
+[not so] new [GitHub Pages](https://pages.github.com/) service.
