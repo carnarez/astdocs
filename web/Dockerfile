@@ -6,11 +6,9 @@ WORKDIR /usr/src
 
 COPY front-matter.txt .
 COPY index.md .
-COPY template.html .
 
 RUN apt-get update \
- && DEBIAN_FRONTEND=noninteractive \
-    apt-get install --no-install-recommends --yes git wget \
+ && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends --yes git wget \
  && pip install -U pip \
  && pip install --no-cache-dir git+https://github.com/carnarez/markdown-astdocs@master \
                                git+https://github.com/carnarez/markdown-img@master \
@@ -21,9 +19,10 @@ RUN apt-get update \
                                pymdown-extensions \
                                pyyaml \
  && wget --quiet https://raw.githubusercontent.com/carnarez/markdown-tests/master/build/render.py \
+ && wget --quiet https://raw.githubusercontent.com/carnarez/markdown-tests/master/build/template.html \
  && find . -name "*.md" | while read f; do \
       mkdir -p /var/www/`dirname $f`; \
-      cat front-matter.txt $f > /tmp/$f; \
+      echo "[TOC]" | cat front-matter.md - $f > /tmp/$f; \
       python render.py /tmp/$f > /var/www/$(echo $f | sed 's/README/index/g;s/.md$/.html/g'); \
     done
 
