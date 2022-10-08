@@ -57,8 +57,8 @@ jobs:
           # render the documentation
           (
             cd web
-            # the following folder will contain all rendered/bundled content
-            mkdir tmp www
+            # will contain all rendered/bundled content
+            mkdir www
             # download the stylesheets
             wget --directory-prefix=www https://raw.githubusercontent.com/carnarez/markdown-tests/master/static/style.css
             wget --directory-prefix=www https://raw.githubusercontent.com/carnarez/markdown-tests/master/static/style-highlight.css
