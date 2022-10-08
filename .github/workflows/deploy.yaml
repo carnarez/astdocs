@@ -42,6 +42,7 @@ jobs:
             git+https://github.com/carnarez/markdown-insert@master \
             git+https://github.com/carnarez/markdown-script@master \
             jinja2 \
+            lunr \
             markdown \
             pymdown-extensions \
             pyyaml
@@ -56,8 +57,8 @@ jobs:
           # render the documentation
           (
             cd web
-            # the following folder will contain all rendered/bundled content
-            mkdir tmp www
+            # will contain all rendered/bundled content
+            mkdir www
             # download the stylesheets
             wget --directory-prefix=www https://raw.githubusercontent.com/carnarez/markdown-tests/master/static/style.css
             wget --directory-prefix=www https://raw.githubusercontent.com/carnarez/markdown-tests/master/static/style-highlight.css
@@ -66,10 +67,9 @@ jobs:
             # convert markdown to html
             wget https://raw.githubusercontent.com/carnarez/markdown-tests/master/build/render.py
             wget https://raw.githubusercontent.com/carnarez/markdown-tests/master/build/template.html
-            find . -name "*.md" | while read f; do
-              echo "[TOC]" | cat front-matter.md - $f > tmp/$f; \
-              python render.py tmp/$f > www/$(sed 's/.md$/.html/g' <<< $f)
-            done
+            echo "[TOC]" | cat front-matter.md - index.md > tmp
+            mv tmp index.md
+            python render.py --prefix=www --root=https://carnarez.github.io/astdocs/ index.md
             # bundle css
             find www -name "*.css" | while read f; do
               postcss $f --replace --use autoprefixer

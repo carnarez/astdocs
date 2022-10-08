@@ -4,7 +4,7 @@ FROM python:slim as render
 
 WORKDIR /usr/src
 
-COPY front-matter.txt .
+COPY front-matter.md .
 COPY index.md .
 
 RUN apt-get update \
@@ -15,16 +15,19 @@ RUN apt-get update \
                                git+https://github.com/carnarez/markdown-insert@master \
                                git+https://github.com/carnarez/markdown-script@master \
                                jinja2 \
+                               lunr \
                                markdown \
                                pymdown-extensions \
                                pyyaml \
  && wget --quiet https://raw.githubusercontent.com/carnarez/markdown-tests/master/build/render.py \
- && wget --quiet https://raw.githubusercontent.com/carnarez/markdown-tests/master/build/template.html \
- && find . -name "*.md" | while read f; do \
+ && wget --quiet https://raw.githubusercontent.com/carnarez/markdown-tests/master/build/template.html
+
+RUN find . -name "*.md" | while read f; do \
       mkdir -p /var/www/`dirname $f`; \
-      echo "[TOC]" | cat front-matter.md - $f > /tmp/$f; \
-      python render.py /tmp/$f > /var/www/$(echo $f | sed 's/README/index/g;s/.md$/.html/g'); \
-    done
+      echo "[TOC]" | cat front-matter.md - $f > /tmp/md; \
+      mv /tmp/md $f; \
+    done \
+ && python render.py --prefix=/var/www `find . -name "*.md"`
 
 
 # minify everything in place
