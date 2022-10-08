@@ -44,6 +44,7 @@ RUN npm config set update-notifier false \
  && wget --quiet https://raw.githubusercontent.com/carnarez/markdown-tests/master/static/style-highlight.css \
  && wget --quiet https://raw.githubusercontent.com/carnarez/markdown-tests/master/static/style-markdown.css \
  && wget --quiet https://raw.githubusercontent.com/carnarez/markdown-tests/master/static/style-mermaid.css \
+ && wget --quiet https://raw.githubusercontent.com/carnarez/markdown-tests/master/static/style-search.css \
  && find . -name "*.css" | while read f; do \
       postcss $f --replace --use autoprefixer; \
       cleancss --output $f $f; \
