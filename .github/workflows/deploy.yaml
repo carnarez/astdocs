@@ -3,7 +3,7 @@ name: Render and bundle docs
 on:
   push:
     branches:
-      - master
+      - tuned-web-search
 
 jobs:
   Deploy:
@@ -52,6 +52,8 @@ jobs:
           # generate the documentation
           (
             cd astdocs
+            pwd
+            ls -lh
             ASTDOCS_WITH_LINENOS=1 astdocs astdocs.py > ../web/index.md
           )
           # render the documentation
