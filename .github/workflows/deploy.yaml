@@ -53,6 +53,7 @@ jobs:
           (
             cd astdocs
             ASTDOCS_WITH_LINENOS=1 astdocs astdocs.py > ../web/index.md
+            cp astdocs.py ../web/astdocs.py
           )
           # render the documentation
           (
