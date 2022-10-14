@@ -5,12 +5,12 @@ FROM python:slim as render
 WORKDIR /usr/src
 
 COPY front-matter.md .
-COPY index.md .
 
 RUN apt-get update \
  && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends --yes git wget \
  && pip install -U pip \
- && pip install --no-cache-dir git+https://github.com/carnarez/markdown-astdocs@master \
+ && pip install --no-cache-dir git+https://github.com/carnarez/astdocs@master \
+                               git+https://github.com/carnarez/markdown-astdocs@master \
                                git+https://github.com/carnarez/markdown-img@master \
                                git+https://github.com/carnarez/markdown-insert@master \
                                git+https://github.com/carnarez/markdown-script@master \
@@ -22,7 +22,9 @@ RUN apt-get update \
  && wget --quiet https://raw.githubusercontent.com/carnarez/markdown-tests/master/build/render.py \
  && wget --quiet https://raw.githubusercontent.com/carnarez/markdown-tests/master/build/template.html
 
-RUN find . -name "*.md" | while read f; do \
+RUN wget --quiet https://raw.githubusercontent.com/carnarez/astdocs/master/astdocs/astdocs.py \
+ && ASTDOCS_WITH_LINENOS=1 astdocs astdocs.py > index.md \
+ && find . -name "*.md" | while read f; do \
       mkdir -p /var/www/`dirname $f`; \
       echo "[TOC]" | cat front-matter.md - $f > /tmp/md; \
       mv /tmp/md $f; \
