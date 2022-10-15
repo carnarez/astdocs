@@ -61,11 +61,11 @@ jobs:
             # will contain all rendered/bundled content
             mkdir www
             # download the stylesheets
-            wget --directory-prefix=www https://raw.githubusercontent.com/carnarez/markdown-tests/master/static/style.css
-            wget --directory-prefix=www https://raw.githubusercontent.com/carnarez/markdown-tests/master/static/style-highlight.css
-            wget --directory-prefix=www https://raw.githubusercontent.com/carnarez/markdown-tests/master/static/style-markdown.css
-            wget --directory-prefix=www https://raw.githubusercontent.com/carnarez/markdown-tests/master/static/style-mermaid.css
-            wget --directory-prefix=www https://raw.githubusercontent.com/carnarez/markdown-tests/master/static/style-search.css
+            wget https://raw.githubusercontent.com/carnarez/markdown-tests/master/static/style.css
+            wget https://raw.githubusercontent.com/carnarez/markdown-tests/master/static/style-highlight.css
+            wget https://raw.githubusercontent.com/carnarez/markdown-tests/master/static/style-markdown.css
+            wget https://raw.githubusercontent.com/carnarez/markdown-tests/master/static/style-mermaid.css
+            wget https://raw.githubusercontent.com/carnarez/markdown-tests/master/static/style-search.css
             # convert markdown to html
             wget https://raw.githubusercontent.com/carnarez/markdown-tests/master/build/render.py
             wget https://raw.githubusercontent.com/carnarez/markdown-tests/master/build/template.html
@@ -73,9 +73,7 @@ jobs:
             mv tmp index.md
             python render.py --prefix=www --root=https://carnarez.github.io/astdocs/ index.md
             # bundle css
-            cat style.css style-*.css | grep -v '@import "' > bundle.css
-            mv bundle.css style.css
-            rm style-*.css
+            cat style.css style-*.css | grep -v '@import "' > www/style.css
             find www -name "*.css" | while read f; do
               postcss $f --replace --use autoprefixer
               cleancss --output $f $f
