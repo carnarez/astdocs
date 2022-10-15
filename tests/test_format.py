@@ -150,7 +150,7 @@ Raises
 """
     '''.lstrip()
 
-    # arget
+    # target
     formatted = """
 Empty module.
 

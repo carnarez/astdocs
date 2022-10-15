@@ -73,6 +73,9 @@ jobs:
             mv tmp index.md
             python render.py --prefix=www --root=https://carnarez.github.io/astdocs/ index.md
             # bundle css
+            cat style.css style-*.css | grep -v '@import "' > bundle.css
+            mv bundle.css style.css
+            rm style-*.css
             find www -name "*.css" | while read f; do
               postcss $f --replace --use autoprefixer
               cleancss --output $f $f
