@@ -26,7 +26,7 @@ RUN wget --quiet https://raw.githubusercontent.com/carnarez/astdocs/master/astdo
  && ASTDOCS_WITH_LINENOS=1 astdocs astdocs.py > index.md \
  && find . -name "*.md" | while read f; do \
       mkdir -p /var/www/`dirname $f`; \
-      echo "[TOC]" | cat front-matter.md - $f > /tmp/md; \
+      cat front-matter.md $f > /tmp/md; \
       mv /tmp/md $f; \
     done \
  && python render.py --prefix=/var/www `find . -name "*.md"`

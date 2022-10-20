@@ -69,7 +69,7 @@ jobs:
             # convert markdown to html
             wget https://raw.githubusercontent.com/carnarez/markdown-tests/master/build/render.py
             wget https://raw.githubusercontent.com/carnarez/markdown-tests/master/build/template.html
-            echo "[TOC]" | cat front-matter.md - index.md > tmp
+            cat front-matter.md index.md > tmp
             mv tmp index.md
             python render.py --prefix=www --root=https://carnarez.github.io/astdocs/ index.md
             # bundle css
