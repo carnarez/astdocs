@@ -19,8 +19,8 @@ RUN apt-get update \
                                markdown \
                                pymdown-extensions \
                                pyyaml \
- && wget --quiet https://raw.githubusercontent.com/carnarez/markdown-tests/master/build/render.py \
- && wget --quiet https://raw.githubusercontent.com/carnarez/markdown-tests/master/build/template.html
+ && wget --quiet https://raw.githubusercontent.com/carnarez/markdown-render/master/build/render.py \
+ && wget --quiet https://raw.githubusercontent.com/carnarez/markdown-render/master/build/template.html
 
 RUN wget --quiet https://raw.githubusercontent.com/carnarez/astdocs/master/astdocs/astdocs.py \
  && ASTDOCS_WITH_LINENOS=1 astdocs astdocs.py > index.md \
@@ -42,10 +42,10 @@ COPY --from=render /var/www .
 
 RUN npm config set update-notifier false \
  && npm install --global --no-audit --no-fund autoprefixer clean-css-cli html-minifier postcss-cli | grep -v ^$ \
- && wget --quiet https://raw.githubusercontent.com/carnarez/markdown-tests/master/static/style.css \
- && wget --quiet https://raw.githubusercontent.com/carnarez/markdown-tests/master/static/style-highlight.css \
- && wget --quiet https://raw.githubusercontent.com/carnarez/markdown-tests/master/static/style-markdown.css \
- && wget --quiet https://raw.githubusercontent.com/carnarez/markdown-tests/master/static/style-search.css \
+ && wget --quiet https://raw.githubusercontent.com/carnarez/markdown-render/master/style/style.css \
+ && wget --quiet https://raw.githubusercontent.com/carnarez/markdown-render/master/style/style-highlight.css \
+ && wget --quiet https://raw.githubusercontent.com/carnarez/markdown-render/master/style/style-markdown.css \
+ && wget --quiet https://raw.githubusercontent.com/carnarez/markdown-render/master/style/style-search.css \
  && cat style.css style-*.css | grep -v '@import ".*"' > bundle.css \
  && mv bundle.css style.css \
  && rm style-*.css \

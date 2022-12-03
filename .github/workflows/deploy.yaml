@@ -60,14 +60,16 @@ jobs:
             cd web
             # will contain all rendered/bundled content
             mkdir www
+            # where to find the templates (base url)
+            url=https://raw.githubusercontent.com/carnarez/markdown-render/master
             # download the stylesheets
-            wget https://raw.githubusercontent.com/carnarez/markdown-tests/master/static/style.css
-            wget https://raw.githubusercontent.com/carnarez/markdown-tests/master/static/style-highlight.css
-            wget https://raw.githubusercontent.com/carnarez/markdown-tests/master/static/style-markdown.css
-            wget https://raw.githubusercontent.com/carnarez/markdown-tests/master/static/style-search.css
+            wget $url/style/style.css
+            wget $url/style/style-highlight.css
+            wget $url/style/style-markdown.css
+            wget $url/style/style-search.css
             # convert markdown to html
-            wget https://raw.githubusercontent.com/carnarez/markdown-tests/master/build/render.py
-            wget https://raw.githubusercontent.com/carnarez/markdown-tests/master/build/template.html
+            wget $url/build/render.py
+            wget $url/build/template.html
             cat front-matter.md index.md > tmp
             mv tmp index.md
             python render.py --prefix=www --root=https://carnarez.github.io/astdocs/ index.md
@@ -104,5 +106,5 @@ jobs:
         run: |
           (
             cd web
-            ghp-import --branch www --force --no-jekyll --push www
+            ghp-import --branch www --force --push www
           )
