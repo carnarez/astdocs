@@ -315,8 +315,8 @@ Parse a `def` statement.
 **Notes**
 
 If `*args` and some `kwargs` arguments are present, `args.vararg` will not be `None` and
-the `node.args.kwonlyargs`/`node.args.kw_defaults` attributes need to be parse.
-Otherwise all should be available in the `args`/`defaults` attributes.
+the `node.args.kwonlyargs` / `node.args.kw_defaults` attributes need to be parsed.
+Otherwise all should be available in the `args` / `defaults` attributes.
 
 ### `astdocs.parse_import`
 
