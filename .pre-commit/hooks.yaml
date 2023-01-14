@@ -4,7 +4,7 @@ black:
     check: --check
 flake8:
     cmd: flake8
-    flags: --extend-ignore=E203 --max-doc-length=88 --max-line-length=88
+    flags: --max-doc-length=88 --max-line-length=88
     check:
 isort:
     cmd: isort
@@ -16,7 +16,7 @@ mdformat:
     check: --check
 mypy:
     cmd: mypy
-    flags: --cache-dir=/tmp/mypy_cache --install-types --no-color-output --non-interactive
+    flags: --cache-dir=/tmp/mypy_cache --ignore-missing-imports --install-types --no-color-output --non-interactive --check-untyped-defs
     check:
 pydocstyle:
     cmd: pydocstyle

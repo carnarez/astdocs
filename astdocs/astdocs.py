@@ -595,8 +595,8 @@ def parse_function(
     Notes
     -----
     If `*args` and some `kwargs` arguments are present, `args.vararg` will not be `None`
-    and the `node.args.kwonlyargs`/`node.args.kw_defaults` attributes need to be parse.
-    Otherwise all should be available in the `args`/`defaults` attributes.
+    and the `node.args.kwonlyargs` / `node.args.kw_defaults` attributes need to be
+    parsed. Otherwise all should be available in the `args` / `defaults` attributes.
     """
     ap = f"{ancestry}.{node.name}"  # absolute path to the object
     lp = ap.replace(module, "", 1).lstrip(".")  # local path to the object
