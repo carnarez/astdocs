@@ -249,8 +249,149 @@ Do this and that.
     """.strip()
 
     n = ast.parse(s).body[1]
-    functions = astdocs.parse_function(n, MODULE, MODULE, {})
+    functions = astdocs.parse_function(n, MODULE, MODULE, {})  # type: ignore
     rendered = astdocs.render_function(f"{MODULE}.py", f"{MODULE}.func", functions)
+
+    assert rendered == r
+
+
+def test_many_parameters():
+    '''Test rendering for function/method with many parameters.
+
+    ```python
+    def function(param1: float,
+                 param2: int,
+                 param3: str,
+                 param4: str,
+                 param5: list[str] = [],
+                 param6: tuple[float, float, float] = (),
+                 param7: dict[int, str] = [],
+                 *args,
+                 **kwargs):
+        """This does everything and more."""
+
+    class Classy(Parent):
+        """A classy class."""
+
+        def method(
+            self,
+            param1: float,
+            param2: int,
+            param3: str,
+            param4: str,
+            param5: list[str] = [],
+            param6: tuple[float, float, float] = (),
+            param7: dict[int, str] = [],
+            *args,
+            **kwargs,
+        ):
+            pass
+    ```
+    '''
+    astdocs.objects[MODULE] = {"classes": {}, "functions": {}, "imports": {}}
+    astdocs.astdocs._update_templates(astdocs.config)
+
+    # source
+    s = '''
+def function(param1: float,
+             param2: int,
+             param3: str,
+             param4: str,
+             param5: list[str] = [],
+             param6: tuple[float, float, float] = (),
+             param7: dict[int, str] = [],
+             *args,
+             **kwargs):
+    """This does everything and more."""
+
+class Classy(Parent):
+    """A classy class."""
+
+    def method(
+        self,
+        param1: float,
+        param2: int,
+        param3: str,
+        param4: str,
+        param5: list[str] = [],
+        param6: tuple[float, float, float] = (),
+        param7: dict[int, str] = [],
+        *args,
+        **kwargs,
+    ):
+        pass
+    '''.strip()
+
+    # target
+    r = """
+# Module `test`
+
+**Functions**
+
+* [`function()`](#testfunction): This does everything and more.
+
+**Classes**
+
+* [`Classy`](#testclassy): A classy class.
+
+## Functions
+
+### `test.function`
+
+```python
+function(
+    param1: float,
+    param2: int,
+    param3: str,
+    param4: str,
+    param5: list[str] = [],
+    param6: tuple[float, float, float] = (),
+    param7: dict[int, str] = [],
+    *args,
+    **kwargs,
+):
+```
+
+This does everything and more.
+
+## Classes
+
+### `test.Classy`
+
+A classy class.
+
+**Methods**
+
+* [`method()`](#testclassymethod)
+
+#### Constructor
+
+```python
+Classy()
+```
+
+#### Methods
+
+##### `test.Classy.method`
+
+```python
+method(
+    param1: float,
+    param2: int,
+    param3: str,
+    param4: str,
+    param5: list[str] = [],
+    param6: tuple[float, float, float] = (),
+    param7: dict[int, str] = [],
+    *args,
+    **kwargs,
+):
+```
+    """.strip()
+
+    n = ast.parse(s)
+    classes, functions, imports = astdocs.parse(n, MODULE, MODULE)
+    rendered = astdocs.render(code=s, module=MODULE)
 
     assert rendered == r
 

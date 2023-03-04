@@ -851,7 +851,7 @@ def render_class(
     if n in fs:
         fs.remove(n)
         details = functions.pop(n)
-        params = re.sub(r"self[\s,]*", "", details["params"], 1).strip()
+        params = re.sub(r"self[\s,]*", "", details["params"], 1)
         docstring = details["funcdocs"]
         beglineno = details["lineno"]
         endlineno = details["endlineno"]
@@ -869,9 +869,7 @@ def render_class(
             functions[f].update(
                 {
                     "hashtags": f"{ht}##",
-                    "params": re.sub(
-                        r"self[\s,]*", "", functions[f]["params"], 1
-                    ).strip(),
+                    "params": re.sub(r"self[\s,]*", "", functions[f]["params"], 1),
                 }
             )
             fsr.append(render_function(filepath, f, functions))

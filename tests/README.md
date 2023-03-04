@@ -414,6 +414,8 @@ All tests related to the `astdocs.render_*()` functions.
   `__init__` and methods.
 - [`test_complex_function()`](#test_rendertest_complex_function): Test for complex
   input/output arguments.
+- [`test_many_parameters()`](#test_rendertest_many_parameters): Test rendering for
+  function/method with many parameters.
 - [`test_private_hidden_objects()`](#test_rendertest_private_hidden_objects): Test for
   private objects.
 - [`test_private_visible_objects()`](#test_rendertest_private_visible_objects): Test for
@@ -510,6 +512,44 @@ def func(
 
 def _hidden():
     pass
+```
+
+### `test_render.test_many_parameters`
+
+```python
+test_many_parameters():
+```
+
+Test rendering for function/method with many parameters.
+
+```python
+def function(param1: float,
+             param2: int,
+             param3: str,
+             param4: str,
+             param5: list[str] = [],
+             param6: tuple[float, float, float] = (),
+             param7: dict[int, str] = [],
+             *args,
+             **kwargs):
+    """This does everything and more."""
+
+class Classy(Parent):
+    """A classy class."""
+
+    def method(
+        self,
+        param1: float,
+        param2: int,
+        param3: str,
+        param4: str,
+        param5: list[str] = [],
+        param6: tuple[float, float, float] = (),
+        param7: dict[int, str] = [],
+        *args,
+        **kwargs,
+    ):
+        pass
 ```
 
 ### `test_render.test_private_hidden_objects`
