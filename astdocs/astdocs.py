@@ -397,11 +397,11 @@ def format_docstring(
     s = re.sub(r"\n([A-Za-z ]+)\n-{3,}", r"\n**\1**\n", s)
 
     # rework list of arguments/descriptions (no types)
-    s = re.sub(r"\n([A-Za-z0-9_ ]+)\n {2,}(.*)", r"\n* `\1`: \2", s)
+    s = re.sub(r"\n([A-Za-z0-9_]+)\n {2,}(.*)", r"\n* `\1`: \2", s)
 
     # rework list of arguments/types/descriptions
     s = re.sub(
-        r"\n([A-Za-z0-9_ ]+) : ([A-Za-z0-9_\[\],\.| ]+)\n {2,}(.*)",
+        r"\n([A-Za-z0-9_]+) : ([A-Za-z0-9_\[\],\.| ]+)\n {2,}(.*)",
         r"\n* `\1` [`\2`]: \3",
         s,
     )
@@ -783,7 +783,6 @@ def parse(
         Dictionnaries of all encountered imports.
     """
     for n in node.body:
-
         # call the parser for each supported node type
         if n.__class__.__name__ == "ClassDef":
             classes = parse_class(n, module, ancestry, classes)
@@ -1030,7 +1029,6 @@ def render(
     _update_templates(config)
 
     if len(filepath):
-
         # clean up module name
         if remove_from_path:
             filepath = filepath.replace(remove_from_path, "")
