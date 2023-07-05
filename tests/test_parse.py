@@ -7,7 +7,7 @@ import astdocs
 MODULE: str = "test"
 
 
-def test_simple_decorator():
+def test_simple_decorator() -> None:
     '''Test for decoration parsing.
 
     ```python
@@ -37,7 +37,7 @@ def test_simple_decorator():
     ]
 
 
-def test_complex_decorator():
+def test_complex_decorator() -> None:
     """Test for more complicated decoration.
 
     ```python
@@ -47,15 +47,15 @@ def test_complex_decorator():
     ```
     """
     n = ast.parse(
-        "@decorator(including=parameter, and_with=another)\ndef func():\n    pass"
+        "@decorator(including=parameter, and_with=another)\ndef func():\n    pass",
     ).body[0]
 
     assert [astdocs.parse_annotation(d) for d in n.decorator_list] == [
-        "decorator(including=parameter, and_with=another)"
+        "decorator(including=parameter, and_with=another)",
     ]
 
 
-def test_inheritance():
+def test_inheritance() -> None:
     '''Test for multiple inheritance.
 
     ```python
@@ -83,7 +83,7 @@ class Class(Parent, inlaws.Parent, foreign.family.Parent):
     ]
 
 
-def test_simple_parameters_typing():
+def test_simple_parameters_typing() -> None:
     """Test for simple input/output arguments.
 
     ```python
@@ -111,7 +111,7 @@ def func(a, b: typing.Union[bool, str] = None, c: int = 0) -> str:
     assert astdocs.parse_annotation(n.returns) == "str"
 
 
-def test_simple_parameters_v310():
+def test_simple_parameters_v310() -> None:
     """Test for simple input/output arguments (v3.10 syntax).
 
     ```python
@@ -120,7 +120,7 @@ def test_simple_parameters_v310():
     ```
     """
     n = ast.parse(
-        "def func(a, b: bool | float | str, c: int = 0) -> str:\n    return str(j)"
+        "def func(a, b: bool | float | str, c: int = 0) -> str:\n    return str(j)",
     ).body[0]
 
     assert [astdocs.parse_annotation(a.annotation) for a in n.args.args] == [
@@ -132,7 +132,7 @@ def test_simple_parameters_v310():
     assert astdocs.parse_annotation(n.returns) == "str"
 
 
-def test_with_args_kwargs():
+def test_with_args_kwargs() -> None:
     """Test for presence of `*args` and `**kwargs` in function arguments (v3.10 syntax).
 
     ```python
@@ -141,14 +141,14 @@ def test_with_args_kwargs():
     ```
     """
     n = ast.parse(
-        "def func(a, *args, b: list[bool] = [True, False], **kwargs):\n    pass"
+        "def func(a, *args, b: list[bool] = [True, False], **kwargs):\n    pass",
     ).body[0]
 
     assert astdocs.parse_annotation(n.args.args[0].annotation) == ""
     assert astdocs.parse_annotation(n.args.kwonlyargs[0].annotation) == "list[bool]"
 
 
-def test_complex_parameters_typing():
+def test_complex_parameters_typing() -> None:
     """Test for complex input/output arguments.
 
     ```python
@@ -190,7 +190,7 @@ def func(
     ]
 
 
-def test_complex_parameters_v310():
+def test_complex_parameters_v310() -> None:
     """Test for complex input/output arguments (v3.10 syntax).
 
     ```python
@@ -229,7 +229,7 @@ def func(
     ]
 
 
-def test_class():
+def test_class() -> None:
     """Test for class including `__init__` and methods.
 
     ```python
@@ -273,7 +273,7 @@ class Classy:
     }
 
 
-def test_function():
+def test_function() -> None:
     """Test for a simple function.
 
     ```python
@@ -284,14 +284,14 @@ def test_function():
     astdocs.objects[MODULE] = {"classes": {}, "functions": {}, "imports": {}}
 
     n = ast.parse(
-        "def func(a, b: bool | float | str, c: int = 0) -> str:\n    return str(j)"
+        "def func(a, b: bool | float | str, c: int = 0) -> str:\n    return str(j)",
     )
     astdocs.parse(n, MODULE, MODULE)
 
     assert astdocs.objects[MODULE]["functions"] == {"func": f"{MODULE}.func"}
 
 
-def test_import():
+def test_import() -> None:
     """Test for complex imports.
 
     ```python

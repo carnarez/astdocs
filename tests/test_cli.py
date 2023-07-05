@@ -8,7 +8,7 @@ import pytest
 import astdocs.astdocs
 
 
-def test_runs():
+def test_runs() -> None:
     """Test successful run (this test checks nothing more than a script run).
 
     Equivalent to:
@@ -17,23 +17,25 @@ def test_runs():
     $ python astdocs/astdocs.py astdocs/astdocs.py  # running on itself
     $ python astdocs/astdocs.py astdocs  # run on folder
     ```
-
     """
-    assert subprocess.run(
-        ["python", "astdocs/astdocs.py", "astdocs/astdocs.py"], capture_output=True
+    subprocess.run(
+        ["/usr/local/bin/python", "astdocs/astdocs.py", "astdocs/astdocs.py"],
+        capture_output=True,
+        check=True,
     )
-    assert subprocess.run(
-        ["python", "astdocs/astdocs.py", "astdocs/"], capture_output=True
+    subprocess.run(
+        ["/usr/local/bin/python", "astdocs/astdocs.py", "astdocs/"],
+        capture_output=True,
     )
 
 
-def test_faulty_run():
+def test_faulty_run() -> None:
     """Test faulty run (no file nor code provided)."""
     with pytest.raises(SystemExit):
         astdocs.astdocs.cli()
 
 
-def test_environment():
+def test_environment() -> None:
     """Test for environment variables.
 
     ```text
@@ -59,7 +61,7 @@ def test_environment():
     }
 
 
-def test_default_environment():
+def test_default_environment() -> None:
     """Test for environment variables (reset them for the tests).
 
     ```text
@@ -83,3 +85,9 @@ def test_default_environment():
         "split_by": "",
         "with_linenos": False,
     }
+
+
+# adding the noqa rule to avoid bandit false-positives
+# https://github.com/PyCQA/bandit/issues/333 (still open as i write this)
+# and we are calling hidden function *on purpose*
+# ruff: noqa: S603,SLF001

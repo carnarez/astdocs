@@ -1,0 +1,82 @@
+# generic ruff configuration file
+
+cache-dir = "/tmp/ruff_cache"
+line-length = 88
+
+# https://beta.ruff.rs/docs/rules/
+# switching all rules on; we like to be exhaustive, even if slower...
+# ignoring boolean traps though, sorry Martin (https://martinfowler.com/bliki/FlagArgument.html)
+# ignoring django & pandas for obvious reasons
+select = [
+  "A",   # flake8-builtins
+  "ANN", # flake8-annotations
+  "ARG", # flake8-unused-arguments
+  "B",   # flake8-bugbear
+  "BLE", # flake8-blind-except
+  "C4",  # flake8-comprehensions
+  "C90", # mccabe
+  "COM", # flake8-commas
+  "D",   # pydocstyle
+# "DJ",  # flake8-django
+  "DTZ", # flake8-datetimez
+  "E",   # pycodestyle
+  "EM",  # flake8-errmsg
+  "ERA", # eradicate
+  "EXE", # flake8-executable
+  "F",   # pyflakes
+# "FBT", # flake8-boolean-trap
+  "G",   # flake8-logging-format
+  "I",   # isort
+  "ICN", # flake8-import-conventions
+  "INP", # flake8-no-pep420
+  "INT", # flake8-gettext
+  "ISC", # flake8-implicit-str-concat
+  "N",   # pep8-naming
+  "NPY", # numpy
+  "PGH", # pygrep-hooks
+  "PIE", # flake8-pie
+# "PD",  # pandas-vet
+  "PL",  # pylint
+  "PT",  # flake8-pytest-style
+  "PTH", # flake8-use-pathlib
+  "PYI", # flake8-pyi
+  "Q",   # flake8-quotes
+  "RSE", # flake8-raise
+  "RET", # flake8-return
+  "RUF", # ruff-specific rules
+  "S",   # flake8-bandit
+  "SLF", # flake8-self
+  "SIM", # flake8-simplify
+  "T10", # flake8-debugger
+  "T20", # flake8-print
+  "TCH", # flake8-type-checking
+  "TID", # flake8-tidy-imports
+  "TRY", # tryceratops
+  "UP",  # pyupgrade
+  "YTT", # flake8-2020
+  "W",   # pycodestyle
+]
+
+# https://beta.ruff.rs/docs/rules/
+# ignoring some rules that do not make sense to us, or that we simply ignore
+ignore = [
+  "ANN101",  # missing type annotation for "self" in method
+  "ANN102",  # missing type annotation for "cls" in classmethod
+  "D203",    # one blank line required before class docstring
+  "D213",    # multi-line docstring summary should start at the second line
+  "E741",    # ambiguous variable name
+  "N806",    # variable name should be lowercase
+  "PLR0913", # too many arguments to function call
+  "PLR2004", # magic value used in comparisons
+]
+
+[per-file-ignores]
+"__init__.py" = [
+  "F401", # unused imports
+]
+"test_*.py" = [
+  "S101", # use of assert 
+]
+"tests/**.py" = [
+  "S101", # use of assert 
+]

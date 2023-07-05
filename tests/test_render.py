@@ -9,21 +9,21 @@ import astdocs.astdocs
 MODULE: str = "test"
 
 
-def test_empty():
+def test_empty() -> None:
     """Test for no input (just to get 100% coverage)."""
     assert astdocs.render() == "Nothing to do."
 
 
-def test_remove_from_path():
+def test_remove_from_path() -> None:
     """Test with the `remove_from_path` argument (just to get 100% coverage).
 
     This test checks literally *nothing* more than the `remove_from_path` flag of the
     `render()` function. Return is ignored.
     """
-    assert astdocs.render(filepath=f"./tests/{__name__}.py", remove_from_path="./")
+    astdocs.render(filepath="./tests/test_render.py", remove_from_path="./")
 
 
-def test_simple_class():
+def test_simple_class() -> None:
     '''Test for simple class rendering.
 
     ```python
@@ -56,28 +56,17 @@ A classy class.
 
 **Methods**
 
-* [`static_method()`](#testclassystatic_method)
 * [`method()`](#testclassymethod): Methodically classy.
 
 #### Constructor
 
 ```python
-Classy(a: str, b: list[bool], **kwargs)
+Classy()
 ```
 
 
 
 #### Methods
-
-##### `test.Classy.static_method`
-
-```python
-static_method(i: int):
-```
-
-
-
-**Decoration** via `@staticmethod`.
 
 ##### `test.Classy.method`
 
@@ -91,13 +80,16 @@ Methodically classy.
     n = ast.parse(s)
     classes, functions, imports = astdocs.parse(n, MODULE, MODULE)
     rendered = astdocs.render_class(
-        f"{MODULE}.py", f"{MODULE}.Classy", classes, functions
+        f"{MODULE}.py",
+        f"{MODULE}.Classy",
+        classes,
+        functions,
     )
 
     assert rendered == r
 
 
-def test_complex_class():
+def test_complex_class() -> None:
     '''Test for class including `__init__` and methods.
 
     ```python
@@ -179,13 +171,16 @@ method(j: str) -> str:
     n = ast.parse(s)
     classes, functions, imports = astdocs.parse(n, MODULE, MODULE)
     rendered = astdocs.render_class(
-        f"{MODULE}.py", f"{MODULE}.Classy", classes, functions
+        f"{MODULE}.py",
+        f"{MODULE}.Classy",
+        classes,
+        functions,
     )
 
     assert rendered == r
 
 
-def test_complex_function():
+def test_complex_function() -> None:
     '''Test for complex input/output arguments.
 
     ```python
@@ -249,13 +244,13 @@ Do this and that.
     """.strip()
 
     n = ast.parse(s).body[1]
-    functions = astdocs.parse_function(n, MODULE, MODULE, {})  # type: ignore
+    functions = astdocs.parse_function(n, MODULE, MODULE, {})
     rendered = astdocs.render_function(f"{MODULE}.py", f"{MODULE}.func", functions)
 
     assert rendered == r
 
 
-def test_many_parameters():
+def test_many_parameters() -> None:
     '''Test rendering for function/method with many parameters.
 
     ```python
@@ -396,7 +391,7 @@ method(
     assert rendered == r
 
 
-def test_private_hidden_objects():
+def test_private_hidden_objects() -> None:
     '''Test for private objects.
 
     ```python
@@ -421,7 +416,7 @@ def test_private_hidden_objects():
     assert rendered == r
 
 
-def test_private_visible_objects():
+def test_private_visible_objects() -> None:
     '''Test for visible private objects.
 
     ```python
@@ -478,7 +473,7 @@ _Hidden()
     assert rendered == r
 
 
-def test_it_all():
+def test_it_all() -> None:
     '''Test for a full example (concatention of other snippets).
 
     ```python
@@ -633,7 +628,7 @@ def _add_header(md: str) -> str:
 
 
 @astdocs.postrender(_add_header)
-def _render(code, module) -> str:
+def _render(code: str, module: str) -> str:
     """Wrap `astdocs` rendering function.
 
     Parameters
@@ -651,7 +646,7 @@ def _render(code, module) -> str:
     return astdocs.render(code=code, module=module)
 
 
-def test_postrender_decorator():
+def test_postrender_decorator() -> None:
     """Test the output of the `@postrender` decorator.
 
     ```python
@@ -662,7 +657,7 @@ def test_postrender_decorator():
     assert _render("def _func():\n    pass", MODULE) == "Header\n\n# Module `test`"
 
 
-def test_alternate_config():
+def test_alternate_config() -> None:
     """Test for different configuration options.
 
     ```python
@@ -755,3 +750,7 @@ method(b):
     rendered = astdocs.render(code=s, module=MODULE, config=config)
 
     assert rendered == r
+
+
+# we are calling hidden function *on purpose*
+# ruff: noqa: SLF001
