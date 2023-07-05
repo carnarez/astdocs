@@ -6,7 +6,7 @@ export TERM=xterm-256color
 # they will be run in the order provided
 
 declare -A hooks
-hooks=([md]=mdformat [py]=black,flake8,isort,mypy,pydocstyle)
+hooks=([md]=mdformat [py]=black,ruff,mypy)
 
 
 # grep by extension defined in the associative array

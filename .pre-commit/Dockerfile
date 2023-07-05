@@ -13,8 +13,9 @@ RUN apt-get update \
  && pip install --upgrade pip \
  && pip install --no-cache-dir -r /tmp/requirements.txt
 
-COPY hooks.yaml /usr/share/pre-commit/hooks.yaml
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY hooks.yaml /usr/share/pre-commit/hooks.yaml
+COPY ruff.toml /usr/share/pre-commit/ruff.toml
 
 WORKDIR /usr/src
 

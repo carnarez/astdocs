@@ -5,7 +5,7 @@ import ast
 from astdocs import format_docstring
 
 
-def test_simple_class_docstring():
+def test_simple_class_docstring() -> None:
     '''Test extraction of simple docstring from a class definition.
 
     ```
@@ -19,7 +19,7 @@ def test_simple_class_docstring():
     assert format_docstring(n) == s
 
 
-def test_simple_function_docstring():
+def test_simple_function_docstring() -> None:
     '''Test extration of simple docstring from [async] function definitions.
 
     ```
@@ -33,7 +33,11 @@ def test_simple_function_docstring():
     n = ast.FunctionDef(
         name="func",
         args=ast.arguments(
-            posonlyargs=[], args=[], kwonlyargs=[], kw_defaults=[], defaults=[]
+            posonlyargs=[],
+            args=[],
+            kwonlyargs=[],
+            kw_defaults=[],
+            defaults=[],
         ),
         body=[ast.Expr(value=ast.Constant(value=s))],
         decorator_list=[],
@@ -51,7 +55,7 @@ def test_simple_function_docstring():
     assert format_docstring(n) == s
 
 
-def test_simple_module_docstring():
+def test_simple_module_docstring() -> None:
     '''Test extraction of simple docstring from a module definition.
 
     ```
@@ -67,7 +71,7 @@ def test_simple_module_docstring():
     assert format_docstring(n) == s
 
 
-def test_complex_docstring():
+def test_complex_docstring() -> None:
     '''Test extraction of more complex docstring (from module to make it easier).
 
     `````

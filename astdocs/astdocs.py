@@ -1,6 +1,6 @@
 r"""Extract and format `Markdown` documentation from `Python` code.
 
-> **According to **my** standards.**
+_According to_ **my** _standards._
 
 In a few more words, parse the underlying Abstract Syntax Tree (AST) description. (See
 the [documentation](https://docs.python.org/3/library/ast.html) of the standard library
@@ -115,12 +115,14 @@ TPL_MODULE : string.Template
     Template to render the module summary.
 objects : dict[str, typing.Any]
     Nested dictionary of all relevant objects encountered while parsing the source code.
+
 """
 
 import ast
 import glob
 import itertools
 import os
+import pathlib
 import re
 import string
 import sys
@@ -149,7 +151,7 @@ TPL_CLASSDEF: string.Template = string.Template(
     "\n$constdocs"
     "\n"
     "\n$functions"
-    "\n%%%END CLASSDEF $ancestry.$classname"
+    "\n%%%END CLASSDEF $ancestry.$classname",
 )
 
 TPL_FUNCTIONDEF: string.Template = string.Template(
@@ -165,7 +167,7 @@ TPL_FUNCTIONDEF: string.Template = string.Template(
     "\n$decoration"
     "\n"
     "\n%%%SOURCE $path:$lineno:$endlineno"
-    "\n%%%END FUNCTIONDEF $ancestry.$funcname"
+    "\n%%%END FUNCTIONDEF $ancestry.$funcname",
 )
 
 TPL_MODULE: string.Template = string.Template(
@@ -177,7 +179,7 @@ TPL_MODULE: string.Template = string.Template(
     "\n$funcnames"
     "\n"
     "\n$classnames"
-    "\n%%%END MODULE $module"
+    "\n%%%END MODULE $module",
 )
 
 # default configuration
@@ -206,28 +208,20 @@ def _update_configuration() -> dict[str, typing.Any]:
     # if requested, add markers indicating the start and end of an object definition
     config.update(
         {
-            "bound_objects": (
-                True
-                if os.environ.get("ASTDOCS_BOUND_OBJECTS", "off") in truthy
-                else False
-            )
-        }
+            "bound_objects": (os.environ.get("ASTDOCS_BOUND_OBJECTS", "off") in truthy),
+        },
     )
 
     # set the string length limit (black default)
     config.update(
-        {"fold_args_after": int(os.environ.get("ASTDOCS_FOLD_ARGS_AFTER", "88"))}
+        {"fold_args_after": int(os.environ.get("ASTDOCS_FOLD_ARGS_AFTER", "88"))},
     )
 
     # if requested, show private objects in the output
     config.update(
         {
-            "show_private": (
-                True
-                if os.environ.get("ASTDOCS_SHOW_PRIVATE", "off") in truthy
-                else False
-            )
-        }
+            "show_private": (os.environ.get("ASTDOCS_SHOW_PRIVATE", "off") in truthy),
+        },
     )
 
     # if requested, split things up with %%% markers
@@ -236,18 +230,14 @@ def _update_configuration() -> dict[str, typing.Any]:
     # if requested, add the line numbers to the source
     config.update(
         {
-            "with_linenos": (
-                True
-                if os.environ.get("ASTDOCS_WITH_LINENOS", "off") in truthy
-                else False
-            )
-        }
+            "with_linenos": (os.environ.get("ASTDOCS_WITH_LINENOS", "off") in truthy),
+        },
     )
 
     return config
 
 
-def _update_templates(config: dict[str, typing.Any]):
+def _update_templates(config: dict[str, typing.Any]) -> None:
     """Update the default templates according to the given configuration.
 
     Parameters
@@ -258,7 +248,9 @@ def _update_templates(config: dict[str, typing.Any]):
     # keep (or not) the "%%%START ..." and "%%%END ..." markers
     if not config["bound_objects"]:
         TPL_CLASSDEF.template = re.sub(
-            r"\n%%%[A-Z]+ CLASSDEF \$ancestry\.\$classname", "", TPL_CLASSDEF.template
+            r"\n%%%[A-Z]+ CLASSDEF \$ancestry\.\$classname",
+            "",
+            TPL_CLASSDEF.template,
         )
         TPL_FUNCTIONDEF.template = re.sub(
             r"\n%%%[A-Z]+ FUNCTIONDEF \$ancestry\.\$funcname",
@@ -266,7 +258,9 @@ def _update_templates(config: dict[str, typing.Any]):
             TPL_FUNCTIONDEF.template,
         )
         TPL_MODULE.template = re.sub(
-            r"\n%%%[A-Z]+ MODULE \$module", "", TPL_MODULE.template
+            r"\n%%%[A-Z]+ MODULE \$module",
+            "",
+            TPL_MODULE.template,
         )
 
     # add (or not) the "%%%BEGIN CLASSDEF ..." and "%%%END CLASSDEF ..." markers
@@ -288,10 +282,12 @@ def _update_templates(config: dict[str, typing.Any]):
     # keep (or not) the "%%%SOURCE ...:...:..." markers
     if not config["with_linenos"]:
         TPL_CLASSDEF.template = TPL_CLASSDEF.template.replace(
-            "\n\n%%%SOURCE $path:$lineno:$endlineno", ""
+            "\n\n%%%SOURCE $path:$lineno:$endlineno",
+            "",
         )
         TPL_FUNCTIONDEF.template = TPL_FUNCTIONDEF.template.replace(
-            "\n\n%%%SOURCE $path:$lineno:$endlineno", ""
+            "\n\n%%%SOURCE $path:$lineno:$endlineno",
+            "",
         )
 
 
@@ -322,6 +318,7 @@ def format_docstring(
     (very inceptional):
 
     ```text
+
     Parameters
     ----------
     node : ast.AsyncFunctionDef | ast.ClassDef | ast.FunctionDef | ast.Module
@@ -416,7 +413,7 @@ def format_docstring(
     return s.strip()
 
 
-def parse_annotation(a: typing.Any) -> str:
+def parse_annotation(a: typing.Any) -> str:  # noqa: C901 (ignoring complexity warning)
     """Format an annotation (object type or decorator).
 
     Dive as deep as necessary within the children nodes until reaching the name of the
@@ -440,79 +437,71 @@ def parse_annotation(a: typing.Any) -> str:
     * The implementation only supports nodes I encountered in my projects.
     * Does not support `lambda` constructs.
     """
+    s = ""
+
     # dig deeper: module.object
     if type(a) == ast.Attribute:
-        return f"{parse_annotation(a.value)}.{a.attr}"
+        s = f"{parse_annotation(a.value)}.{a.attr}"
 
     # dig deeper: | operator
-    if type(a) == ast.BinOp:
+    elif type(a) == ast.BinOp:
         s = parse_annotation(a.left)
         s += " | "
         s += parse_annotation(a.right)
-        return s
 
     # dig deeper: @decorator(including=parameter)
-    if type(a) == ast.Call:
+    elif type(a) == ast.Call:
         s = parse_annotation(a.func)
         s += "("
         s += ", ".join([f"{a_.arg}={parse_annotation(a_.value)}" for a_ in a.keywords])
         s += ")"
-        return s
 
     # we dug deep enough and unravelled a value
-    if type(a) == ast.Constant:
-        if type(a.value) == str:
-            return f'"{a.value}"'
-        else:
-            return str(a.value)
+    elif type(a) == ast.Constant:
+        s = f'"{a.value}"' if type(a.value) == str else str(a.value)
 
     # dig deeper: content within a dictionnary
-    if type(a) == ast.Dict:
+    elif type(a) == ast.Dict:
         s = "{"
         s += ", ".join(
             [
                 f"{parse_annotation(k)}: {parse_annotation(v)}"
-                for k, v in zip(a.keys, a.values)
-            ]
+                for k, v in zip(a.keys, a.values, strict=True)
+            ],
         )
         s += "}"
-        return s
 
     # dig deeper: content within a list
-    if type(a) == ast.List:
+    elif type(a) == ast.List:
         s = "["
         s += ", ".join([parse_annotation(a_) for a_ in a.elts])
         s += "]"
-        return s
 
     # we dug deep enough and unravelled a canonical object
-    if type(a) == ast.Name:
-        return a.id
+    elif type(a) == ast.Name:
+        s = a.id
 
     # dig deeper: complex object, tuple[dict[int, float], bool, str] for instance
-    if type(a) == ast.Subscript:
+    elif type(a) == ast.Subscript:
         v = parse_annotation(a.slice)
         s = parse_annotation(a.value)
         s += "["
         s += v[1:-1] if v.startswith("(") and v.endswith(")") else v
         s += "]"
-        return s
 
     # dig deeper: content within a set
-    if type(a) == ast.Set:
+    elif type(a) == ast.Set:
         s = "{"
         s += ", ".join([parse_annotation(a_) for a_ in a.elts])
         s += "}"
-        return s
 
     # dig deeper: content within a tuple
-    if type(a) == ast.Tuple:
+    elif type(a) == ast.Tuple:
         s = "("
         s += ", ".join([parse_annotation(a_) for a_ in a.elts])
         s += ")"
-        return s
 
-    return ""
+    return s
 
 
 def parse_class(
@@ -520,7 +509,6 @@ def parse_class(
     module: str,
     ancestry: str,
     classes: dict[str, dict[str, str]],
-    config: dict[str, typing.Any] = config,
 ) -> dict[str, dict[str, str]]:
     """Parse a `class` statement.
 
@@ -535,12 +523,10 @@ def parse_class(
         (functions and methods for instance).
     classes : dict[str, dict[str, str]]
         Dictionnaries of all encountered class definitions.
-    config : dict[str, typing.Any]
-        Configuration options used to render attributes.
 
     Returns
     -------
-    classes : dict[str, dict[str, str]]
+    : dict[str, dict[str, str]]
         Dictionnaries of all encountered class definitions.
     """
     ap = f"{ancestry}.{node.name}"  # absolute path to the object
@@ -569,8 +555,7 @@ def parse_function(
     module: str,
     ancestry: str,
     functions: dict[str, dict[str, str]],
-    config: dict[str, typing.Any] = config,
-) -> dict[str, dict[str, str]]:
+) -> dict[str, dict]:
     """Parse a `def` statement.
 
     Parameters
@@ -584,12 +569,10 @@ def parse_function(
         (functions and methods for instance).
     functions : dict[str, dict[str, str]]
         Dictionnaries of all encountered function definitions.
-    config : dict[str, typing.Any]
-        Configuration options used to render attributes.
 
     Returns
     -------
-    functions : dict[str, dict[str, str]]
+    : dict[str, dict]
         Dictionnaries of all encountered function definitions.
 
     Notes
@@ -608,7 +591,7 @@ def parse_function(
     dc = [f"`@{parse_annotation(d)}`" for d in node.decorator_list]
 
     # parse/format arguments and annotations; with default values if present
-    def _parse_format_argument(ann: typing.Any, val: typing.Any = None):
+    def _parse_format_argument(ann: typing.Any, val: typing.Any = None) -> str:
         """Parse and format an annotation.
 
         Parameters
@@ -636,7 +619,7 @@ def parse_function(
 
     # args; to accolate default values we need to reverse the argument list
     for ann, val in list(
-        itertools.zip_longest(node.args.args[::-1], node.args.defaults[::-1])
+        itertools.zip_longest(node.args.args[::-1], node.args.defaults[::-1]),
     )[::-1]:
         params.append(_parse_format_argument(ann, val))
 
@@ -646,7 +629,7 @@ def parse_function(
 
     # kwargs, only populated if args.vararg is; same accolation comment as above
     for ann, val in list(
-        itertools.zip_longest(node.args.kwonlyargs[::-1], node.args.kw_defaults[::-1])
+        itertools.zip_longest(node.args.kwonlyargs[::-1], node.args.kw_defaults[::-1]),
     )[::-1]:
         params.append(_parse_format_argument(ann, val))
 
@@ -655,10 +638,7 @@ def parse_function(
         params.append(f"**{node.args.kwarg.arg}")
 
     # output
-    if node.returns is not None:
-        output = f" -> {parse_annotation(node.returns)}"
-    else:
-        output = ""
+    output = f" -> {parse_annotation(node.returns)}" if node.returns is not None else ""
 
     # add line breaks if the function call is long (pre-render this latter first, no way
     # around it)
@@ -689,7 +669,6 @@ def parse_import(
     module: str,
     ancestry: str,
     imports: dict[str, str],
-    config: dict[str, typing.Any] = config,
 ) -> dict[str, str]:
     """Parse `import ... [as ...]` and `from ... import ... [as ...]` statements.
 
@@ -706,14 +685,12 @@ def parse_import(
     ancestry : str
         Complete path to the object, used to identify ownership of children objects
         (functions and methods for instance).
-    imports : dict[str, str]
+    imports : dict[str, str] | None
         Dictionnaries of parsed imports. Defaults to an empty dictionnary `{}`.
-    config : dict[str, typing.Any]
-        Configuration options used to render attributes.
 
     Returns
     -------
-    imports : dict[str, str]
+    : dict[str, str]
         Dictionnaries of all encountered imports. Untouched for now, always empty
         dictionnary `{}`.
     """
@@ -743,10 +720,9 @@ def parse(
     node: typing.Any,
     module: str,
     ancestry: str = "",
-    classes: dict[str, dict[str, str]] = {},
-    functions: dict[str, dict[str, str]] = {},
-    imports: dict[str, str] = {},
-    config: dict[str, typing.Any] = config,
+    classes: dict[str, dict[str, str]] | None = None,
+    functions: dict[str, dict[str, str]] | None = None,
+    imports: dict[str, str] | None = None,
 ) -> tuple[dict[str, dict[str, str]], dict[str, dict[str, str]], dict[str, str]]:
     """Recursively traverse the nodes of the abstract syntax tree.
 
@@ -762,26 +738,26 @@ def parse(
     ancestry : str
         Complete path to the object, used to identify ownership of children objects
         (functions and methods for instance).
-    classes : dict[str, dict[str, str]]
-        Dictionnaries of parsed class definitions. Defaults to an empty dictionnary
-        `{}`.
-    functions : dict[str, dict[str, str]]
-        Dictionnaries of parsed function definitions. Defaults to an empty dictionnary
-        `{}`.
-    imports : dict[str, str]
-        Dictionnaries of parsed imports. Defaults to an empty dictionnary `{}`.
-    config : dict[str, typing.Any]
-        Configuration options used to render attributes.
+    classes : dict[str, dict[str, str]] | None
+        Dictionnaries of parsed class definitions. Defaults to `None`.
+    functions : dict[str, dict[str, str]] | None
+        Dictionnaries of parsed function definitions. Defaults to `None`.
+    imports : dict[str, str] | None
+        Dictionnaries of parsed imports. Defaults to a `None`.
 
     Returns
     -------
-    classes : dict[str, dict[str, str]]
+    : dict[str, dict[str, str]]
         Dictionnaries of all encountered class definitions.
-    functions : dict[str, dict[str, str]]
+    : dict[str, dict[str, str]]
         Dictionnaries of all encountered function definitions.
-    imports : dict[str, str]
+    : dict[str, str]
         Dictionnaries of all encountered imports.
     """
+    classes = {} if classes is None else classes
+    functions = {} if functions is None else functions
+    imports = {} if imports is None else imports
+
     for n in node.body:
         # call the parser for each supported node type
         if n.__class__.__name__ == "ClassDef":
@@ -843,7 +819,7 @@ def render_class(
     ht = classes[name]["hashtags"]
 
     # select related methods
-    fs = [f for f in functions.keys() if f.startswith(f"{name}.")]
+    fs = [f for f in functions if f.startswith(f"{name}.")]
 
     # fetch the content of __init__
     n = f"{name}.__init__"
@@ -869,13 +845,13 @@ def render_class(
                 {
                     "hashtags": f"{ht}##",
                     "params": re.sub(r"self[\s,]*", "", functions[f]["params"], 1),
-                }
+                },
             )
             fsr.append(render_function(filepath, f, functions))
 
     # methods bullet list
     fsl = []
-    for i, f in enumerate(fs):
+    for _i, f in enumerate(fs):
         n = f.split(".")[-1]
         if not n.startswith("_") or config["show_private"]:
             link = f.replace(".", "").lower()  # github syntax
@@ -891,7 +867,7 @@ def render_class(
             "functions": (ht + "# Methods\n\n" + "\n\n".join(fsr)) if fsr else "",
             "funcnames": ("**Methods**\n\n" + "\n".join(fsl)) if fsl else "",
             "path": filepath,
-        }
+        },
     )
 
     return TPL_CLASSDEF.substitute(classes[name]).strip()
@@ -901,7 +877,6 @@ def render_function(
     filepath: str,
     name: str,
     functions: dict[str, dict[str, str]],
-    config: dict[str, typing.Any] = config,
 ) -> str:
     """Render a `def` object (function or method).
 
@@ -915,8 +890,6 @@ def render_function(
         The name (full path including all ancestors) of the object to render.
     functions : dict[str, dict[str, str]]
         Dictionnaries of all encountered function definitions.
-    config : dict[str, typing.Any]
-        Configuration options used to render attributes.
 
     Returns
     -------
@@ -1035,10 +1008,10 @@ def render(
 
         module = re.sub(r"\.py$", "", filepath.replace("/", ".")).lstrip(".")
         module = module.replace(".__init__", "")
-        module = module if len(module) else os.getcwd().rsplit("/", 1)[-1]
+        module = module if len(module) else str(pathlib.Path.cwd()).rsplit("/", 1)[-1]
 
         # traverse and parse the ast
-        with open(filepath) as fp:
+        with pathlib.Path(filepath).open() as fp:
             n = ast.parse(fp.read())
 
     elif len(code) and len(module):
@@ -1048,7 +1021,8 @@ def render(
     else:
         return "Nothing to do."  # user provided nOthINg
 
-    global objects  # all objects encountered over a whole run are kept track of
+    # all objects encountered over a whole run are kept track of
+    global objects  # noqa: PLW0602
     objects[module] = {"classes": {}, "functions": {}, "imports": {}}
 
     # parse it all
@@ -1060,7 +1034,7 @@ def render(
         if f.count(".") == module.count(".") + 1:
             name = f.split(".")[-1]
             if not name.startswith("_") or config["show_private"]:
-                fs.append(render_function(filepath, f, functions, config))
+                fs.append(render_function(filepath, f, functions))
 
     # render the classes at the root of the module
     cs = []
@@ -1076,16 +1050,20 @@ def render(
             [
                 "## Classes" if "c" not in config["split_by"] and cs else "",
                 "\n\n".join(cs) if cs else "",
-            ]
+            ],
         ),
         "functions": "\n\n".join(
             [
                 "## Functions" if "f" not in config["split_by"] and fs else "",
                 "\n\n".join(fs) if fs else "",
-            ]
+            ],
         ),
         "module": render_module(
-            module, format_docstring(n), classes, functions, config
+            module,
+            format_docstring(n),
+            classes,
+            functions,
+            config,
         ),
     }
 
@@ -1093,13 +1071,13 @@ def render(
 
     # cleanup (extra line breaks)
     s = re.sub(r"\n{3,}", "\n\n", s)
-    s = re.sub(r"\n{2,}%%%(^SOURCE[A-Z]*)", r"\n%%%\1", s)
-
-    return s
+    return re.sub(r"\n{2,}%%%(^SOURCE[A-Z]*)", r"\n%%%\1", s)
 
 
 def render_recursively(
-    path: str, remove_from_path: str = "", config: dict[str, typing.Any] = config
+    path: str,
+    remove_from_path: str = "",
+    config: dict[str, typing.Any] = config,
 ) -> str:
     r"""Run pipeline on each `Python` module found in a folder and its subfolders.
 
@@ -1155,16 +1133,16 @@ def render_recursively(
         if not name.startswith("_") or config["show_private"] or name == "__init__.py":
             ms.append(
                 render(
-                    filepath=filepath, remove_from_path=remove_from_path, config=config
-                )
+                    filepath=filepath,
+                    remove_from_path=remove_from_path,
+                    config=config,
+                ),
             )
 
     s = "\n\n".join(ms)
 
     # cleanup (extra line breaks)
-    s = re.sub(r"\n{2,}%%%(^SOURCE[A-Z]*)", r"\n%%%\1", s)
-
-    return s
+    return re.sub(r"\n{2,}%%%(^SOURCE[A-Z]*)", r"\n%%%\1", s)
 
 
 def postrender(func: typing.Callable) -> typing.Callable:
@@ -1252,7 +1230,7 @@ def postrender(func: typing.Callable) -> typing.Callable:
     """
 
     def decorator(f: typing.Callable) -> typing.Callable:
-        def wrapper(*args, **kwargs) -> typing.Callable:
+        def wrapper(*args: list, **kwargs: dict) -> typing.Callable:
             return func(f(*args, **kwargs))
 
         return wrapper
@@ -1260,7 +1238,7 @@ def postrender(func: typing.Callable) -> typing.Callable:
     return decorator
 
 
-def cli():
+def cli() -> None:
     """Process CLI calls."""
     config = _update_configuration()
 
@@ -1272,8 +1250,12 @@ def cli():
     except IsADirectoryError:
         md = render_recursively(sys.argv[1], config=config)
 
-    print(md)
+    sys.stdout.write(f"{md}\n")
 
 
 if __name__ == "__main__":
     cli()
+
+# since we are working with the ast a lot of objects are encountered; listing all of
+# them in the type hints would be unreasonable and we are ignoring the warnings
+# ruff: noqa: ANN401

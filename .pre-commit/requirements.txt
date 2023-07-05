@@ -1,6 +1,4 @@
 black
-flake8
-isort
 mdformat
 mypy
-pydocstyle
+ruff
