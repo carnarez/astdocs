@@ -1,1 +1,1 @@
-"""Thorough(-ish) battery of tests for our this little stunt."""
+"""Thorough(-ish) battery of tests for this little stunt."""

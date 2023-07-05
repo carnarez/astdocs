@@ -17,7 +17,7 @@ Tests related to the environment (configuration) and the `cli()` function.
 ### `test_cli.test_runs`
 
 ```python
-test_runs():
+test_runs() -> None:
 ```
 
 Test successful run (this test checks nothing more than a script run).
@@ -32,7 +32,7 @@ $ python astdocs/astdocs.py astdocs  # run on folder
 ### `test_cli.test_faulty_run`
 
 ```python
-test_faulty_run():
+test_faulty_run() -> None:
 ```
 
 Test faulty run (no file nor code provided).
@@ -40,7 +40,7 @@ Test faulty run (no file nor code provided).
 ### `test_cli.test_environment`
 
 ```python
-test_environment():
+test_environment() -> None:
 ```
 
 Test for environment variables.
@@ -56,7 +56,7 @@ ASTDOCS_WITH_LINENOS=1
 ### `test_cli.test_default_environment`
 
 ```python
-test_default_environment():
+test_default_environment() -> None:
 ```
 
 Test for environment variables (reset them for the tests).
@@ -89,7 +89,7 @@ All tests related to the `astdocs.format_docstring()` function.
 ### `test_format.test_simple_class_docstring`
 
 ```python
-test_simple_class_docstring():
+test_simple_class_docstring() -> None:
 ```
 
 Test extraction of simple docstring from a class definition.
@@ -102,7 +102,7 @@ class Classy:
 ### `test_format.test_simple_function_docstring`
 
 ```python
-test_simple_function_docstring():
+test_simple_function_docstring() -> None:
 ```
 
 Test extration of simple docstring from \[async\] function definitions.
@@ -115,7 +115,7 @@ def func():
 ### `test_format.test_simple_module_docstring`
 
 ```python
-test_simple_module_docstring():
+test_simple_module_docstring() -> None:
 ```
 
 Test extraction of simple docstring from a module definition.
@@ -130,7 +130,7 @@ def func():
 ### `test_format.test_complex_docstring`
 
 ```python
-test_complex_docstring():
+test_complex_docstring() -> None:
 ```
 
 Test extraction of more complex docstring (from module to make it easier).
@@ -212,7 +212,7 @@ All tests related to the `astdocs.parse_*()` function.
 ### `test_parse.test_simple_decorator`
 
 ```python
-test_simple_decorator():
+test_simple_decorator() -> None:
 ```
 
 Test for decoration parsing.
@@ -233,7 +233,7 @@ def func():
 ### `test_parse.test_complex_decorator`
 
 ```python
-test_complex_decorator():
+test_complex_decorator() -> None:
 ```
 
 Test for more complicated decoration.
@@ -247,7 +247,7 @@ def func():
 ### `test_parse.test_inheritance`
 
 ```python
-test_inheritance():
+test_inheritance() -> None:
 ```
 
 Test for multiple inheritance.
@@ -263,7 +263,7 @@ class Class(Parent, inlaws.Parent, foreign.family.Parent):
 ### `test_parse.test_simple_parameters_typing`
 
 ```python
-test_simple_parameters_typing():
+test_simple_parameters_typing() -> None:
 ```
 
 Test for simple input/output arguments.
@@ -278,7 +278,7 @@ def func(a, b: typing.Union[bool, str] = None, c: int = 0) -> str:
 ### `test_parse.test_simple_parameters_v310`
 
 ```python
-test_simple_parameters_v310():
+test_simple_parameters_v310() -> None:
 ```
 
 Test for simple input/output arguments (v3.10 syntax).
@@ -291,7 +291,7 @@ def func(a, b: bool | float | str, c: int = 0) -> str:
 ### `test_parse.test_with_args_kwargs`
 
 ```python
-test_with_args_kwargs():
+test_with_args_kwargs() -> None:
 ```
 
 Test for presence of `*args` and `**kwargs` in function arguments (v3.10 syntax).
@@ -304,7 +304,7 @@ def func(a, *args, b: list[bool] = [True, False], **kwargs):
 ### `test_parse.test_complex_parameters_typing`
 
 ```python
-test_complex_parameters_typing():
+test_complex_parameters_typing() -> None:
 ```
 
 Test for complex input/output arguments.
@@ -326,7 +326,7 @@ def func(
 ### `test_parse.test_complex_parameters_v310`
 
 ```python
-test_complex_parameters_v310():
+test_complex_parameters_v310() -> None:
 ```
 
 Test for complex input/output arguments (v3.10 syntax).
@@ -347,7 +347,7 @@ def func(
 ### `test_parse.test_class`
 
 ```python
-test_class():
+test_class() -> None:
 ```
 
 Test for class including `__init__` and methods.
@@ -369,7 +369,7 @@ class Classy:
 ### `test_parse.test_function`
 
 ```python
-test_function():
+test_function() -> None:
 ```
 
 Test for a simple function.
@@ -382,7 +382,7 @@ def func(a, b: bool | float | str = "", c: int = 0) -> str:
 ### `test_parse.test_import`
 
 ```python
-test_import():
+test_import() -> None:
 ```
 
 Test for complex imports.
@@ -432,7 +432,7 @@ All tests related to the `astdocs.render_*()` functions.
 ### `test_render.test_empty`
 
 ```python
-test_empty():
+test_empty() -> None:
 ```
 
 Test for no input (just to get 100% coverage).
@@ -440,7 +440,7 @@ Test for no input (just to get 100% coverage).
 ### `test_render.test_remove_from_path`
 
 ```python
-test_remove_from_path():
+test_remove_from_path() -> None:
 ```
 
 Test with the `remove_from_path` argument (just to get 100% coverage).
@@ -451,7 +451,7 @@ This test checks literally *nothing* more than the `remove_from_path` flag of th
 ### `test_render.test_simple_class`
 
 ```python
-test_simple_class():
+test_simple_class() -> None:
 ```
 
 Test for simple class rendering.
@@ -467,7 +467,7 @@ class Classy:
 ### `test_render.test_complex_class`
 
 ```python
-test_complex_class():
+test_complex_class() -> None:
 ```
 
 Test for class including `__init__` and methods.
@@ -491,7 +491,7 @@ class Classy(Parent):
 ### `test_render.test_complex_function`
 
 ```python
-test_complex_function():
+test_complex_function() -> None:
 ```
 
 Test for complex input/output arguments.
@@ -517,7 +517,7 @@ def _hidden():
 ### `test_render.test_many_parameters`
 
 ```python
-test_many_parameters():
+test_many_parameters() -> None:
 ```
 
 Test rendering for function/method with many parameters.
@@ -555,7 +555,7 @@ class Classy(Parent):
 ### `test_render.test_private_hidden_objects`
 
 ```python
-test_private_hidden_objects():
+test_private_hidden_objects() -> None:
 ```
 
 Test for private objects.
@@ -571,7 +571,7 @@ class _Hidden:
 ### `test_render.test_private_visible_objects`
 
 ```python
-test_private_visible_objects():
+test_private_visible_objects() -> None:
 ```
 
 Test for visible private objects.
@@ -587,7 +587,7 @@ class _Hidden:
 ### `test_render.test_it_all`
 
 ```python
-test_it_all():
+test_it_all() -> None:
 ```
 
 Test for a full example (concatention of other snippets).
@@ -624,7 +624,7 @@ class Classy(Parent):
 ### `test_render.test_postrender_decorator`
 
 ```python
-test_postrender_decorator():
+test_postrender_decorator() -> None:
 ```
 
 Test the output of the `@postrender` decorator.
@@ -637,7 +637,7 @@ def _func():
 ### `test_render.test_alternate_config`
 
 ```python
-test_alternate_config():
+test_alternate_config() -> None:
 ```
 
 Test for different configuration options.

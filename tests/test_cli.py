@@ -19,12 +19,12 @@ def test_runs() -> None:
     ```
     """
     subprocess.run(
-        ["/usr/local/bin/python", "astdocs/astdocs.py", "astdocs/astdocs.py"],
+        ["python", "astdocs/astdocs.py", "astdocs/astdocs.py"],
         capture_output=True,
         check=True,
     )
     subprocess.run(
-        ["/usr/local/bin/python", "astdocs/astdocs.py", "astdocs/"],
+        ["python", "astdocs/astdocs.py", "astdocs/"],
         capture_output=True,
     )
 
@@ -87,7 +87,9 @@ def test_default_environment() -> None:
     }
 
 
-# adding the noqa rule to avoid bandit false-positives
-# https://github.com/PyCQA/bandit/issues/333 (still open as i write this)
-# and we are calling hidden function *on purpose*
-# ruff: noqa: S603,SLF001
+# S603: adding the noqa rule to avoid bandit false-positives; see the open issue at
+#       https://github.com/PyCQA/bandit/issues/333
+# S607: different path locally and within github runners; will keep a partial path and
+#       ignore the associated warnings
+# SLF001: we are calling hidden function *on purpose*
+# ruff: noqa: S603,S607,SLF001
