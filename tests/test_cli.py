@@ -85,11 +85,3 @@ def test_default_environment() -> None:
         "split_by": "",
         "with_linenos": False,
     }
-
-
-# S603: adding the noqa rule to avoid bandit false-positives; see the open issue at
-#       https://github.com/PyCQA/bandit/issues/333
-# S607: different path locally and within github runners; will keep a partial path and
-#       ignore the associated warnings
-# SLF001: we are calling hidden function *on purpose*
-# ruff: noqa: S603,S607,SLF001

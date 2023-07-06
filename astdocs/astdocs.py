@@ -1255,7 +1255,3 @@ def cli() -> None:
 
 if __name__ == "__main__":
     cli()
-
-# since we are working with the ast a lot of objects are encountered; listing all of
-# them in the type hints would be unreasonable and we are ignoring the warnings
-# ruff: noqa: ANN401
