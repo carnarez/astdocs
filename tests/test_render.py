@@ -750,7 +750,3 @@ method(b):
     rendered = astdocs.render(code=s, module=MODULE, config=config)
 
     assert rendered == r
-
-
-# we are calling hidden function *on purpose*
-# ruff: noqa: SLF001

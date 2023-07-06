@@ -1,4 +1,0 @@
-black
-mdformat
-mypy
-ruff
