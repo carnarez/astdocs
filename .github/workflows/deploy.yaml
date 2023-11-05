@@ -90,8 +90,8 @@ jobs:
 
             # bundle css
             find . -name "*.css" | while read f; do
-              postcss $f --replace --use autoprefixer
-              postcss $f --replace --use cssnano
+              postcss $f --no-map --replace --use autoprefixer
+              postcss $f --no-map --replace --use cssnano
             done
 
             # bundle html
