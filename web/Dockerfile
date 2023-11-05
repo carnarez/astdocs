@@ -47,7 +47,7 @@ RUN apk --no-cache add git \
                                               postcss-cli \
                                               terser \
     | grep -v ^$ \
- && git clone --branch=bundle --depth=1 https://github.com/carnarez/markdown-render-styling.git
+ && git clone --branch=bundle --depth=1 https://github.com/carnarez/markdown-render-styling.git \
  && cat markdown-render-styling/style.css *.css 2>/dev/null | grep -v '@import url("style-' > style.css_ \
  && rm -fr markdown-render-styling *.css \
  && mv style.css_ style.css \
