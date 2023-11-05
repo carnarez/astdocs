@@ -10,83 +10,90 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout https://github.com/carnarez/astdocs repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Set up Node v16.x
-        uses: actions/setup-node@v3
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: '16.x'
+          node-version: '18.x'
 
       - name: Install Node dependencies
         run: |
-          npm install --global --no-audit --no-fund \
-            autoprefixer \
-            clean-css-cli \
-            html-minifier \
-            postcss-cli \
-            terser
+          npm install --global --no-audit --no-fund autoprefixer \
+                                                    cssnano \
+                                                    html-minifier \
+                                                    postcss-cli \
+                                                    terser
 
-      - name: Set up Python v3.10
+      - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.12'
 
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install --no-cache-dir \
-            ghp-import \
-            git+https://github.com/carnarez/astdocs@master \
-            git+https://github.com/carnarez/markdown-extension-astdocs@master \
-            git+https://github.com/carnarez/markdown-extension-img@master \
-            git+https://github.com/carnarez/markdown-extension-insert@master \
-            git+https://github.com/carnarez/markdown-extension-script@master \
-            git+https://github.com/carnarez/markdown-render@master \
-            jinja2 \
-            lunr \
-            markdown \
-            pymdown-extensions \
-            pyyaml
+          python -m pip install --no-cache-dir ghp-import \
+                                               git+https://github.com/carnarez/astdocs@master \
+                                               git+https://github.com/carnarez/markdown-extension-astdocs@master \
+                                               git+https://github.com/carnarez/markdown-extension-img@master \
+                                               git+https://github.com/carnarez/markdown-extension-insert@master \
+                                               git+https://github.com/carnarez/markdown-extension-script@master \
+                                               git+https://github.com/carnarez/markdown-render@master \
+                                               jinja2 \
+                                               lunr \
+                                               markdown \
+                                               pymdown-extensions \
+                                               pyyaml
 
       - name: Render and bundle
         run: |
           # generate the documentation
           (
             cd astdocs
+
             ASTDOCS_WITH_LINENOS=1 astdocs astdocs.py > ../web/index.md
             cp astdocs.py ../web/astdocs.py
           )
+
           # render the documentation
           (
             cd web
+
             # will contain all rendered/bundled content
             mkdir /tmp/www
-            # prepare markdown files
+
+            # prepare and convert markdown files to html
             cat front-matter.md index.md > tmp
             mv tmp index.md
             rm front-matter.md
-            # convert markdown to html
             render-markdown --prefix=/tmp/www \
                             --root=https://carnarez.github.io/astdocs/ \
                             index.md
+
             # prepare html files
+
             # prepare css files
-            git clone --depth=1 https://github.com/carnarez/markdown-render-styling.git
-            cat markdown-render-styling/style.css markdown-render-styling/style-*.css | grep -v '@import ".*"' > _bundle.css
-            cat *.css > /tmp/www/style.css
+            git clone --branch=bundle --depth=1 https://github.com/carnarez/markdown-render-styling.git
+            cat markdown-render-styling/style.css *.css 2>/dev/null | grep -v '@import url("style-' > style.css_
             rm -fr markdown-render-styling *.css
+            mv style.css_ style.css
             find . -name "*.css" | while read f; do cp $f /tmp/www/$(dirname $f); done
+
             # prepare js files
             find . -name "*.js" | while read f; do cp $f /tmp/www/$(dirname $f); done
           )
+
           # minify everything
           (
             cd /tmp/www
+
             # bundle css
             find . -name "*.css" | while read f; do
               postcss $f --replace --use autoprefixer
-              cleancss --output $f $f
+              postcss $f --replace --use cssnano
             done
+
             # bundle html
             find . -name "*.html" | while read f; do
               html-minifier --collapse-boolean-attributes \
@@ -104,6 +111,7 @@ jobs:
                             --use-short-doctype \
                             $f
             done
+
             # bundle js
             find . -name "*.js" | while read f; do terser --compress --mangle --module --output $f $f; done
           )
@@ -112,5 +120,6 @@ jobs:
         run: |
           (
             cd web
+
             ghp-import --branch www --force --push /tmp/www
           )
