@@ -89,6 +89,7 @@ RUN addgroup -S www \
 WORKDIR /var/www
 
 COPY --from=bundle /var/www .
+COPY splash.svg .
 
 USER www
 
