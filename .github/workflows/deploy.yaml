@@ -116,6 +116,9 @@ jobs:
             find . -name "*.js" | while read f; do terser --compress --mangle --module --output $f $f; done
           )
 
+          # copy static assets
+          cp web/splash.svg /tmp/www
+
       - name: Deploy to https://carnarez.github.io/astdocs/
         run: |
           (
