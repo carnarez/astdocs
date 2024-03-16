@@ -623,6 +623,7 @@ def _add_header(md: str) -> str:
     -------
     : str
         Processed `Markdown`.
+
     """
     return f"Header\n\n{md}"
 
@@ -642,6 +643,7 @@ def _render(code: str, module: str) -> str:
     -------
     : str
         Processed input.
+
     """
     return astdocs.render(code=code, module=module)
 

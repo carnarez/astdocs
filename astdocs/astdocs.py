@@ -119,7 +119,6 @@ objects : dict[str, typing.Any]
 """
 
 import ast
-import glob
 import itertools
 import os
 import pathlib
@@ -202,6 +201,7 @@ def _update_configuration() -> dict[str, typing.Any]:
     -------
     : dict[str, typing.Any]
         Updated configuration.
+
     """
     truthy = ("1", "on", "true", "yes")
 
@@ -244,6 +244,7 @@ def _update_templates(config: dict[str, typing.Any]) -> None:
     ----------
     config : dict[str, typing.Any]
         Configuration options used to update the templates.
+
     """
     # keep (or not) the "%%%START ..." and "%%%END ..." markers
     if not config["bound_objects"]:
@@ -371,6 +372,7 @@ def format_docstring(
     Known problem
     -------------
     Overall naive, stiff and *very* opinionated (again, for *my* use).
+
     """
     s = ast.get_docstring(node) or ""
 
@@ -436,32 +438,33 @@ def parse_annotation(a: typing.Any) -> str:  # noqa: C901 (ignoring complexity w
     --------------
     * The implementation only supports nodes I encountered in my projects.
     * Does not support `lambda` constructs.
+
     """
     s = ""
 
     # dig deeper: module.object
-    if type(a) == ast.Attribute:
+    if isinstance(a, ast.Attribute):
         s = f"{parse_annotation(a.value)}.{a.attr}"
 
     # dig deeper: | operator
-    elif type(a) == ast.BinOp:
+    elif isinstance(a, ast.BinOp):
         s = parse_annotation(a.left)
         s += " | "
         s += parse_annotation(a.right)
 
     # dig deeper: @decorator(including=parameter)
-    elif type(a) == ast.Call:
+    elif isinstance(a, ast.Call):
         s = parse_annotation(a.func)
         s += "("
         s += ", ".join([f"{a_.arg}={parse_annotation(a_.value)}" for a_ in a.keywords])
         s += ")"
 
     # we dug deep enough and unravelled a value
-    elif type(a) == ast.Constant:
-        s = f'"{a.value}"' if type(a.value) == str else str(a.value)
+    elif isinstance(a, ast.Constant):
+        s = f'"{a.value}"' if isinstance(a.value, str) else str(a.value)
 
     # dig deeper: content within a dictionnary
-    elif type(a) == ast.Dict:
+    elif isinstance(a, ast.Dict):
         s = "{"
         s += ", ".join(
             [
@@ -472,17 +475,17 @@ def parse_annotation(a: typing.Any) -> str:  # noqa: C901 (ignoring complexity w
         s += "}"
 
     # dig deeper: content within a list
-    elif type(a) == ast.List:
+    elif isinstance(a, ast.List):
         s = "["
         s += ", ".join([parse_annotation(a_) for a_ in a.elts])
         s += "]"
 
     # we dug deep enough and unravelled a canonical object
-    elif type(a) == ast.Name:
+    elif isinstance(a, ast.Name):
         s = a.id
 
     # dig deeper: complex object, tuple[dict[int, float], bool, str] for instance
-    elif type(a) == ast.Subscript:
+    elif isinstance(a, ast.Subscript):
         v = parse_annotation(a.slice)
         s = parse_annotation(a.value)
         s += "["
@@ -490,13 +493,13 @@ def parse_annotation(a: typing.Any) -> str:  # noqa: C901 (ignoring complexity w
         s += "]"
 
     # dig deeper: content within a set
-    elif type(a) == ast.Set:
+    elif isinstance(a, ast.Set):
         s = "{"
         s += ", ".join([parse_annotation(a_) for a_ in a.elts])
         s += "}"
 
     # dig deeper: content within a tuple
-    elif type(a) == ast.Tuple:
+    elif isinstance(a, ast.Tuple):
         s = "("
         s += ", ".join([parse_annotation(a_) for a_ in a.elts])
         s += ")"
@@ -528,6 +531,7 @@ def parse_class(
     -------
     : dict[str, dict[str, str]]
         Dictionnaries of all encountered class definitions.
+
     """
     ap = f"{ancestry}.{node.name}"  # absolute path to the object
     lp = ap.replace(module, "", 1).lstrip(".")  # local path to the object
@@ -580,6 +584,7 @@ def parse_function(
     If `*args` and some `kwargs` arguments are present, `args.vararg` will not be `None`
     and the `node.args.kwonlyargs` / `node.args.kw_defaults` attributes need to be
     parsed. Otherwise all should be available in the `args` / `defaults` attributes.
+
     """
     ap = f"{ancestry}.{node.name}"  # absolute path to the object
     lp = ap.replace(module, "", 1).lstrip(".")  # local path to the object
@@ -605,6 +610,7 @@ def parse_function(
         -------
         : str
             Formatted annotation with potential default value.
+
         """
         s = ann.arg
 
@@ -693,8 +699,9 @@ def parse_import(
     : dict[str, str]
         Dictionnaries of all encountered imports. Untouched for now, always empty
         dictionnary `{}`.
+
     """
-    if type(node) == ast.Import:
+    if isinstance(node, ast.Import):
         for n in node.names:
             abspath = f"{ancestry}.{n.name}"
             locpath = n.asname or n.name
@@ -702,7 +709,7 @@ def parse_import(
             # save the object
             objects[module]["imports"][locpath] = abspath
 
-    if type(node) == ast.ImportFrom:
+    if isinstance(node, ast.ImportFrom):
         m = f"{node.module}." if node.module is not None else ""
         v = node.level + 1 if node.level > 0 else 0
         for n in node.names:
@@ -753,6 +760,7 @@ def parse(
         Dictionnaries of all encountered function definitions.
     : dict[str, str]
         Dictionnaries of all encountered imports.
+
     """
     classes = {} if classes is None else classes
     functions = {} if functions is None else functions
@@ -815,6 +823,7 @@ def render_class(
     -------
     : str
         `Markdown`-formatted description of the class object.
+
     """
     ht = classes[name]["hashtags"]
 
@@ -826,7 +835,7 @@ def render_class(
     if n in fs:
         fs.remove(n)
         details = functions.pop(n)
-        params = re.sub(r"self[\s,]*", "", details["params"], 1)
+        params = re.sub(r"self[\s,]*", "", details["params"], count=1)
         docstring = details["funcdocs"]
         beglineno = details["lineno"]
         endlineno = details["endlineno"]
@@ -844,7 +853,9 @@ def render_class(
             functions[f].update(
                 {
                     "hashtags": f"{ht}##",
-                    "params": re.sub(r"self[\s,]*", "", functions[f]["params"], 1),
+                    "params": re.sub(
+                        r"self[\s,]*", "", functions[f]["params"], count=1
+                    ),
                 },
             )
             fsr.append(render_function(filepath, f, functions))
@@ -895,6 +906,7 @@ def render_function(
     -------
     : str
         `Markdown`-formatted description of the function/method object.
+
     """
     # update the description of the object
     functions[name].update({"path": filepath})
@@ -930,6 +942,7 @@ def render_module(
     -------
     : str
         `Markdown`-formatted description of the whole module.
+
     """
     # self-standing functions bullet list
     fs = []
@@ -998,6 +1011,7 @@ def render(
     -------
     : str
         `Markdown`-formatted content.
+
     """
     _update_templates(config)
 
@@ -1124,16 +1138,17 @@ def render_recursively(
     except NameError:
         pass
     ```
+
     """
     ms = []
 
     # render each module
-    for filepath in sorted(glob.glob(f"{path}/**/*.py", recursive=True)):
-        name = filepath.split("/")[-1]
+    for filepath in sorted(pathlib.Path(path).glob("**/*.py")):
+        name = str(filepath).split("/")[-1]
         if not name.startswith("_") or config["show_private"] or name == "__init__.py":
             ms.append(
                 render(
-                    filepath=filepath,
+                    filepath=str(filepath),
                     remove_from_path=remove_from_path,
                     config=config,
                 ),
@@ -1227,6 +1242,7 @@ def postrender(func: typing.Callable) -> typing.Callable:
 
     print(render(...))
     ```
+
     """
 
     def decorator(f: typing.Callable) -> typing.Callable:
