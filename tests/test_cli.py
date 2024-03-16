@@ -19,13 +19,14 @@ def test_runs() -> None:
     ```
     """
     subprocess.run(
-        ["python", "astdocs/astdocs.py", "astdocs/astdocs.py"],
+        ["/usr/bin/python", "astdocs/astdocs.py", "astdocs/astdocs.py"],
         capture_output=True,
         check=True,
     )
     subprocess.run(
-        ["python", "astdocs/astdocs.py", "astdocs/"],
+        ["/usr/bin/python", "astdocs/astdocs.py", "astdocs/"],
         capture_output=True,
+        check=False,
     )
 
 

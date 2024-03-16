@@ -118,6 +118,7 @@ def test_complex_docstring() -> None:
     * Argument + description parsing.
     * Type + description parsing.
     * Trailing spaces trimming.
+
     '''
     # source
     docstring = '''
