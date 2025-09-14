@@ -1,3 +1,6 @@
+# mypy: disable-error-code="attr-defined"
+# ruff: noqa: RUF059
+
 """All tests related to the `astdocs.parse_*()` function."""
 
 import ast
