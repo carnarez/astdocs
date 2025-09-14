@@ -1,3 +1,5 @@
+# ruff: noqa: SLF001
+
 """Tests related to the environment (configuration) and the `cli()` function."""
 
 import os

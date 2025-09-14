@@ -1,3 +1,6 @@
+# mypy: disable-error-code="arg-type,attr-defined"
+# ruff: noqa: RUF059, SLF001
+
 """All tests related to the `astdocs.render_*()` functions."""
 
 import ast

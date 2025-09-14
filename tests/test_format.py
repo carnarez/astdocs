@@ -1,3 +1,5 @@
+# mypy: disable-error-code="arg-type,assignment"
+
 """All tests related to the `astdocs.format_docstring()` function."""
 
 import ast

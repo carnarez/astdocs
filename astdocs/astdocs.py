@@ -648,7 +648,7 @@ def parse_function(
 
     # add line breaks if the function call is long (pre-render this latter first, no way
     # around it)
-    if len(f'{node.name}({", ".join(params)}){output}') > config["fold_args_after"]:
+    if len(f"{node.name}({', '.join(params)}){output}") > config["fold_args_after"]:
         params = [f"\n    {p}" for p in params]
         suffix = ",\n"
     else:
@@ -657,7 +657,7 @@ def parse_function(
     # save the object details
     functions[ap] = {
         "ancestry": ancestry,
-        "params": ("," if len(suffix) else ", ").join(params) + suffix,
+        "params": ("," if suffix else ", ").join(params) + suffix,
         "decoration": ("**Decoration** via " + ", ".join(dc) + ".") if dc else "",
         "endlineno": str(node.end_lineno),
         "funcdocs": format_docstring(node),
@@ -713,7 +713,7 @@ def parse_import(
         m = f"{node.module}." if node.module is not None else ""
         v = node.level + 1 if node.level > 0 else 0
         for n in node.names:
-            abspath = f'{ancestry}.{"." * v}{m}{n.name}'
+            abspath = f"{ancestry}.{'.' * v}{m}{n.name}"
             locpath = n.asname or n.name
 
             # save the object; with support for heresy like "from .. import *" (who does
