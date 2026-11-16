@@ -337,3 +337,159 @@ from package.module.submodule import YetAnotherObject as short_alias
         "package.module": "test.package.module",
         "short_alias": "test.package.module.submodule.YetAnotherObject",
     }
+
+
+def test_annotation_fallback() -> None:
+    """Test for values not explicitly supported (rendered via `ast.unparse()`).
+
+    ```python
+    def func(
+        a: int = -1,
+        b: bool = not True,
+        c: int = 2 * 3,
+        d: typing.Callable[..., int] = lambda x: x,
+        e: pathlib.Path = pathlib.Path("x", *parts, mode="r", **options),
+    ):
+        pass
+    ```
+    """
+    n = ast.parse(
+        "def func(\n"
+        "    a: int = -1,\n"
+        "    b: bool = not True,\n"
+        "    c: int = 2 * 3,\n"
+        "    d: typing.Callable[..., int] = lambda x: x,\n"
+        '    e: pathlib.Path = pathlib.Path("x", *parts, mode="r", **options),\n'
+        "):\n"
+        "    pass",
+    ).body[0]
+
+    assert [astdocs.parse_annotation(d) for d in n.args.defaults] == [
+        "-1",
+        "not True",
+        "2 * 3",
+        "lambda x: x",
+        'pathlib.Path("x", *parts, mode="r", **options)',
+    ]
+    assert astdocs.parse_annotation(n.args.args[3].annotation) == (
+        "typing.Callable[..., int]"
+    )
+
+
+def test_parameters_kinds() -> None:
+    """Test for positional-only, keyword-only and annotated variadic parameters.
+
+    ```python
+    def func(a, b=2, /, c=3, *, d, e: int = 5): ...
+    def func(a, /, *args: int, **kwargs: str): ...
+    ```
+    """
+    astdocs.objects[MODULE] = {"classes": {}, "functions": {}, "imports": {}}
+
+    s = "def func(a, b=2, /, c=3, *, d, e: int = 5):\n    pass"
+    functions = astdocs.parse_function(ast.parse(s).body[0], MODULE, MODULE, {})
+
+    assert functions[f"{MODULE}.func"]["params"] == "a, b=2, /, c=3, *, d, e: int = 5"
+
+    s = "def func(a, /, *args: int, **kwargs: str):\n    pass"
+    functions = astdocs.parse_function(ast.parse(s).body[0], MODULE, MODULE, {})
+
+    assert functions[f"{MODULE}.func"]["params"] == "a, /, *args: int, **kwargs: str"
+
+
+def test_methods_first_parameter() -> None:
+    """Test the instance/class is left out of method signatures (only).
+
+    ```python
+    def func(self, a): ...
+
+    class Classy:
+        def method(self, /, a): ...
+
+        @classmethod
+        def build(cls, a): ...
+
+        @staticmethod
+        def static(itself: int): ...
+
+        def bare(*args): ...
+    ```
+    """
+    astdocs.objects[MODULE] = {"classes": {}, "functions": {}, "imports": {}}
+
+    s = """
+def func(self, a):
+    pass
+
+class Classy:
+    def method(self, /, a):
+        pass
+
+    @classmethod
+    def build(cls, a):
+        pass
+
+    @staticmethod
+    def static(itself: int):
+        pass
+
+    def bare(*args):
+        pass
+    """.strip()
+    _, functions, _ = astdocs.parse(ast.parse(s), MODULE, MODULE)
+
+    assert {f: functions[f]["params"] for f in functions} == {
+        f"{MODULE}.func": "self, a",
+        f"{MODULE}.Classy.method": "a",
+        f"{MODULE}.Classy.build": "a",
+        f"{MODULE}.Classy.static": "itself: int",
+        f"{MODULE}.Classy.bare": "*args",
+    }
+
+
+def test_conditional_definitions() -> None:
+    """Test for objects defined within compound statements.
+
+    ```python
+    try:
+        import fast
+    except ImportError:
+        def fallback(): ...
+
+    class Classy:
+        if True:
+            def method(self): ...
+
+    match x:
+        case 0:
+            def matched(): ...
+    ```
+    """
+    astdocs.objects[MODULE] = {"classes": {}, "functions": {}, "imports": {}}
+
+    s = """
+try:
+    import fast
+except ImportError:
+    def fallback():
+        pass
+
+class Classy:
+    if True:
+        def method(self):
+            pass
+
+match x:
+    case 0:
+        def matched():
+            pass
+    """.strip()
+    _, functions, _ = astdocs.parse(ast.parse(s), MODULE, MODULE)
+
+    assert astdocs.objects[MODULE]["imports"] == {"fast": f"{MODULE}.fast"}
+    assert functions[f"{MODULE}.Classy.method"]["params"] == ""
+    assert list(functions) == [
+        f"{MODULE}.fallback",
+        f"{MODULE}.Classy.method",
+        f"{MODULE}.matched",
+    ]

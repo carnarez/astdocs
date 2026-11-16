@@ -6,11 +6,15 @@ Tests related to the environment (configuration) and the `cli()` function.
 
 - [`test_runs()`](#test_clitest_runs): Test successful run (this test checks nothing
   more than a script run).
-- [`test_faulty_run()`](#test_clitest_faulty_run): Test faulty run (no file nor code
-  provided).
+- [`test_cli_file()`](#test_clitest_cli_file): Test the `cli()` function on a single
+  module.
+- [`test_cli_folder()`](#test_clitest_cli_folder): Test the `cli()` function on a
+  folder, including hidden and invalid modules.
+- [`test_faulty_run()`](#test_clitest_faulty_run): Test faulty runs (no path, too many
+  paths, or path not found).
 - [`test_environment()`](#test_clitest_environment): Test for environment variables.
 - [`test_default_environment()`](#test_clitest_default_environment): Test for
-  environment variables (reset them for the tests).
+  environment variables (none set: defaults).
 
 ## Functions
 
@@ -29,18 +33,51 @@ $ python astdocs/astdocs.py astdocs/astdocs.py  # running on itself
 $ python astdocs/astdocs.py astdocs  # run on folder
 ```
 
+### `test_cli.test_cli_file`
+
+```python
+test_cli_file(capsys: pytest.CaptureFixture) -> None:
+```
+
+Test the `cli()` function on a single module.
+
+```shell
+$ astdocs astdocs/astdocs.py
+```
+
+### `test_cli.test_cli_folder`
+
+```python
+test_cli_folder(tmp_path: pathlib.Path, capsys: pytest.CaptureFixture) -> None:
+```
+
+Test the `cli()` function on a folder, including hidden and invalid modules.
+
+```text
+tmp_path/
+├── .venv/
+│   └── leaked.py
+├── broken.py  # invalid syntax
+└── visible.py
+```
+
+```python
+def func():
+    """Visible."""
+```
+
 ### `test_cli.test_faulty_run`
 
 ```python
 test_faulty_run() -> None:
 ```
 
-Test faulty run (no file nor code provided).
+Test faulty runs (no path, too many paths, or path not found).
 
 ### `test_cli.test_environment`
 
 ```python
-test_environment() -> None:
+test_environment(monkeypatch: pytest.MonkeyPatch) -> None:
 ```
 
 Test for environment variables.
@@ -56,17 +93,17 @@ ASTDOCS_WITH_LINENOS=1
 ### `test_cli.test_default_environment`
 
 ```python
-test_default_environment() -> None:
+test_default_environment(monkeypatch: pytest.MonkeyPatch) -> None:
 ```
 
-Test for environment variables (reset them for the tests).
+Test for environment variables (none set: defaults).
 
 ```text
-ASTDOCS_BOUND_OBJECTS=off
-ASTDOCS_FOLD_ARGS_AFTER=88
-ASTDOCS_SHOW_PRIVATE=false
+ASTDOCS_BOUND_OBJECTS=
+ASTDOCS_FOLD_ARGS_AFTER=
+ASTDOCS_SHOW_PRIVATE=
 ASTDOCS_SPLIT_BY=
-ASTDOCS_WITH_LINENOS=0
+ASTDOCS_WITH_LINENOS=
 ```
 
 # Module `test_format`
@@ -78,11 +115,13 @@ All tests related to the `astdocs.format_docstring()` function.
 - [`test_simple_class_docstring()`](#test_formattest_simple_class_docstring): Test
   extraction of simple docstring from a class definition.
 - [`test_simple_function_docstring()`](#test_formattest_simple_function_docstring): Test
-  extration of simple docstring from \[async\] function definitions.
+  extration of simple docstring from [async] function definitions.
 - [`test_simple_module_docstring()`](#test_formattest_simple_module_docstring): Test
   extraction of simple docstring from a module definition.
 - [`test_complex_docstring()`](#test_formattest_complex_docstring): Test extraction of
   more complex docstring (from module to make it easier).
+- [`test_many_code_blocks()`](#test_formattest_many_code_blocks): Test more than ten
+  code blocks are all put back in place.
 
 ## Functions
 
@@ -105,7 +144,7 @@ class Classy:
 test_simple_function_docstring() -> None:
 ```
 
-Test extration of simple docstring from \[async\] function definitions.
+Test extration of simple docstring from [async] function definitions.
 
 ```
 def func():
@@ -181,6 +220,33 @@ Each of the following is tested:
 - Type + description parsing.
 - Trailing spaces trimming.
 
+### `test_format.test_many_code_blocks`
+
+```python
+test_many_code_blocks() -> None:
+```
+
+Test more than ten code blocks are all put back in place.
+
+```
+"""Docstring.
+
+```
+
+block0
+
+```
+
+[...]
+
+```
+
+block11
+
+```
+"""
+```
+
 # Module `test_parse`
 
 All tests related to the `astdocs.parse_*()` function.
@@ -206,6 +272,14 @@ All tests related to the `astdocs.parse_*()` function.
   methods.
 - [`test_function()`](#test_parsetest_function): Test for a simple function.
 - [`test_import()`](#test_parsetest_import): Test for complex imports.
+- [`test_annotation_fallback()`](#test_parsetest_annotation_fallback): Test for values
+  not explicitly supported (rendered via `ast.unparse()`).
+- [`test_parameters_kinds()`](#test_parsetest_parameters_kinds): Test for
+  positional-only, keyword-only and annotated variadic parameters.
+- [`test_methods_first_parameter()`](#test_parsetest_methods_first_parameter): Test the
+  instance/class is left out of method signatures (only).
+- [`test_conditional_definitions()`](#test_parsetest_conditional_definitions): Test for
+  objects defined within compound statements.
 
 ## Functions
 
@@ -398,6 +472,84 @@ from module.submodule import AnotherObject as ThatObject
 from package.module.submodule import YetAnotherObject as short_alias
 ```
 
+### `test_parse.test_annotation_fallback`
+
+```python
+test_annotation_fallback() -> None:
+```
+
+Test for values not explicitly supported (rendered via `ast.unparse()`).
+
+```python
+def func(
+    a: int = -1,
+    b: bool = not True,
+    c: int = 2 * 3,
+    d: typing.Callable[..., int] = lambda x: x,
+    e: pathlib.Path = pathlib.Path("x", *parts, mode="r", **options),
+):
+    pass
+```
+
+### `test_parse.test_parameters_kinds`
+
+```python
+test_parameters_kinds() -> None:
+```
+
+Test for positional-only, keyword-only and annotated variadic parameters.
+
+```python
+def func(a, b=2, /, c=3, *, d, e: int = 5): ...
+def func(a, /, *args: int, **kwargs: str): ...
+```
+
+### `test_parse.test_methods_first_parameter`
+
+```python
+test_methods_first_parameter() -> None:
+```
+
+Test the instance/class is left out of method signatures (only).
+
+```python
+def func(self, a): ...
+
+class Classy:
+    def method(self, /, a): ...
+
+    @classmethod
+    def build(cls, a): ...
+
+    @staticmethod
+    def static(itself: int): ...
+
+    def bare(*args): ...
+```
+
+### `test_parse.test_conditional_definitions`
+
+```python
+test_conditional_definitions() -> None:
+```
+
+Test for objects defined within compound statements.
+
+```python
+try:
+    import fast
+except ImportError:
+    def fallback(): ...
+
+class Classy:
+    if True:
+        def method(self): ...
+
+match x:
+    case 0:
+        def matched(): ...
+```
+
 # Module `test_render`
 
 All tests related to the `astdocs.render_*()` functions.
@@ -426,6 +578,12 @@ All tests related to the `astdocs.render_*()` functions.
   output of the `@postrender` decorator.
 - [`test_alternate_config()`](#test_rendertest_alternate_config): Test for different
   configuration options.
+- [`test_successive_configurations()`](#test_rendertest_successive_configurations): Test
+  successive renderings with different configurations do not interfere.
+- [`test_remove_from_path_elsewhere()`](#test_rendertest_remove_from_path_elsewhere):
+  Test the `remove_from_path` argument with a file outside the working directory.
+- [`test_nested_objects()`](#test_rendertest_nested_objects): Test for classes and
+  functions defined within classes and methods.
 
 ## Functions
 
@@ -655,4 +813,55 @@ with
 
 ```python
 config.update({"bound_objects": True, "split_by": "cfm", "with_linenos": True})
+```
+
+### `test_render.test_successive_configurations`
+
+```python
+test_successive_configurations() -> None:
+```
+
+Test successive renderings with different configurations do not interfere.
+
+```python
+class Classy:
+    pass
+```
+
+### `test_render.test_remove_from_path_elsewhere`
+
+```python
+test_remove_from_path_elsewhere(tmp_path: pathlib.Path) -> None:
+```
+
+Test the `remove_from_path` argument with a file outside the working directory.
+
+```python
+def func():
+    """Somewhere else."""
+```
+
+### `test_render.test_nested_objects`
+
+```python
+test_nested_objects() -> None:
+```
+
+Test for classes and functions defined within classes and methods.
+
+```python
+class Outer:
+    """Outer."""
+
+    class Inner:
+        """Inner."""
+
+        def inner_method(self):
+            """Inner method."""
+
+    def method(self):
+        """Method."""
+
+        def nested():
+            pass
 ```

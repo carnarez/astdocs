@@ -1,10 +1,10 @@
 # mypy: disable-error-code="arg-type,attr-defined"
-# ruff: noqa: RUF059, SLF001
+# ruff: noqa: RUF059
 
 """All tests related to the `astdocs.render_*()` functions."""
 
 import ast
-import importlib
+import pathlib
 
 import astdocs
 import astdocs.astdocs
@@ -38,7 +38,6 @@ def test_simple_class() -> None:
     ```
     '''
     astdocs.objects[MODULE] = {"classes": {}, "functions": {}, "imports": {}}
-    astdocs.astdocs._update_templates(astdocs.config)
 
     # source
     s = '''
@@ -112,7 +111,6 @@ def test_complex_class() -> None:
     ```
     '''
     astdocs.objects[MODULE] = {"classes": {}, "functions": {}, "imports": {}}
-    astdocs.astdocs._update_templates(astdocs.config)
 
     # source
     s = '''
@@ -205,7 +203,6 @@ def test_complex_function() -> None:
     ```
     '''
     astdocs.objects[MODULE] = {"classes": {}, "functions": {}, "imports": {}}
-    astdocs.astdocs._update_templates(astdocs.config)
 
     # source
     s = '''
@@ -287,7 +284,6 @@ def test_many_parameters() -> None:
     ```
     '''
     astdocs.objects[MODULE] = {"classes": {}, "functions": {}, "imports": {}}
-    astdocs.astdocs._update_templates(astdocs.config)
 
     # source
     s = '''
@@ -680,9 +676,6 @@ def test_alternate_config() -> None:
     config.update({"bound_objects": True, "split_by": "cfm", "with_linenos": True})
     ```
     """
-    importlib.reload(astdocs)
-    importlib.reload(astdocs.astdocs)
-
     config = astdocs.config.copy()
     config.update({"bound_objects": True, "split_by": "cfm", "with_linenos": True})
 
@@ -710,7 +703,7 @@ class Classy:
 
 %%%BEGIN FUNCTIONDEF test.func
 %%%START FUNCTIONDEF test.func
-### `test.func`
+# `test.func`
 
 ```python
 func(a):
@@ -721,7 +714,7 @@ func(a):
 
 %%%BEGIN CLASSDEF test.Classy
 %%%START CLASSDEF test.Classy
-### `test.Classy`
+# `test.Classy`
 
 **Methods**
 
@@ -729,7 +722,7 @@ func(a):
 
 %%%SOURCE test.py:4:10
 
-#### Constructor
+## Constructor
 
 ```python
 Classy()
@@ -737,11 +730,11 @@ Classy()
 
 %%%SOURCE test.py:6:7
 
-#### Methods
+## Methods
 
 %%%BEGIN FUNCTIONDEF test.Classy.method
 %%%START FUNCTIONDEF test.Classy.method
-##### `test.Classy.method`
+### `test.Classy.method`
 
 ```python
 method(b):
@@ -755,3 +748,144 @@ method(b):
     rendered = astdocs.render(code=s, module=MODULE, config=config)
 
     assert rendered == r
+
+
+def test_successive_configurations() -> None:
+    """Test successive renderings with different configurations do not interfere.
+
+    ```python
+    class Classy:
+        pass
+    ```
+    """
+    s = "class Classy:\n    pass"
+    bound = astdocs.config.copy()
+    bound.update({"bound_objects": True, "split_by": "c"})
+
+    first = astdocs.render(code=s, module=MODULE, config=bound)
+    astdocs.render(code=s, module=MODULE)
+    astdocs.render(code=s, module=MODULE, config=bound)
+
+    assert astdocs.render(code=s, module=MODULE, config=bound) == first
+    assert first.count("%%%BEGIN CLASSDEF") == 1
+    assert first.count("%%%START CLASSDEF") == 1
+    assert "%%%" not in astdocs.render(code=s, module=MODULE)
+
+
+def test_remove_from_path_elsewhere(tmp_path: pathlib.Path) -> None:
+    '''Test the `remove_from_path` argument with a file outside the working directory.
+
+    ```python
+    def func():
+        """Somewhere else."""
+    ```
+    '''
+    (tmp_path / "package").mkdir()
+    (tmp_path / "package" / "__init__.py").write_text('"""Package."""')
+    (tmp_path / "package" / "module.py").write_text('def func():\n    """Else."""')
+
+    for f, m in (("module.py", "package.module"), ("__init__.py", "package")):
+        rendered = astdocs.render(
+            filepath=str(tmp_path / "package" / f),
+            remove_from_path=f"{tmp_path}/",
+        )
+
+        assert rendered.startswith(f"# Module `{m}`")
+
+
+def test_nested_objects() -> None:
+    '''Test for classes and functions defined within classes and methods.
+
+    ```python
+    class Outer:
+        """Outer."""
+
+        class Inner:
+            """Inner."""
+
+            def inner_method(self):
+                """Inner method."""
+
+        def method(self):
+            """Method."""
+
+            def nested():
+                pass
+    ```
+    '''
+    s = '''
+class Outer:
+    """Outer."""
+
+    class Inner:
+        """Inner."""
+
+        def inner_method(self):
+            """Inner method."""
+
+    def method(self):
+        """Method."""
+
+        def nested():
+            pass
+    '''.strip()
+
+    r = """
+# Module `test`
+
+**Classes**
+
+* [`Outer`](#testouter): Outer.
+
+## Classes
+
+### `test.Outer`
+
+Outer.
+
+**Methods**
+
+* [`method()`](#testoutermethod): Method.
+
+#### Constructor
+
+```python
+Outer()
+```
+
+#### Methods
+
+##### `test.Outer.method`
+
+```python
+method():
+```
+
+Method.
+
+### `test.Outer.Inner`
+
+Inner.
+
+**Methods**
+
+* [`inner_method()`](#testouterinnerinner_method): Inner method.
+
+#### Constructor
+
+```python
+Inner()
+```
+
+#### Methods
+
+##### `test.Outer.Inner.inner_method`
+
+```python
+inner_method():
+```
+
+Inner method.
+    """.strip()
+
+    assert astdocs.render(code=s, module=MODULE) == r

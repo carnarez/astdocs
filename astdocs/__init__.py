@@ -1,4 +1,4 @@
-# flake8: noqa
+# ruff: noqa: F401 (re-exporting)
 # isort: skip_file
 
 """Make all objects available at the root of the package.
@@ -13,10 +13,15 @@ TPL_FUNCTIONDEF : string.Template
     Template to render `def` objects (async or not).
 TPL_MODULE : string.Template
     Template to render the module summary.
-format_annotation : typing.Callable
-    Format an annotation (object type or decorator).
+config : dict[str, typing.Any]
+    Default configuration, updated from the `ASTDOCS_*` environment variables by the
+    command line interface.
 format_docstring : typing.Callable
     Format the object docstring.
+objects : dict[str, typing.Any]
+    Nested dictionary of all relevant objects encountered while parsing the source code.
+parse_annotation : typing.Callable
+    Format an annotation (object type or decorator).
 parse_class : typing.Callable
     Parse a `class` statement.
 parse_function : typing.Callable
@@ -37,6 +42,7 @@ render_recursively : typing.Callable
     Run pipeline on each `Python` module found in a folder and its subfolders.
 postrender : typing.Callable
     Apply a post-rendering function on the output of the decorated function.
+
 """
 
 from .astdocs import (
