@@ -27,6 +27,10 @@ or even:
 $ python astdocs.py .  # recursively look for *.py files in the current directory
 ```
 
+When processing a folder, hidden subfolders (`.git`, `.venv`, *etc.*) are skipped, as
+are modules that cannot be parsed (a warning is written to `stderr`). See
+`python astdocs.py --help` for a short summary of the usage.
+
 The behaviour of this little stunt can be modified via environment variables:
 
 * `ASTDOCS_BOUND_OBJECTS` taking the `1`, `on`, `true` or `yes` values (anything else
@@ -74,7 +78,14 @@ function.)
 
 Each of these environment variables translates into a configuration option stored in the
 `config` dictionnary of the present module. The key name is lowercased and stripped from
-the `ASTDOCS_` prefix.
+the `ASTDOCS_` prefix. The `TPL_*` templates are never modified: each rendering derives
+its own copy (with or without the markers) from them and the configuration it is given,
+such that successive calls with different configurations do not interfere.
+
+Objects defined within conditional blocks (`if`, `try`, `with`, *etc.*) are documented
+as if they were defined at the level of the block itself. Classes defined within classes
+are rendered right after their parent; functions defined within functions are recorded
+in `objects` but not rendered.
 
 When handling rendering programmatically one can use helper [private] functions (if
 necessary). See code and/or tests for details.
@@ -173,8 +184,9 @@ Returns
     The formatted docstring.
 ```
 
-The code blocks are extracted and replaced by placeholders before performing the
-substitutions (then rolled back in). The regular expressions are then applied:
+The code blocks are extracted and replaced by placeholders (`%%%BLOCK<n>%%%`) before
+performing the substitutions (then rolled back in). The regular expressions are then
+applied:
 
 * Leading hashtags (`#`) are removed from any lines starting with them as we do not
   want to conflict with the `Markdown` output.
@@ -239,8 +251,10 @@ See the code itself for some line-by-line documentation.
 
 **Known problems**
 
-* The implementation only supports nodes I encountered in my projects.
-* Does not support `lambda` constructs.
+* The implementation only explicitly supports nodes I encountered in my projects.
+  Any other node (`lambda` constructs, unary or arithmetic operations, *etc.*) is
+  rendered via `ast.unparse()`, which might format things slightly differently
+  (single quotes around strings for instance).
 
 ### `astdocs.parse_class`
 
@@ -275,6 +289,8 @@ parse_function(
     module: str,
     ancestry: str,
     functions: dict[str, dict[str, str]],
+    *,
+    method: bool = False,
 ) -> dict[str, dict]:
 ```
 
@@ -287,6 +303,9 @@ Parse a `def` statement.
 * `ancestry` [`str`]: Complete path to the object, used to identify ownership of children objects
     (functions and methods for instance).
 * `functions` [`dict[str, dict[str, str]]`]: Dictionnaries of all encountered function definitions.
+* `method` [`bool`]: Whether the function is defined within a class. If so (and unless decorated
+    with `@staticmethod`) its first parameter (`self`, `cls`, *etc.*) is left out.
+    Defaults to `False`.
 
 **Returns**
 
@@ -294,9 +313,11 @@ Parse a `def` statement.
 
 **Notes**
 
-If `*args` and some `kwargs` arguments are present, `args.vararg` will not be `None`
-and the `node.args.kwonlyargs` / `node.args.kw_defaults` attributes need to be
-parsed. Otherwise all should be available in the `args` / `defaults` attributes.
+Parameters are rendered in the order of the signature: positional-only ones
+(followed by a `/`), regular ones, `*args` (or a lone `*` if keyword-only parameters
+follow), keyword-only ones and `**kwargs`. Default values are formatted following
+[PEP 8](https://peps.python.org/pep-0008/#other-recommendations): `a: int = 0` but
+`a=0`.
 
 ### `astdocs.parse_import`
 
@@ -321,12 +342,12 @@ post-processing or some later [smart and exciting] implementations.
 * `module` [`str`]: Name of the current module.
 * `ancestry` [`str`]: Complete path to the object, used to identify ownership of children objects
     (functions and methods for instance).
-* `imports` [`dict[str, str] | None`]: Dictionnaries of parsed imports. Defaults to an empty dictionnary `{}`.
+* `imports` [`dict[str, str]`]: Dictionnaries of parsed imports.
 
 **Returns**
 
-* [`dict[str, str]`]: Dictionnaries of all encountered imports. Untouched for now, always empty
-    dictionnary `{}`.
+* [`dict[str, str]`]: Dictionnaries of all encountered imports. Untouched for now: imports are only
+    recorded in `objects`.
 
 ### `astdocs.parse`
 
@@ -344,7 +365,8 @@ parse(
 Recursively traverse the nodes of the abstract syntax tree.
 
 The present function calls the formatting function corresponding to the node name
-(if supported) to parse/format it.
+(if supported) to parse/format it. Compound statements (`if`, `try`, *etc.*) are
+traversed as well, their content being attached to the current ancestry.
 
 **Parameters**
 
@@ -376,6 +398,9 @@ render_class(
 
 Render a `class` object, according to the defined `TPL_CLASSDEF` template.
 
+Only the methods directly defined within the class are rendered. Classes defined
+within the class are rendered (recursively) right after it.
+
 **Parameters**
 
 * `filepath` [`str`]: Path to the module (file) defining the object.
@@ -386,12 +411,17 @@ Render a `class` object, according to the defined `TPL_CLASSDEF` template.
 
 **Returns**
 
-* [`str`]: `Markdown`-formatted description of the class object.
+* [`str`]: `Markdown`-formatted description of the class object (and nested classes).
 
 ### `astdocs.render_function`
 
 ```python
-render_function(filepath: str, name: str, functions: dict[str, dict[str, str]]) -> str:
+render_function(
+    filepath: str,
+    name: str,
+    functions: dict[str, dict[str, str]],
+    config: dict[str, typing.Any] = config,
+) -> str:
 ```
 
 Render a `def` object (function or method).
@@ -403,6 +433,7 @@ Follow the defined `TPL_FUNCTIONDEF` template.
 * `filepath` [`str`]: Path to the module (file) defining the object.
 * `name` [`str`]: The name (full path including all ancestors) of the object to render.
 * `functions` [`dict[str, dict[str, str]]`]: Dictionnaries of all encountered function definitions.
+* `config` [`dict[str, typing.Any]`]: Configuration options used to render attributes.
 
 **Returns**
 
@@ -455,7 +486,9 @@ Run the whole pipeline (useful wrapper function when this gets used as a module)
 * `filepath` [`str`]: The path to the module to process. Defaults to empty string.
 * `remove_from_path` [`str`]: Part of the path to be removed. If one is rendering the content of a file buried
     deep down in a complicated folder tree *but* does not want this to appear in the
-    ancestry of the module. Defaults to empty string.
+    ancestry of the module. The file itself is still read from `filepath`; the
+    shortened path is used for the module name and the `%%%SOURCE` markers. Defaults
+    to empty string.
 * `code` [`str`]: Code to process; useful when used as a module. If both `filepath` and `code` are
     provided the latter will be ignored. Defaults to empty string.
 * `module` [`str`]: Name of the current module. Defaults to empty string.
@@ -477,6 +510,10 @@ render_recursively(
 
 Run pipeline on each `Python` module found in a folder and its subfolders.
 
+Hidden files and folders (starting with a dot, like `.git` or `.venv`) are skipped.
+Modules that cannot be parsed (`SyntaxError`) are skipped as well, with a warning
+written to `stderr`.
+
 **Parameters**
 
 * `path` [`str`]: The path to the folder to process.
@@ -489,37 +526,39 @@ Run pipeline on each `Python` module found in a folder and its subfolders.
 
 **Example**
 
+Write each module/class/function to its own file (the configuration needs to define
+the `split_by` option, see the documentation of the module):
+
 ```python
+import pathlib
 import astdocs
-import re
 
-outdir = "docs"
+config = astdocs.config.copy()
+config.update({"split_by": "mc"})
 
-for line in astdocs.render_recursively(...).split("\n"):
+outdir = pathlib.Path("docs")
+output = None
+
+for line in astdocs.render_recursively(..., config=config).split("\n"):
     if line.startswith("%%%BEGIN"):
-        try:
+        if output is not None:
             output.close()
-        except NameError:
-            pass
-        path = re.sub(
-            r"\.py$",
-            ".md",
-            "/".join([outdir.rstrip("/")] + line.split()[2].split(".")),
-        )
-        os.makedirs(path.split("/")[:-1], exist_ok=True)
-        output = open(path, "w")
-    else:
+        path = outdir.joinpath(*line.split()[2].split(".")).with_suffix(".md")
+        path.parent.mkdir(parents=True, exist_ok=True)
+        output = path.open("w")
+    elif output is not None:
         output.write(f"{line}\n")
-try:
+
+if output is not None:
     output.close()
-except NameError:
-    pass
 ```
 
 ### `astdocs.postrender`
 
 ```python
-postrender(func: typing.Callable) -> typing.Callable:
+postrender(
+    func: typing.Callable[[str], str],
+) -> typing.Callable[[typing.Callable[..., str]], typing.Callable[..., str]]:
 ```
 
 Apply a post-rendering function on the output of the decorated function.
@@ -529,12 +568,12 @@ This can be used to streamline the linting of the output, or immediately convert
 
 **Parameters**
 
-* `func` [`typing.Callable`]: The function to apply; should take a `str` as lone input, the `Markdown` to
+* `func` [`typing.Callable[[str], str]`]: The function to apply; should take a `str` as lone input, the `Markdown` to
     process.
 
 **Returns**
 
-* [`str`]: `Markdown`-formatted content.
+* [`typing.Callable[[typing.Callable[..., str]], typing.Callable[..., str]]`]: Decorator returning the processed output of the decorated (rendering) function.
 
 **Example**
 
@@ -578,18 +617,19 @@ print(render(...))
 and replace the `%%%SOURCE ...` markers by `<details>` HTML tags including the code
 of each object:
 
-```python
+````python
 import astdocs
 import re
 
 def extract_snippet(md: str) -> str:
-    for m in re.finditer("^%%%SOURCE (.*):([0-9]+):([0-9]+)\n", md):
-        ms = m.group(0)  # matched string
-        fp, cs, ce = m.groups()  # path to module, first and last line of snippet
+    for m in re.finditer(r"^%%%SOURCE (.*):([0-9]+):([0-9]+)$", md, flags=re.M):
+        fp, start, end = m.groups()  # path to module, first/last line of snippet
         with open(fp) as f:
-            snippet = "\n".join(f.readlines()[cs:ce + 1])
+            snippet = "".join(f.readlines()[int(start) - 1 : int(end)])
         md = md.replace(
-            ms, f"<details><summary>Source</summary>\n\n{snippet}\n\n</details>"
+            m.group(0),
+            "<details><summary>Source</summary>\n\n"
+            f"```python\n{snippet}```\n\n</details>",
         )
     return md
 
@@ -600,12 +640,17 @@ def render(filepath: str) -> str:
     return astdocs.render(filepath, config=config)
 
 print(render(...))
-```
+````
 
 ### `astdocs.cli`
 
 ```python
-cli() -> None:
+cli(argv: list[str] | None = None) -> None:
 ```
 
 Process CLI calls.
+
+**Parameters**
+
+* `argv` [`list[str] | None`]: Command line arguments (without the program name). Defaults to `None`, reading
+    them from `sys.argv`.

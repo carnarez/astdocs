@@ -188,3 +188,27 @@ Let's test this too:
     n = ast.parse(docstring)
 
     assert format_docstring(n) == formatted
+
+
+def test_many_code_blocks() -> None:
+    '''Test more than ten code blocks are all put back in place.
+
+    ```
+    """Docstring.
+
+    ```
+    block0
+    ```
+
+    [...]
+
+    ```
+    block11
+    ```
+    """
+    ```
+    '''
+    blocks = "\n\n".join(f"```\nblock{i}\n```" for i in range(12))
+    n = ast.parse(f'"""Docstring.\n\n{blocks}\n"""')
+
+    assert format_docstring(n) == f"Docstring.\n\n{blocks}"
